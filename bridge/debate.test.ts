@@ -68,8 +68,13 @@ test("a full fake debate runs in order and ends with the requester's plan", asyn
   expect(events.find((e) => e.from === "client-5" && e.type === "challenge")?.text).toMatch(/theme prop/);
   const plan = events.at(-1)!;
   expect(plan.from).toBe("client-1");
-  expect(plan.text).toMatch(/we also run ECharts/);
+  expect(plan.text).toMatch(/We also run ECharts/);
+  expect(plan.cites).toEqual(expect.arrayContaining(["client-3", "client-5"]));
   for (const e of events) expect(typeof e.ts).toBe("number");
+
+  // Same confidentiality rule as the real actors: agents refer to deployments by id only.
+  const names = (await loadSeedData()).clients.map((c) => c.name);
+  for (const e of events) for (const name of names) expect(e.text).not.toContain(name);
 });
 
 test("FDE input added mid-debate reaches later turns and the plan", async () => {
@@ -114,8 +119,11 @@ test("seeding twice leaves the same state (idempotent)", async () => {
   const data = await loadSeedData();
   await seedAll(actors, data);
   await seedAll(actors, data);
-  const take = await actors.client("client-3").respond("Add dark mode", [{ type: "request", from: "client-1", text: "Add dark mode", ts: 1 }]);
-  expect(take).toMatchObject({ type: "take", from: "client-3", cites: ["client-3: Add dark mode to the patient portal"] });
+  const { id, memories, ...profile } = data.clients.find((c) => c.id === "client-3")!;
+  expect(profile).toEqual({ name: expect.any(String), stack: expect.any(String), constraints: expect.any(Array) });
+  expect(await actors.client(id).seed(profile, memories)).toBe(memories.length);
+  const take = await actors.client(id).respond("Add dark mode", [{ type: "request", from: "client-1", text: "Add dark mode", ts: 1 }]);
+  expect(take).toMatchObject({ type: "take", from: "client-3", cites: ["client-3"] });
 });
 
 test("normalizeEvent coerces messy actor output into a valid Event", () => {

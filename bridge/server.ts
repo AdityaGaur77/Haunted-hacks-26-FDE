@@ -4,8 +4,9 @@
 //   GET  /seminar/:id/events                         -> Event[]         full log (fallback / replay);
 //                                                                       the debate is over once a "plan" event exists
 //   GET  /seminar/:id/socket                         -> { websocketUrl, ... } from SeminarActor.prepareWebsocket()
-//                                                       (query params become the socket metadata, default role=fde;
-//                                                       fake actors return a placeholder with fake: true)
+//                                                       (metadata null, as the SeminarActor expects; any query params
+//                                                       are sent as metadata instead. Fake actors return a placeholder
+//                                                       with fake: true)
 //   POST /seminar/:id/fde      { text }              -> Event           the FDE jumps in mid-debate
 //   GET  /health                                     -> { ok, actors, relay }
 import { loadActors } from "./actors";
@@ -51,7 +52,7 @@ const server = Bun.serve({
       return json(await actors.seminar(seminarId).getEvents());
     }
     if (action === "socket" && req.method === "GET") {
-      const metadata = searchParams.size ? Object.fromEntries(searchParams) : { role: "fde" };
+      const metadata = searchParams.size ? Object.fromEntries(searchParams) : null;
       return json(await actors.prepareSeminarSocket(seminarId, metadata));
     }
     if (action === "fde" && req.method === "POST") {

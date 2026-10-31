@@ -29,9 +29,11 @@ export async function loadSeedData(): Promise<SeedData> {
 }
 
 export async function seedAll(actors: Actors, data: SeedData) {
-  for (const { memories, ...profile } of data.clients) {
-    await actors.client(profile.id).seed(profile, memories);
-    console.log(`seeded ${profile.id} (${profile.name}): ${memories.length} memories`);
+  for (const { id, memories, ...profile } of data.clients) {
+    // The actor's id is the client id; the profile itself is { name, stack, constraints }.
+    const stored = await actors.client(id).seed(profile, memories);
+    const held = typeof stored === "number" ? ` (actor now holds ${stored})` : "";
+    console.log(`seeded ${id} (${profile.name}): ${memories.length} memories${held}`);
   }
 }
 

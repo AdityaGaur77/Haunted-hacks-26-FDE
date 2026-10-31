@@ -32,8 +32,8 @@ export async function startDebate(deps: Deps, requester: ClientId, request: stri
   lastSeminarTs = Math.max(Date.now(), lastSeminarTs + 1); // unique even for two debates in the same ms
   const seminarId = `seminar-${lastSeminarTs}`;
   const seminar = deps.actors.seminar(seminarId);
-  const requestEvent: Event = { type: "request", from: requester, text: request, ts: Date.now() };
-  await seminar.addEvent(requestEvent);
+  // start() marks the seminar running and records the "request" event.
+  const requestEvent = normalizeEvent(await seminar.start(requester, request), requester, ["request"]);
 
   const ctx: Context = { ...deps, seminarId, seminar, requester, request, transcript: [requestEvent], seenFde: new Set() };
   console.log(`\n=== ${seminarId}  (${deps.actors.kind} actors, Relay ${deps.relay.enabled ? `#${seminarId}` : "off"})`);

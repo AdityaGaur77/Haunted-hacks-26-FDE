@@ -24,9 +24,8 @@ export interface Memory {
   outcome: string;
 }
 
-// Bridge-defined (seed data shape), not part of the shared contract above.
+// Same as actors/src/types.ts. The client id is the actor id, not part of the profile.
 export interface ClientProfile {
-  id: ClientId;
   name: string;
   stack: string;
   constraints: string[];

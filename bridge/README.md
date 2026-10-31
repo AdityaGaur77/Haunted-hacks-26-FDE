@@ -1,12 +1,12 @@
 # FDE Council bridge
 
 Runs the debate. When a client makes a request, the 5 client agents debate it live over
-**Agent Relay** (each posts as its own Relay identity), the event log lives in a Terse
+**Agent Relay** (each posts as its own Relay identity), the event log lives in the
 **SeminarActor**, and the requesting client writes the plan. The FDE can jump in at any time.
 
 ```
 POST /debate ──> startDebate(client, request)
-   SeminarActor "seminar-<ts>"  <── request event          Relay #seminar-<ts>  <── posted as client-N
+   SeminarActor "seminar-<ts>".start()  -> request event   Relay #seminar-<ts>  <── posted as client-N
    Round 1  requester first, then the rest: respond()   -> take | abstain
    Round 2  the rest, then the requester: challenge()   -> challenge
    Plan     requester: writePlan(transcript, fdeConstraints) -> plan, then markDone()
@@ -31,7 +31,8 @@ cp .env.example .env      # set RELAY_API_KEY (or leave empty to auto-create a w
 | `bun test` / `bun run typecheck` | Tests (fake actors, no network) / type check |
 
 With no teammate code at all, everything runs on the **fake actors** (`fake-actors.ts`): canned
-but realistic replies built from `seed-data.json`. Set `FAKE_DELAY_MS=0` for an instant debate.
+but realistic replies built from `seed-data.json`, in the same style as the real actors (agent ids
+only, short texts, numbered plan). Set `FAKE_DELAY_MS=0` for an instant debate.
 
 ## HTTP API (for /web)
 
@@ -41,39 +42,43 @@ CORS is open, no auth.
 | --- | --- | --- |
 | `POST /debate` | `{ "client": "client-1", "request": "Add dark mode" }` | `{ "seminarId": "seminar-1730…" }` (debate runs in the background) |
 | `GET /seminar/:id/events` | | `Event[]`, the full log (fallback / replay). The debate is over once a `plan` event is in it |
-| `GET /seminar/:id/socket` | | `{ websocketUrl, … }` from `SeminarActor.prepareWebsocket()`. Query params become the socket metadata (default `{ "role": "fde" }`). Fake actors return a placeholder with `"fake": true`, so poll `/events` instead |
-| `POST /seminar/:id/fde` | `{ "text": "Must ship by Friday" }` | the `fde` Event. The FDE jumps in; agents see it from their next turn and the plan gets it as an FDE constraint |
+| `GET /seminar/:id/socket` | | `{ websocketUrl, … }` from `SeminarActor.prepareWebsocket({ actorId, metadata: null })`. Fake actors return a placeholder with `"fake": true`, so poll `/events` instead |
+| `POST /seminar/:id/fde` | `{ "text": "Must ship by Friday" }` | the `fde` Event. Agents see it from their next turn; the plan gets it as an FDE constraint |
 | `GET /health` | | `{ ok, actors: "fake" \| "real", relay: boolean }` |
 
 ```ts
-// Event (shared contract, see types.ts)
+// Event (shared contract, see types.ts / actors/src/types.ts)
 { type: "request" | "take" | "abstain" | "challenge" | "fde" | "plan",
-  from: "client-1".."client-5" | "fde", text: string, cites?: string[], ts: number }
+  from: "client-1".."client-5" | "fde", text: string, cites?: string[] /* agent ids */, ts: number }
 ```
 
-## Actor interface (for /actors)
+On the real socket (see `/actors`), the SeminarActor broadcasts `{ type: "event", event }` for each
+new event and emits `status` / `events`. The FDE can also jump in by sending `{ type: "fde", text }`
+over the socket, which is equivalent to `POST /seminar/:id/fde`.
 
-`actors.ts` defines what the bridge calls, and the switch: `USE_REAL_ACTORS=true` loads the
-generated Terse client from `TERSE_CLIENT` (default `../actors/generated/index.js`, which is where
-`terse actor generate` writes when run in `/actors`). The generated client reads `TERSE_ACTOR_URL`
-and `TERSE_API_KEY`.
+## Actors (switch to the real ones)
 
-| Actor | Method | Notes |
-| --- | --- | --- |
-| `ClientActor` (`client-1`..`client-5`) | `seed(profile, memories[])` | Must **replace** earlier data (seed.ts is re-runnable). `profile = { id, name, stack, constraints[] }` |
-| | `respond(request, transcript)` | Return an Event of type `take` or `abstain` |
-| | `challenge(transcript)` | Return an Event of type `challenge` |
-| | `writePlan(transcript, fdeConstraints)` | Return an Event of type `plan` |
-| `SeminarActor` (`seminar-<ts>`) | `addEvent(event)` / `getEvents()` / `markDone()` | `getEvents()` must include `fde` events added from the frontend |
-| | `prepareWebsocket({ actorId, metadata })` | Called by `GET /seminar/:id/socket`; default metadata `{ role: "fde" }` |
+`actors.ts` defines what the bridge calls and holds the switch. `USE_REAL_ACTORS=true` loads the
+generated client from `./generated/index.js` or `../actors/generated/index.js` (or `ACTORS_CLIENT`).
+
+| Actor | Methods the bridge calls |
+| --- | --- |
+| `ClientActor` (`client-1`..`client-5`) | `seed(profile, memories)` (replaces, so it's re-runnable; profile is `{ name, stack, constraints }`), `respond`, `challenge`, `writePlan` |
+| `SeminarActor` (`seminar-<ts>`) | `start(client, request)`, `addEvent`, `getEvents`, `markDone`, and `prepareWebsocket` for the socket |
 
 The bridge forgives messy actor output: it forces `from` to the actor's id, fills in a missing
 `ts`, and coerces an invalid `type`. Each call gets one retry and a timeout (`ACTOR_TIMEOUT_MS`,
 default 90s). An agent that still fails is skipped, and if the plan fails, a clearly-marked
 fallback `plan` event ends the debate so the UI never hangs.
 
-**Milestone 4 checklist:** `terse actor generate` in `/actors` → set `USE_REAL_ACTORS=true`
-(+ `TERSE_ACTOR_URL` / `TERSE_API_KEY` if not local) → `bun run seed` → `bun run debate`.
+**Milestone 4 checklist** (same machine as the actor server):
+
+```bash
+cd actors && bunx durable-actors dev               # terminal 1, wait for "Ready" (port 7100)
+cd actors && bunx durable-actors generate          # terminal 2: writes actors/generated/
+cd bridge && USE_REAL_ACTORS=true bun run seed     # "actor now holds N" stays the same on re-runs
+cd bridge && USE_REAL_ACTORS=true bun run debate   # then: USE_REAL_ACTORS=true bun run start
+```
 
 ## Agent Relay
 
@@ -90,7 +95,7 @@ fallback `plan` event ends the debate so the UI never hangs.
 ## Seed data
 
 `seed-data.json`: 5 clients, 3–4 memories each (`request, solution, what_broke, fix, stack,
-outcome`). Lessons only, no code.
+outcome`). Lessons only, no code. `bun run seed` validates it strictly against the contract.
 
 | Client | Who | Role in the dark-mode demo |
 | --- | --- | --- |
