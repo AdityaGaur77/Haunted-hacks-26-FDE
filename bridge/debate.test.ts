@@ -90,6 +90,7 @@ test("a full fake debate runs in order and ends with the requester's plan", asyn
     ...Array(5).fill(expect.stringMatching(/^(take|abstain)$/)),
     ...Array(5).fill("challenge"),
     "plan",
+    "fde", // "Approved the plan."
   ]);
   // Within a round, events arrive in whatever order the parallel calls finish.
   const all = [...CLIENT_IDS];
@@ -99,7 +100,7 @@ test("a full fake debate runs in order and ends with the requester's plan", asyn
   expect(events.find((e) => e.from === "client-5" && e.type === "challenge")?.text).toMatch(/theme prop/);
   // The planted disagreement: client-3 pushes back on client-5 about charts.
   expect(events.find((e) => e.from === "client-3" && e.type === "challenge")?.text).toMatch(/I disagree with .*@client-5.*SVG-based charts/);
-  const plan = events.at(-1)!;
+  const plan = events.findLast((e) => e.type === "plan")!;
   expect(plan.from).toBe("client-1");
   expect(plan.text).toMatch(/We also run ECharts/);
   expect(plan.cites).toEqual(expect.arrayContaining(["client-3", "client-5"]));
@@ -126,7 +127,7 @@ test("FDE input added mid-debate reaches later turns and the plan", async () => 
   expect(calls.challenge.every((t) => t.some((e) => e.type === "fde" && e.text === "Ship by Friday"))).toBe(true);
   expect(calls.plan).toEqual([["Ship by Friday"]]);
   const events = await actors.seminar(debate.seminarId).getEvents();
-  expect(events.at(-1)!.text).toContain("Ship by Friday");
+  expect(events.findLast((e) => e.type === "plan")!.text).toContain("Ship by Friday");
 });
 
 test("a failing agent is skipped and a failing plan still ends the debate", async () => {
@@ -184,7 +185,7 @@ test("the final plan is saved to Supabase once, with only the plan fields", asyn
   const actors: Actors = { ...createFakeActors(), kind: "real" }; // pretend these are the real actors
   const debate = await startDebate({ actors, relay: noRelay, store }, "client-1", "Add dark mode");
   await finish(actors, debate);
-  const plan = (await actors.seminar(debate.seminarId).getEvents()).at(-1)!;
+  const plan = (await actors.seminar(debate.seminarId).getEvents()).findLast((e) => e.type === "plan")!;
   expect(plans).toEqual([{ seminar_id: debate.seminarId, client_id: "client-1", request: "Add dark mode", plan: plan.text, cites: plan.cites ?? [] }]);
 });
 
@@ -233,7 +234,7 @@ test("approved: markDone, then the plan is saved and remembered (never before ap
 
   await actors.seminar(debate.seminarId).approve();
   await debate.done;
-  const plan = (await actors.seminar(debate.seminarId).getEvents()).at(-1)!;
+  const plan = (await actors.seminar(debate.seminarId).getEvents()).findLast((e) => e.type === "plan")!;
   expect(plans.map((p) => p.plan)).toEqual([plan.text]);
   expect(remembered).toEqual([{ request: "Add dark mode", solution: plan.text, what_broke: "", fix: "", stack: "", outcome: "Approved by FDE" }]);
 });

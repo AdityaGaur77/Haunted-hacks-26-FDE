@@ -52,12 +52,17 @@ function fakeSeminar(id: string, seminars: Map<string, Event[]>, approvals: Map<
     async getApproval() {
       return structuredClone(approvals.get(id) ?? { state: "none" });
     },
+    // Same as the real SeminarActor: only acts on a pending plan, and both append an "fde" event.
     async approve() {
+      if (approvals.get(id)?.state !== "pending") return;
       approvals.set(id, { state: "approved" });
+      events().push({ type: "fde", from: "fde", text: "Approved the plan.", ts: Date.now() });
     },
     async reject(feedback) {
-      approvals.set(id, { state: "rejected", feedback });
-      events().push({ type: "fde", from: "fde", text: feedback, ts: Date.now() }); // same as the real actor
+      if (approvals.get(id)?.state !== "pending") return;
+      const text = feedback.trim() || "Rejected the plan. Revise it.";
+      approvals.set(id, { state: "rejected", feedback: text });
+      events().push({ type: "fde", from: "fde", text, ts: Date.now() });
     },
   };
 }
