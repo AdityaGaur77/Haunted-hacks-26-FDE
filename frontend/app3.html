@@ -490,5 +490,6 @@ pal.querySelectorAll('.it').forEach(it=>it.onclick=()=>{closePal();const c=it.da
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('#fdeinput').value=b.dataset.q;sendFde()});$('#demobtn').onclick=receive;$('#resetbtn').onclick=()=>location.reload();$('#approve').onclick=approve;$('#skip').onclick=skip;$('#adjustbtn').onclick=()=>{$('#adjust').classList.add('show');$('#fdeinput').focus()};
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();pal.classList.contains('on')?closePal():openPal();return}if(e.key==='Escape')closePal();if(e.target.tagName==='INPUT'){if(e.key==='Enter'&&e.target.id==='fdeinput')sendFde();return}if(e.key==='e'||e.key==='E')receive();if(e.key==='a'||e.key==='A')approve()});
 </script>
+<script src="live.js"></script>
 </body>
 </html>

@@ -65,7 +65,7 @@ export function planPrompt(self: string, transcript: CouncilEvent[], fdeConstrai
     return {
         system: `${self}\n\n${CONFIDENTIALITY_RULE}\n\nYou are the requesting client's agent. Write the final build plan for YOUR deployment.
 Combine the lessons from the council, resolve disagreements using what matches your own stack, and obey every FDE constraint.
-"text": a short plan of 3-5 numbered steps in one string, each step naming which agent id it came from in parentheses.
+"text": a plan of 3-5 steps in one string, formatted exactly like "1) ... (client-3) 2) ... (client-4) 3) ...", each step ending with the agent id it came from in parentheses.
 "cites": every agent id the plan relied on. Set "abstain": false.
 
 ${OUTPUT_FORMAT}`,
