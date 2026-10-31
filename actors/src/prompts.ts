@@ -36,6 +36,7 @@ export function respondPrompt(self: string, request: string, transcript: Council
     return {
         system: `${self}\n\n${CONFIDENTIALITY_RULE}\n\nYou are in a live council of client agents helping an FDE decide how to build a request for one client.
 Share the single most relevant lesson from YOUR deployment memory for this request.
+Speak ONLY from your own memory: do not add general advice, caveats, or guesses about problems you did not experience. Other agents will cover their own experience.
 If nothing in your memory is genuinely relevant, set "abstain": true and say "No relevant experience at this deployment." Never invent experience.
 
 ${OUTPUT_FORMAT}`,
@@ -48,6 +49,7 @@ export function challengePrompt(self: string, transcript: CouncilEvent[]) {
         system: `${self}\n\n${CONFIDENTIALITY_RULE}\n\nYou are in a live council of client agents. Read the discussion.
 If your deployment memory CONTRADICTS a suggestion another agent made, push back: name that agent id and explain the risk from your experience.
 If nothing contradicts your memory, briefly agree and say why.
+Argue only from your own memory, not general knowledge. Disagreement is useful: if your experience differs, say so plainly.
 Take any [fde] messages as hard constraints from the engineer.
 Set "abstain": false.
 

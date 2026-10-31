@@ -33,6 +33,16 @@ const seminarId = `seminar-${Date.now()}`
 const seminar = actors.SeminarActor.get(seminarId)
 await seminar.start("client-1", "Add dark mode")
 
+// Listen on the live socket to prove agents stream "typing" text.
+const typingFrom = new Map<string, number>()
+const { websocketUrl } = await actors.SeminarActor.prepareWebsocket({ actorId: seminarId, metadata: null })
+const socket = new WebSocket(websocketUrl)
+socket.onmessage = event => {
+    const msg = JSON.parse(String(event.data))
+    if (msg.type === "typing") typingFrom.set(msg.from, (typingFrom.get(msg.from) ?? 0) + 1)
+}
+await new Promise(resolve => socket.addEventListener("open", resolve, { once: true }))
+
 for (const client of [c3, c5]) {
     const e = await client.respond("Add dark mode", await seminar.getEvents(), seminarId)
     await seminar.addEvent(e)
@@ -43,4 +53,8 @@ await seminar.addEvent(await c1.writePlan(await seminar.getEvents(), await semin
 await seminar.markDone()
 
 for (const e of await seminar.getEvents()) console.log(`[${e.type}] ${e.from}: ${e.text}${e.cites?.length ? `  (cites ${e.cites.join(", ")})` : ""}`)
-console.log(`\nSeminar ${seminarId} done.`)
+socket.close()
+const total = [...typingFrom.values()].reduce((x, y) => x + y, 0)
+console.log(`\nTyping messages received: ${total} ${JSON.stringify(Object.fromEntries(typingFrom))}`)
+console.log(total > 0 ? "PASS: streaming works" : "FAIL: no typing messages (debate still works, only live typing is missing)")
+console.log(`Seminar ${seminarId} done.`)
