@@ -16,7 +16,7 @@ beforeAll(() => {
 
 /** Wrap the fakes so tests can see what each actor was called with. */
 function spyActors(base = createFakeActors()) {
-  const calls = { challenge: [] as Event[][], plan: [] as string[][] };
+  const calls = { challenge: [] as Event[][], plan: [] as string[][], seminarIds: [] as (string | undefined)[] };
   let seminarId = "";
   const actors: Actors = {
     ...base,
@@ -25,8 +25,9 @@ function spyActors(base = createFakeActors()) {
       const real = base.client(id);
       return {
         ...real,
-        challenge: (t) => (calls.challenge.push(t), real.challenge(t)),
-        writePlan: (t, c) => (calls.plan.push(c), real.writePlan(t, c)),
+        respond: (r, t, s) => (calls.seminarIds.push(s), real.respond(r, t, s)),
+        challenge: (t, s) => (calls.challenge.push(t), calls.seminarIds.push(s), real.challenge(t, s)),
+        writePlan: (t, c, s) => (calls.plan.push(c), calls.seminarIds.push(s), real.writePlan(t, c, s)),
       };
     },
   };
@@ -50,10 +51,12 @@ test("seed data matches the contract and plants the dark-mode conflict", async (
 });
 
 test("a full fake debate runs in order and ends with the requester's plan", async () => {
-  const { actors } = spyActors();
+  const { actors, calls } = spyActors();
   const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode to the dashboard");
   await debate.done;
   const events = await actors.seminar(debate.seminarId).getEvents();
+  // Every agent call carries the seminar id, so real actors can stream "typing" to the socket.
+  expect(calls.seminarIds).toEqual(Array(11).fill(debate.seminarId));
 
   expect(debate.seminarId).toMatch(/^seminar-\d+$/);
   expect(events.map((e) => e.type)).toEqual([
@@ -85,7 +88,7 @@ test("FDE input added mid-debate reaches later turns and the plan", async () => 
   actors.client = (id) => {
     const c = client(id);
     if (id !== "client-2") return c;
-    return { ...c, respond: async (r, t) => (await addFdeInput(base, seminarId(), "Ship by Friday"), c.respond(r, t)) };
+    return { ...c, respond: async (r, t, s) => (await addFdeInput(base, seminarId(), "Ship by Friday"), c.respond(r, t, s)) };
   };
   const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode");
   await debate.done;

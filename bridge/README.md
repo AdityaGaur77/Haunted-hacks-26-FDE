@@ -52,9 +52,11 @@ CORS is open, no auth.
   from: "client-1".."client-5" | "fde", text: string, cites?: string[] /* agent ids */, ts: number }
 ```
 
-On the real socket (see `/actors`), the SeminarActor broadcasts `{ type: "event", event }` for each
-new event and emits `status` / `events`. The FDE can also jump in by sending `{ type: "fde", text }`
-over the socket, which is equivalent to `POST /seminar/:id/fde`.
+The real socket protocol is in `actors/SOCKET.md`. In short, the SeminarActor sends `state` /
+`state_update`, `{ type: "event", event }` for each new event, and `{ type: "typing", from, text }`
+while an agent is generating. The bridge passes the seminar id to every agent call, so typing
+streams. The FDE can also jump in by sending `{ type: "fde", text }` over the socket, which does the
+same as `POST /seminar/:id/fde`.
 
 ## Actors (switch to the real ones)
 
@@ -63,7 +65,7 @@ generated client from `./generated/index.js` or `../actors/generated/index.js` (
 
 | Actor | Methods the bridge calls |
 | --- | --- |
-| `ClientActor` (`client-1`..`client-5`) | `seed(profile, memories)` (replaces, so it's re-runnable; profile is `{ name, stack, constraints }`), `respond`, `challenge`, `writePlan` |
+| `ClientActor` (`client-1`..`client-5`) | `seed(profile, memories)` (replaces, so it's re-runnable; profile is `{ name, stack, constraints }`), plus `respond`, `challenge` and `writePlan`, each given the seminar id as its last argument |
 | `SeminarActor` (`seminar-<ts>`) | `start(client, request)`, `addEvent`, `getEvents`, `markDone`, and `prepareWebsocket` for the socket |
 
 The bridge forgives messy actor output: it forces `from` to the actor's id, fills in a missing

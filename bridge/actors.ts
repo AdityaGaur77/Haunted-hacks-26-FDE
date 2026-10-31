@@ -11,12 +11,13 @@ import type { ClientId, ClientProfile, Event, Memory } from "./types";
 export interface ClientActor {
   /** Load the profile and memories, REPLACING earlier data (so seeding twice is safe). Returns the memory count. */
   seed(profile: ClientProfile, memories: Memory[]): Promise<number | void>;
+  // `seminarId` lets the actor stream live "typing" text to that seminar's socket.
   /** Round 1: returns an Event of type "take" or "abstain". */
-  respond(request: string, transcript: Event[]): Promise<Event>;
+  respond(request: string, transcript: Event[], seminarId?: string): Promise<Event>;
   /** Round 2: returns an Event of type "challenge". */
-  challenge(transcript: Event[]): Promise<Event>;
+  challenge(transcript: Event[], seminarId?: string): Promise<Event>;
   /** Called on the requesting client: returns an Event of type "plan". */
-  writePlan(transcript: Event[], fdeConstraints: string[]): Promise<Event>;
+  writePlan(transcript: Event[], fdeConstraints: string[], seminarId?: string): Promise<Event>;
 }
 
 /** SeminarActor, id "seminar-<timestamp>". The debate's event log (source of truth). */

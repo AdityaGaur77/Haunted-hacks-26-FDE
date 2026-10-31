@@ -61,19 +61,21 @@ async function runRounds(ctx: Context, requestEvent: Event) {
   // Round 1: the requester briefs the council first, then everyone gives a take (or abstains).
   for (const id of [requester, ...others]) {
     const transcript = await readTranscript(ctx);
-    await turn(ctx, id, ["take", "abstain"], () => actors.client(id).respond(request, transcript));
+    await turn(ctx, id, ["take", "abstain"], () => actors.client(id).respond(request, transcript, seminarId));
   }
 
   // Round 2: everyone challenges; the requester goes last so it can react before planning.
   for (const id of [...others, requester]) {
     const transcript = await readTranscript(ctx);
-    await turn(ctx, id, ["challenge"], () => actors.client(id).challenge(transcript));
+    await turn(ctx, id, ["challenge"], () => actors.client(id).challenge(transcript, seminarId));
   }
 
   // Plan: written by the requesting client, honouring everything the FDE said.
   const transcript = await readTranscript(ctx);
   const fdeConstraints = transcript.filter((e) => e.type === "fde").map((e) => e.text);
-  const planned = await turn(ctx, requester, ["plan"], () => actors.client(requester).writePlan(transcript, fdeConstraints));
+  const planned = await turn(ctx, requester, ["plan"], () =>
+    actors.client(requester).writePlan(transcript, fdeConstraints, seminarId),
+  );
   if (!planned) {
     // Keep the UI from waiting forever: the frontend treats the "plan" event as the end of the debate.
     const text = "The plan could not be generated (see bridge logs). The debate above still stands.";
