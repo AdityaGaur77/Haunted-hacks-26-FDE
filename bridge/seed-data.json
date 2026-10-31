@@ -1,0 +1,193 @@
+{
+  "clients": [
+    {
+      "id": "client-1",
+      "name": "Lumen Analytics",
+      "stack": "Next.js 14, TypeScript, Tailwind CSS, ECharts via echarts-for-react (every dashboard is canvas charts), Postgres",
+      "constraints": [
+        "Charts are the product: any chart regression is a P1 incident",
+        "Customers export charts to PNG for board decks, and exports must stay print-friendly on a light background",
+        "Every UI change ships behind a feature flag with a staged rollout"
+      ],
+      "memories": [
+        {
+          "request": "Let customers export any dashboard chart as a PNG for board decks",
+          "solution": "Used the chart library's built-in image export at 2x pixel ratio instead of screenshotting the page",
+          "what_broke": "Exports had transparent backgrounds that turned black when pasted into some slide tools",
+          "fix": "Set an explicit white background on the export only, leaving the on-screen chart unchanged",
+          "stack": "Next.js, ECharts (echarts-for-react)",
+          "outcome": "Shipped in a week; export is now the second most-used feature"
+        },
+        {
+          "request": "Speed up dashboards that render 40+ charts",
+          "solution": "Mounted charts lazily as they scroll into view and sampled very large series before drawing",
+          "what_broke": "Charts that mounted inside hidden tabs rendered at zero width",
+          "fix": "Resized each chart when its tab becomes visible",
+          "stack": "Next.js, ECharts (echarts-for-react)",
+          "outcome": "Dashboard load time dropped from 9s to 2.5s"
+        },
+        {
+          "request": "Add SAML single sign-on for enterprise customers",
+          "solution": "Integrated SAML through our auth provider and mapped identity-provider groups to workspace roles",
+          "what_broke": "Users whose emails differed only by letter case got duplicate accounts",
+          "fix": "Normalized emails to lowercase before every account lookup",
+          "stack": "Next.js, NextAuth, Postgres",
+          "outcome": "Unblocked two enterprise deals"
+        }
+      ]
+    },
+    {
+      "id": "client-2",
+      "name": "Pinecrest Pay",
+      "stack": "Nuxt 3 (Vue), SCSS with design tokens, Node.js API, payment processor's hosted card-entry iframe",
+      "constraints": [
+        "PCI scope: no new third-party scripts on payment pages",
+        "Every partner credit union has its own brand theme",
+        "Releases go through a two-week compliance review"
+      ],
+      "memories": [
+        {
+          "request": "Per-partner color themes so each credit union sees its own brand",
+          "solution": "Generated one set of CSS variables per partner from our design tokens and swapped the set at login",
+          "what_broke": "The payment processor's hosted card-entry iframe ignored our CSS variables and stayed default blue",
+          "fix": "Passed the partner's colors through the processor's iframe styling options when the iframe mounts",
+          "stack": "Nuxt 3, SCSS, design tokens",
+          "outcome": "14 partners branded with zero custom code per partner. Lesson: CSS variables stop at iframe and third-party boundaries"
+        },
+        {
+          "request": "Speed up monthly statement PDF generation",
+          "solution": "Moved PDF rendering to a background queue and cached each partner's statement template",
+          "what_broke": "Brand fonts were missing in the containerized renderer, so statements fell back to a default serif font",
+          "fix": "Bundled the brand fonts into the renderer image",
+          "stack": "Node.js, headless Chrome, Redis queue",
+          "outcome": "Statement generation went from 6 hours to 40 minutes"
+        },
+        {
+          "request": "Add two-factor authentication to member logins",
+          "solution": "Authenticator-app codes with recovery codes, SMS only as a fallback",
+          "what_broke": "Members who changed phones got locked out and flooded support",
+          "fix": "Added self-serve recovery through a verified email with a 24-hour cooldown",
+          "stack": "Nuxt 3, Node.js, Postgres",
+          "outcome": "Account takeover reports dropped to zero; support volume was back to normal within two weeks"
+        }
+      ]
+    },
+    {
+      "id": "client-3",
+      "name": "Harbor Health",
+      "stack": "Next.js, Tailwind CSS, Radix UI primitives; no charting library (results are shown as accessible tables)",
+      "constraints": [
+        "WCAG 2.1 AA is a legal requirement: 4.5:1 contrast for text, 3:1 for UI components",
+        "Every UI change gets a screen-reader pass (NVDA and VoiceOver) before release",
+        "Respect OS settings: prefers-color-scheme and prefers-reduced-motion",
+        "No patient data in client-side logs or analytics"
+      ],
+      "memories": [
+        {
+          "request": "Add dark mode to the patient portal",
+          "solution": "Moved every color into CSS variables at the root, swapped them with a theme attribute, defaulted to the OS preference and remembered the user's choice",
+          "what_broke": "Nothing. It shipped in about 2 hours",
+          "fix": "None needed; we re-ran the contrast checker on both themes before release",
+          "stack": "Next.js, Tailwind CSS, Radix UI",
+          "outcome": "Shipped the same day, passed the WCAG AA audit in both themes, zero bug reports"
+        },
+        {
+          "request": "Make appointment booking usable with a screen reader",
+          "solution": "Rebuilt the date picker on accessible primitives with proper roles and live announcements",
+          "what_broke": "Focus jumped back to the top of the page after every step",
+          "fix": "Moved focus to each step's heading when the step changes",
+          "stack": "Next.js, Radix UI",
+          "outcome": "Passed the external accessibility audit; booking completion rose 18% among screen-reader users"
+        },
+        {
+          "request": "Show lab result trends to patients",
+          "solution": "Showed trends as accessible tables with plain-language summaries instead of adding a chart library",
+          "what_broke": "An early canvas chart prototype was invisible to screen readers",
+          "fix": "Dropped the canvas chart for a semantic table plus a small trend image with alt text",
+          "stack": "Next.js",
+          "outcome": "Audit passed; patients preferred the plain-language summaries"
+        },
+        {
+          "request": "Add an inactivity timeout for shared hospital kiosks",
+          "solution": "Warned two minutes before logout with an accessible dialog and an extend button",
+          "what_broke": "Screen-reader users could not reach the extend button before the session ended",
+          "fix": "The warning dialog now takes focus, and the warning window grew to five minutes",
+          "stack": "Next.js, Radix UI",
+          "outcome": "Met the hospital security policy with no accessibility complaints"
+        }
+      ]
+    },
+    {
+      "id": "client-4",
+      "name": "Atlas Freight",
+      "stack": "Go microservices, gRPC, Postgres, Kafka; public REST API and webhooks only, no customer-facing web UI",
+      "constraints": [
+        "99.95% uptime SLA",
+        "Public API changes must be backwards compatible and versioned",
+        "SOC 2: every change needs a reviewed pull request and an audit trail"
+      ],
+      "memories": [
+        {
+          "request": "Add rate limiting to the public API",
+          "solution": "Token bucket per API key at the gateway, with the remaining quota returned in response headers",
+          "what_broke": "One customer's retry storm hit the limit, and their retries multiplied the load",
+          "fix": "Returned Retry-After headers and documented exponential backoff in the API guide",
+          "stack": "Go, Envoy, Redis",
+          "outcome": "No more API brownouts during peak shipping season"
+        },
+        {
+          "request": "Deliver shipment status updates through webhooks",
+          "solution": "Outbox table plus a delivery worker with signed payloads and retries",
+          "what_broke": "Out-of-order deliveries made customers display stale statuses",
+          "fix": "Added sequence numbers and told customers to ignore older events",
+          "stack": "Go, Postgres, Kafka",
+          "outcome": "Webhooks now carry 80% of status traffic and polling dropped sharply"
+        },
+        {
+          "request": "Upgrade the rates database to a new Postgres version without downtime",
+          "solution": "Logical replication to the new cluster, then a 30-second read-only cutover",
+          "what_broke": "Sequences were not replicated, so the first inserts after cutover collided",
+          "fix": "Bumped every sequence past its current maximum id before the cutover",
+          "stack": "Postgres 12 to 16",
+          "outcome": "Cutover finished in 30 seconds during business hours"
+        }
+      ]
+    },
+    {
+      "id": "client-5",
+      "name": "Ridgeline Logistics",
+      "stack": "React 18, Vite, TypeScript, ECharts via echarts-for-react, Mapbox GL",
+      "constraints": [
+        "Dispatchers work night shifts on wall-mounted screens, so glare matters",
+        "The dashboard must stay live during a shift: no full page reloads",
+        "Ops leadership signs off on any visual change to the live map"
+      ],
+      "memories": [
+        {
+          "request": "Add dark mode to the fleet dashboard for night-shift dispatchers",
+          "solution": "Moved our colors into CSS variables and flipped them with a theme toggle, the usual pattern",
+          "what_broke": "The chart library ignored the CSS variables. ECharts paints on canvas from JavaScript options, so axis labels, legends and gridlines stayed dark-on-dark and unreadable, and tooltips stayed bright white. Dispatchers reported broken charts on the first night shift",
+          "fix": "Registered light and dark chart themes built from the same design tokens and passed the active one through the chart component's theme prop, re-rendering charts when the theme toggles",
+          "stack": "React, Vite, ECharts (echarts-for-react)",
+          "outcome": "Rolled back for two days, then reshipped with the theme prop; no chart issues since. Lesson: CSS variables reach DOM and SVG, not canvas charts"
+        },
+        {
+          "request": "Show 2,000 live trucks on the map without freezing",
+          "solution": "Replaced per-truck DOM markers with a clustered GPU layer and throttled position updates to once per second",
+          "what_broke": "Clicking a cluster near the screen edge zoomed to the wrong place",
+          "fix": "Used the map library's cluster expansion zoom instead of a fixed zoom step",
+          "stack": "React, Mapbox GL",
+          "outcome": "The map holds 60fps with more than 2,000 vehicles"
+        },
+        {
+          "request": "Export a shift report as CSV",
+          "solution": "Streamed the CSV from the API instead of building it in the browser",
+          "what_broke": "Spreadsheet apps mangled timestamps and dropped leading zeros from truck IDs",
+          "fix": "Wrote ISO timestamps and quoted the ID columns",
+          "stack": "Node.js, Postgres",
+          "outcome": "Dispatch leads use it every morning"
+        }
+      ]
+    }
+  ]
+}
