@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE Council</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c11;--sb:#0d1017;--surf:#11141c;--surf2:#161a24;--line:#1f2431;--line2:#2a3040;
+  --text:#e6e8ee;--text2:#aab0bf;--muted:#6f7788;
+  --primary:#6e8bff;--primary2:#8fa6ff;--cyan:#4fd1e8;--amber:#f5a524;--green:#3ecf8e;--pink:#f06aa8;--purple:#9b7cff;
+  --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;overflow:hidden}
+#app{display:grid;grid-template-columns:232px 1fr;grid-template-rows:52px 1fr;height:100vh}
+/* sidebar */
+.sb{grid-row:1/3;background:var(--sb);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px 12px;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
+.brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary),#4b63d6);display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff}
+.brand b{font-size:14px;font-weight:600;display:block;line-height:1.1}.brand small{color:var(--muted);font-size:11px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--text2);text-decoration:none;font-weight:500}
+.nav a.on{background:var(--surf2);color:var(--text)}.nav a .ic{width:16px;text-align:center;color:var(--muted)}
+.nav a .cnt{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.sb .sec{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:14px 10px 6px;font-weight:600}
+.client{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:var(--text2);cursor:default}
+.client .dot{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.04)}
+.client .nm{font-weight:500;color:var(--text);font-size:12.5px;line-height:1.15}.client .st{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.client .lock{margin-left:auto;color:var(--green);font-size:11px;opacity:.9}
+.sb .me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--line)}
+.sb .me .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--pink),#b23a7a);display:grid;place-items:center;font-weight:600;font-size:12px}
+.sb .me b{display:block;font-size:12.5px}.sb .me small{color:var(--muted);font-size:11px}
+/* topbar */
+.top{display:flex;align-items:center;gap:14px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--sb)}
+.crumb{color:var(--muted);font-size:12.5px}.crumb b{color:var(--text);font-weight:600}
+.steps{display:flex;gap:4px;margin-left:12px}
+.step{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11.5px;color:var(--muted);border:1px solid transparent}
+.step i{width:16px;height:16px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+.step.on{color:var(--text);border-color:var(--line2);background:var(--surf2)}.step.on i{background:var(--primary);border-color:var(--primary);color:#fff}
+.step.done i{background:var(--green);border-color:var(--green);color:#042;}.step.done{color:var(--text2)}
+.top .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;padding:4px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--text2)}
+.pill i{width:6px;height:6px;border-radius:50%;background:var(--muted)}.pill.live i{background:var(--green);box-shadow:0 0 8px var(--green)}
+button{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--text);background:var(--surf2);border:1px solid var(--line2);padding:7px 12px;border-radius:8px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--primary)}
+button.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+button.ghost{background:transparent}
+/* main grid */
+.main{display:grid;grid-template-columns:1fr 400px;grid-template-rows:1fr 220px;gap:14px;padding:14px;min-height:0}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:12px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.card>h3{margin:0;padding:12px 16px;border-bottom:1px solid var(--line);font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:10px}
+.card>h3 .r{margin-left:auto;display:flex;gap:6px;align-items:center;font-weight:400;color:var(--muted);font-family:var(--mono);font-size:10.5px}
+/* council view */
+.council{position:relative;flex:1;min-height:0;display:grid;place-items:center;background:
+  radial-gradient(700px 320px at 50% 0%,rgba(110,139,255,.08),transparent 60%),var(--surf)}
+.council svg{width:100%;height:100%;max-height:100%}
+.ov{position:absolute;inset:0;pointer-events:none}
+.bubble{position:absolute;transform:translate(-50%,-100%);max-width:240px;background:var(--surf2);border:1px solid var(--line2);border-radius:10px;padding:8px 11px;font-size:12px;line-height:1.4;box-shadow:0 12px 40px -12px #000;pointer-events:none}
+.bubble .who{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.bubble.objection{border-color:var(--amber)}.bubble.fde{border-color:var(--pink)}.bubble.plan{border-color:var(--green)}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;background:inherit;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);transform:translateX(-50%) rotate(45deg)}
+.knock{position:absolute;transform:translate(-50%,-50%);font-family:var(--mono);font-size:11px;color:var(--text);background:var(--surf2);border:1px solid var(--line2);padding:4px 8px;border-radius:999px}
+.overlayrow{position:absolute;left:16px;right:16px;bottom:14px;display:flex;gap:10px;align-items:flex-end;pointer-events:none}
+.kpi{background:rgba(13,16,23,.85);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:118px;backdrop-filter:blur(6px)}
+.kpi .n{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1.1}.kpi .l{font-size:10.5px;color:var(--muted);margin-top:2px}
+.kpi.g .n{color:var(--green)}.kpi.c .n{color:var(--cyan)}.kpi.p .n{color:var(--pink)}
+.narr{position:absolute;left:16px;top:14px;right:16px;display:flex;gap:10px;align-items:flex-start;pointer-events:none}
+.narr .box{background:rgba(13,16,23,.85);border:1px solid var(--line);border-radius:10px;padding:9px 13px;max-width:560px;backdrop-filter:blur(6px)}
+.narr .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--primary2);margin-bottom:2px}
+.narr .t{font-size:13.5px;font-weight:600}.narr .s{font-size:12px;color:var(--text2);margin-top:2px}
+.narr.warn .k{color:var(--amber)}.narr.fde .k{color:var(--pink)}.narr.ok .k{color:var(--green)}
+/* svg states */
+.win .pane{fill:#0e1118;transition:fill .35s}
+.win .glow{opacity:0;transition:opacity .35s}
+.win .ghost{opacity:.28;transition:opacity .3s,transform .3s}
+.win .tag{fill:#aab0bf;font-family:'Inter';font-size:9px;font-weight:600}
+.win .id{fill:#6f7788;font-family:'JetBrains Mono';font-size:7px}
+.win .st{fill:#6f7788;font-family:'JetBrains Mono';font-size:6.5px;letter-spacing:.08em;text-transform:uppercase}
+.win.thinking .pane{fill:#171b26}.win.thinking .ghost{opacity:.7;animation:bob 1s infinite}.win.thinking .st{fill:#aab0bf}
+.win.asking .pane{fill:#1a1830}.win.asking .glow{opacity:.8;fill:var(--purple)}.win.asking .ghost{opacity:1}.win.asking .st{fill:var(--purple)}
+.win.speaking .pane{fill:#0f2230}.win.speaking .glow{opacity:1;fill:var(--cyan)}.win.speaking .ghost{opacity:1;animation:bob .6s infinite}.win.speaking .st{fill:var(--cyan)}
+.win.objecting .pane{fill:#2a1b08}.win.objecting .glow{opacity:1;fill:var(--amber)}.win.objecting .ghost{opacity:1;animation:shake .35s infinite}.win.objecting .st{fill:var(--amber)}
+.win.reeval .pane{fill:#2a1220}.win.reeval .glow{opacity:.9;fill:var(--pink)}.win.reeval .ghost{opacity:1}.win.reeval .st{fill:var(--pink)}
+.win.walled .pane{fill:#0b2018}.win.walled .glow{opacity:.9;fill:var(--green)}.win.walled .ghost{opacity:1}.win.walled .st{fill:var(--green)}
+.win .lock{opacity:0;transition:.3s}.win.walled .lock{opacity:1}
+@keyframes bob{50%{transform:translateY(-3px)}}@keyframes shake{25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+.relay{opacity:.25;transition:opacity .4s}.relay.on{opacity:1}
+.fire{opacity:.45;transition:.4s}.fire.on{opacity:1}
+.pk{filter:drop-shadow(0 0 4px currentColor)}
+.flick{animation:flk .12s 6}@keyframes flk{50%{opacity:.3}}
+.door{transform-origin:272px 318px;transition:transform .5s}.door.open{transform:rotateY(70deg)}
+/* transcript */
+.feed{flex:1;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth}
+.msg{opacity:0;transform:translateY(4px);animation:in .3s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.msg .who{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:3px;display:flex;gap:8px;align-items:center}.msg .who b{font-weight:500}
+.msg .b{background:var(--surf2);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.5}
+.msg.lesson .b{border-color:rgba(79,209,232,.35)}.msg.objection .b{border-color:rgba(245,165,36,.5)}.msg.revision .b{border-color:rgba(62,207,142,.4)}
+.msg.none .b{opacity:.55;font-size:12px;padding:6px 10px}.msg.fde .b{border-color:var(--pink)}.msg.request .b{border-color:var(--purple)}
+.msg.moderator .b{border-style:dashed;background:transparent;color:var(--text2);font-size:12px}
+.chip{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-radius:999px;border:1px solid var(--line2);color:var(--muted)}
+.chip.cite{border-color:rgba(79,209,232,.4);color:var(--cyan)}.chip.red{border-color:rgba(62,207,142,.4);color:var(--green)}
+.meta{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.cursor{display:inline-block;width:6px;height:12px;background:var(--cyan);vertical-align:-2px;margin-left:2px;animation:blink .7s infinite}@keyframes blink{50%{opacity:.2}}
+.sys{align-self:center;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;opacity:0;animation:in .4s forwards;text-align:center}
+/* override + plan */
+.override{padding:12px 14px;border-top:1px solid var(--line);background:var(--surf)}
+.override label{font-size:11px;font-weight:600;color:var(--pink);display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.override label .hint{margin-left:auto;color:var(--muted);font-weight:400;font-family:var(--mono);font-size:10px}
+.override .row{display:flex;gap:8px}
+.override input{flex:1;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surf2);border:1px solid var(--line2);border-radius:8px;padding:9px 12px;outline:none;transition:.2s}
+.override input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(240,106,168,.15)}
+.override.armed input{border-color:var(--pink);animation:arm 1.3s infinite}
+@keyframes arm{0%,100%{box-shadow:0 0 0 3px rgba(240,106,168,.15)}50%{box-shadow:0 0 0 6px rgba(240,106,168,.05)}}
+.override button{background:var(--pink);border-color:var(--pink);color:#2a0a18}
+/* bottom row */
+.bottom{grid-column:1/3;display:grid;grid-template-columns:1fr 1fr 400px;gap:14px;min-height:0}
+.log{flex:1;overflow:auto;font-family:var(--mono);font-size:11px;padding:8px 12px;display:flex;flex-direction:column;gap:3px}
+.log .ln{display:grid;grid-template-columns:62px 72px 1fr;gap:10px;color:var(--text2);opacity:0;animation:in .25s forwards}
+.log .ln .t{color:var(--muted)}.log .ln .a{font-weight:500}.log .ln.ok .m{color:var(--green)}.log .ln.warn .m{color:var(--amber)}.log .ln.fde .m{color:var(--pink)}
+.plan{flex:1;overflow:auto;padding:12px 14px}
+.plan .empty{color:var(--muted);font-size:12px;text-align:center;padding:30px 10px}
+.plan ol{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:7px;font-size:12.3px}
+.plan li{opacity:0;animation:in .4s forwards}
+.plan li .src{font-family:var(--mono);font-size:9.5px;margin-left:6px;padding:1px 6px;border-radius:999px;border:1px solid var(--line2);color:var(--muted)}
+.plan .actions{margin-top:10px;display:flex;gap:8px}
+.arch{flex:1;overflow:auto;padding:8px 12px}
+.arch .row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}
+.arch .row .k{font-family:var(--mono);font-size:10px;color:var(--muted)}.arch .row b{font-weight:500}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surf2);border:1px solid var(--green);padding:9px 14px;border-radius:10px;font-size:12.5px;opacity:0;transition:.3s;z-index:60}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media (max-width:1280px){.main{grid-template-columns:1fr 340px}.bottom{grid-template-columns:1fr 1fr 340px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="sb">
+    <div class="brand"><div class="logo">FC</div><div><b>FDE Council</b><small>Forward-deployed engineering</small></div></div>
+    <nav class="nav">
+      <a href="#" class="on"><span class="ic">◉</span>Council<span class="cnt" id="nav-live">idle</span></a>
+      <a href="#"><span class="ic">▤</span>Requests<span class="cnt">1</span></a>
+      <a href="#"><span class="ic">▦</span>Plan archive<span class="cnt" id="nav-arch">0</span></a>
+      <a href="#"><span class="ic">⚙</span>Settings</a>
+    </nav>
+    <div class="sec">Client actors · sealed</div>
+    <div id="clients"></div>
+    <div class="me"><div class="av">GF</div><div><b>Geart · FDE</b><small>house owner · can override</small></div></div>
+  </aside>
+  <header class="top">
+    <div class="crumb">Council / <b id="reqname">No active request</b></div>
+    <div class="steps" id="steps"></div>
+    <div class="sp"></div>
+    <span class="pill" id="modepill"><i></i>replay</span>
+    <button class="ghost" id="sndbtn">🔊</button>
+    <button class="ghost" id="resetbtn">Reset</button>
+    <button class="primary" id="startbtn">▶ Run request</button>
+  </header>
+  <main class="main">
+    <section class="card">
+      <h3>Council view <span class="r"><span id="viewhint">five sealed windows · one relay · one owner</span></span></h3>
+      <div class="council" id="council">
+        <svg id="svg" viewBox="0 0 560 360" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="moonG"><stop offset="0" stop-color="#fff2cf"/><stop offset="1" stop-color="#f5d78a"/></radialGradient>
+            <linearGradient id="relayG" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4fd1e8" stop-opacity="0"/><stop offset=".5" stop-color="#4fd1e8" stop-opacity=".9"/><stop offset="1" stop-color="#6e8bff" stop-opacity="0"/></linearGradient>
+            <filter id="bl"><feGaussianBlur stdDeviation="6"/></filter>
+            <filter id="bl2"><feGaussianBlur stdDeviation="2"/></filter>
+            <symbol id="ghost" viewBox="-20 -24 40 50"><path d="M0,-20 a14,14 0 0 1 14,14 v22 l-4.7,-4 -4.7,4 -4.6,-4 -4.6,4 -4.7,-4 -4.7,4 v-22 a14,14 0 0 1 14,-14 z" fill="#e6e8ee"/><circle cx="-5" cy="-6" r="2.2" fill="#161a24"/><circle cx="5" cy="-6" r="2.2" fill="#161a24"/></symbol>
+          </defs>
+          <!-- sky details (subtle halloween) -->
+          <circle cx="500" cy="48" r="40" fill="#f5d78a" opacity=".12" filter="url(#bl)"/>
+          <circle cx="500" cy="48" r="18" fill="url(#moonG)"/>
+          <g fill="#aab0bf" opacity=".5"><circle cx="60" cy="40" r="1"/><circle cx="120" cy="22" r="1.2"/><circle cx="200" cy="50" r=".8"/><circle cx="380" cy="30" r="1"/><circle cx="440" cy="80" r=".9"/><circle cx="90" cy="90" r=".7"/></g>
+          <path d="M150,70 q6,-7 12,0 q4,-5 8,0 q-4,3 -8,1 q-6,6 -12,0 q-4,3 -8,1 q4,-5 8,-2z" fill="#161a24"/>
+          <path d="M400,110 q5,-6 10,0 q3,-4 6,0 q-3,2 -6,1 q-5,5 -10,0 q-3,2 -6,1 q3,-4 6,-2z" fill="#161a24"/>
+          <!-- ground -->
+          <rect x="0" y="330" width="560" height="30" fill="#0b0d13"/>
+          <g fill="#171b26"><path d="M40,330 v-16 a7,7 0 0 1 14,0 v16z"/><path d="M70,330 v-10 a5,5 0 0 1 10,0 v10z"/><path d="M490,330 v-14 a6,6 0 0 1 12,0 v14z"/><path d="M520,330 v-9 a5,5 0 0 1 10,0 v9z"/></g>
+          <g stroke="#1f2431" stroke-width="1.5" fill="none"><path d="M30,290 v40 M30,300 q-8,-14 -18,-18 M30,296 q10,-16 20,-18"/><path d="M535,285 v45 M535,296 q-9,-13 -18,-16 M535,292 q9,-15 19,-17"/></g>
+          <!-- house -->
+          <path d="M140,118 L280,60 L420,118 Z" fill="#1a1e2b"/><path d="M140,118 L280,60 L420,118" fill="none" stroke="#2a3040" stroke-width="1.5"/>
+          <rect x="380" y="78" width="14" height="36" fill="#171b26"/><rect x="378" y="76" width="18" height="5" fill="#2a3040"/>
+          <rect x="150" y="118" width="260" height="212" fill="#12151e" stroke="#2a3040" stroke-width="1.5"/>
+          <line x1="150" y1="188" x2="410" y2="188" stroke="#1f2431"/><line x1="150" y1="258" x2="410" y2="258" stroke="#1f2431"/>
+          <!-- relay column -->
+          <g class="relay" id="relay">
+            <rect x="262" y="124" width="36" height="200" fill="url(#relayG)" opacity=".5" filter="url(#bl2)"/>
+            <g stroke="#4fd1e8" stroke-width="1" opacity=".6"><path d="M266,180 l28,-8 M266,170 l28,-8 M266,160 l28,-8 M266,150 l28,-8 M266,140 l28,-8"/><path d="M266,250 l28,-8 M266,240 l28,-8 M266,230 l28,-8 M266,220 l28,-8 M266,210 l28,-8"/></g>
+            <text x="280" y="132" text-anchor="middle" fill="#4fd1e8" font-family="JetBrains Mono" font-size="6.5" letter-spacing="1.5" opacity=".9">RELAY</text>
+          </g>
+          <g id="wins"></g>
+          <!-- balcony + FDE -->
+          <g id="fde" transform="translate(280,214)">
+            <rect x="-30" y="16" width="60" height="4" fill="#2a3040"/>
+            <g stroke="#2a3040" stroke-width="1.5"><line x1="-28" y1="16" x2="-28" y2="4"/><line x1="-14" y1="16" x2="-14" y2="4"/><line x1="0" y1="16" x2="0" y2="4"/><line x1="14" y1="16" x2="14" y2="4"/><line x1="28" y1="16" x2="28" y2="4"/><line x1="-30" y1="4" x2="30" y2="4"/></g>
+            <g id="fdefig"><circle cx="0" cy="-16" r="5.5" fill="#f1d2b6"/><path d="M-6,-19 q6,-9 12,0z" fill="#2a3040"/><path d="M-7,-9 h14 l3,20 h-20z" fill="#f06aa8"/><rect x="11" y="-4" width="5" height="8" rx="1.5" fill="#f5a524"/><circle cx="13.5" cy="0" r="9" fill="#f5a524" opacity=".25" filter="url(#bl2)"/></g>
+            <text x="0" y="30" text-anchor="middle" fill="#f06aa8" font-family="JetBrains Mono" font-size="6.5" letter-spacing="1.2">FDE · OWNER</text>
+          </g>
+          <!-- seminar fire in foyer -->
+          <g id="fire" class="fire" transform="translate(280,300)">
+            <path d="M-9,18 q3,-12 6,-5 q1,-10 5,-2 q3,-8 5,0 q3,-6 5,8z" fill="#3ecf8e" opacity=".9"/>
+            <path d="M-14,20 q0,10 14,10 q14,0 14,-10z" fill="#171b26" stroke="#2a3040"/><ellipse cx="0" cy="20" rx="14" ry="3.5" fill="#1f2431"/>
+            <ellipse cx="0" cy="20" rx="10" ry="2" fill="#3ecf8e" id="brew"/>
+            <text x="0" y="-8" text-anchor="middle" fill="#6f7788" font-family="JetBrains Mono" font-size="6" letter-spacing="1.2">SEMINAR</text>
+          </g>
+          <!-- door -->
+          <g><path d="M260,330 v-30 a20,20 0 0 1 40,0 v30z" fill="#0b0d13"/><g id="door" class="door"><path d="M262,330 v-29 a18,18 0 0 1 36,0 v29z" fill="#1f2431" stroke="#2a3040"/><circle cx="292" cy="312" r="1.6" fill="#f5a524"/></g></g>
+          <!-- pumpkins -->
+          <g fill="#f5a524"><circle cx="246" cy="326" r="5"/><circle cx="315" cy="326" r="4.2"/></g><g fill="#0b0d13"><path d="M243,324 l2,2 h-3z M248,324 l-2,2 h3z M244,328 q2,2 4,0"/></g>
+          <circle cx="246" cy="326" r="10" fill="#f5a524" opacity=".18" filter="url(#bl2)"/><circle cx="315" cy="326" r="9" fill="#f5a524" opacity=".16" filter="url(#bl2)"/>
+          <!-- archive window (ground right) -->
+          <g transform="translate(372,296)"><rect x="-26" y="-22" width="52" height="40" rx="3" fill="#0e1118" stroke="#2a3040"/><g fill="#2a3040"><rect x="-20" y="-16" width="6" height="12"/><rect x="-12" y="-14" width="5" height="10"/><rect x="-5" y="-17" width="6" height="13"/><rect x="4" y="-15" width="5" height="11"/><rect x="11" y="-12" width="7" height="8"/></g><g id="books"></g><text x="0" y="12" text-anchor="middle" fill="#6f7788" font-family="JetBrains Mono" font-size="6" letter-spacing="1">ARCHIVE</text></g>
+          <!-- trick or treater -->
+          <g id="kid" transform="translate(-30,318)"><g id="kidbody"><rect x="-4" y="0" width="3.5" height="11" fill="#2a3040"/><rect x="1" y="0" width="3.5" height="11" fill="#2a3040"/><path d="M-7,-14 h14 l2,15 h-18z" fill="#4b4a8a"/><circle cx="0" cy="-20" r="7" fill="#f5a524"/><path d="M-3,-22 l2,3 h-4z M3,-22 l-2,3 h4z M-3,-17 q3,3 6,0" fill="#1a0d00"/><g id="bag" transform="translate(10,-3)"><path d="M-5,-5 h10 l1,11 h-12z" fill="#5a2a0a"/><g id="bagcandy"></g></g></g></g>
+          <circle id="ring" cx="280" cy="214" r="0" fill="none" stroke="#f06aa8" stroke-width="2" opacity="0"/>
+          <text x="280" y="352" text-anchor="middle" fill="#3b4252" font-family="JetBrains Mono" font-size="6.5" letter-spacing="1.5">EVERY WINDOW IS SEALED · ONLY LESSONS USE THE RELAY</text>
+        </svg>
+        <div class="ov" id="ov"></div>
+        <div class="narr" id="narr"><div class="box"><div class="k" id="narr-k">Ready</div><div class="t" id="narr-t">Run a request to watch the council work.</div><div class="s" id="narr-s">Each window is one client's sealed actor. The relay carries lessons only.</div></div></div>
+        <div class="overlayrow">
+          <div class="kpi g"><div class="n" id="k-cross">0</div><div class="l">cross-client reads</div></div>
+          <div class="kpi c"><div class="n" id="k-relay">0</div><div class="l">relay messages</div></div>
+          <div class="kpi g"><div class="n" id="k-redact">0</div><div class="l">fields redacted</div></div>
+          <div class="kpi p"><div class="n" id="k-fde">0</div><div class="l">owner overrides</div></div>
+          <div class="kpi"><div class="n" id="k-lat">—</div><div class="l">median relay latency</div></div>
+        </div>
+      </div>
+      <div class="override" id="override">
+        <label>Owner override <span class="hint">Enter to send · empty Enter uses the suggestion · propagates to all actors mid-debate</span></label>
+        <div class="row"><input id="fdeinput" placeholder="Add a constraint the council must respect…" autocomplete="off"><button id="sendbtn">Send override</button></div>
+      </div>
+    </section>
+    <section class="card">
+      <h3>Relay transcript <span class="r"><span id="livedot">replay</span></span></h3>
+      <div class="feed" id="feed"></div>
+    </section>
+    <div class="bottom">
+      <section class="card"><h3>Agents at work <span class="r">background activity · per actor</span></h3><div class="log" id="log"></div></section>
+      <section class="card"><h3>Plan · with provenance <span class="r" id="planstat">waiting for consensus</span></h3><div class="plan" id="plan"><div class="empty">The plan appears once the council agrees. Every step is tagged with the client whose lesson it came from.</div></div></section>
+      <section class="card"><h3>Plan archive <span class="r">Supabase · no private data</span></h3><div class="arch" id="arch"><div class="empty" style="color:var(--muted);font-size:12px;padding:14px 4px;text-align:center">No plans shelved yet.</div></div></section>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- data ---------- */
+const CLIENTS=[
+  {id:'client-1',name:'Northwind Analytics',room:'1st floor · west',stack:'Next.js · Recharts · Postgres',color:'#9b7cff',x:205,y:223,mem:12},
+  {id:'client-2',name:'Harbor Logistics',room:'1st floor · east',stack:'Django · HTMX · MySQL',color:'#6e8bff',x:355,y:223,mem:7},
+  {id:'client-3',name:'Lumen Health',room:'attic · west',stack:'React · D3 · Supabase',color:'#4fd1e8',x:205,y:153,mem:19},
+  {id:'client-4',name:'Atlas Fintech',room:'attic · east',stack:'Vue · ECharts · Snowflake',color:'#3ecf8e',x:355,y:153,mem:9},
+  {id:'client-5',name:'Orbit Retail',room:'ground · west',stack:'Next.js · Recharts · BigQuery',color:'#f5a524',x:205,y:293,mem:15},
+];
+const BY=Object.fromEntries(CLIENTS.map(c=>[c.id,c]));
+const COLOR=id=>id==='FDE'||id==='fde'?'#f06aa8':(BY[id]?.color||'#6f7788');
+const REDACT={lesson:['source code','credentials','customer names','repo paths'],objection:['source code','incident ticket id','customer names'],revision:['source code','repo paths'],none:[]};
+const STEPS=['Request','Memory lookup','Debate','Owner override','Plan','Archive'];
+
+const SCRIPT=[
+  {t:100,type:'step',n:0},{t:0,type:'narr',k:'01 · request',t_:'A client submits a request to the FDE.',s:'Client 1 asks for dark mode. The request is addressed to its own actor only.'},
+  {t:300,type:'arrive'},
+  {t:200,type:'request',from:'client-1',text:'Add dark mode to the analytics dashboard. Marketing wants it before the Q4 launch.'},
+  {t:200,type:'status',agent:'client-1',state:'asking'},
+  {t:300,type:'step',n:1},{t:0,type:'narr',k:'02 · memory lookup',t_:'The request is broadcast on the relay. Every other actor searches its own client memory.',s:'Actors can return a lesson or "no relevant experience". Code, credentials and names never leave the actor.'},
+  {t:200,type:'sys',text:'request broadcast · 4 actors searching private memory'},
+  {t:80,type:'status',agent:'client-2',state:'thinking'},{t:80,type:'status',agent:'client-3',state:'thinking'},{t:80,type:'status',agent:'client-4',state:'thinking'},{t:80,type:'status',agent:'client-5',state:'thinking'},
+  {t:200,type:'log',a:'client-3',m:'memory.search("dark mode") → 3 hits · 19 records scanned',c:''},{t:150,type:'log',a:'client-5',m:'memory.search("dark mode") → 2 hits · incident #142 matched',c:'warn'},{t:150,type:'log',a:'client-2',m:'memory.search("dark mode") → 0 hits',c:''},{t:150,type:'log',a:'client-4',m:'memory.search("dark mode") → 0 hits · change-control flag set',c:''},
+  {t:500,type:'step',n:2},{t:0,type:'narr',k:'03 · debate',t_:'Actors share lessons and challenge each other on the relay.',s:'Each message is scoped and redacted before it leaves the actor.'},
+  {t:300,type:'status',agent:'client-3',state:'speaking'},
+  {t:0,type:'log',a:'client-3',m:'redact(lesson) → stripped: source code, credentials, customer names, repo paths',c:'ok'},
+  {t:50,type:'message',from:'client-3',kind:'lesson',cites:'client-3',text:'We shipped dark mode in about two hours. CSS custom properties on :root, a data-theme attribute toggled by a tiny hook, preference persisted in localStorage. No component rewrites, and our D3 charts picked up the colours because they read computed styles.'},
+  {t:300,type:'status',agent:'client-3',state:'idle'},
+  {t:300,type:'status',agent:'client-2',state:'speaking'},
+  {t:50,type:'message',from:'client-2',kind:'none',text:'No relevant experience. Server-rendered Django, no theming layer.'},
+  {t:200,type:'status',agent:'client-2',state:'idle'},
+  {t:200,type:'status',agent:'client-4',state:'speaking'},
+  {t:50,type:'message',from:'client-4',kind:'none',text:'No relevant experience. Theming is blocked by change control on our side.'},
+  {t:200,type:'status',agent:'client-4',state:'idle'},
+  {t:500,type:'status',agent:'client-5',state:'objecting'},
+  {t:0,type:'narr',k:'04 · objection',t_:'Client 5 objects: the same approach broke all of its charts.',s:'The conflict surfaces in seconds, before any code is written.',cls:'warn'},
+  {t:0,type:'log',a:'client-5',m:'redact(objection) → stripped: source code, incident ticket id, customer names',c:'ok'},
+  {t:50,type:'message',from:'client-5',kind:'objection',cites:'client-5',text:'Objection. We tried exactly that CSS-variable approach and it broke every chart. Recharts resolves colours as props at render time, not from CSS, so the SVG stayed light-mode on a dark page. We lost half a day. Client 1 is on Recharts too.'},
+  {t:700,type:'status',agent:'client-5',state:'idle'},
+  {t:300,type:'status',agent:'client-3',state:'speaking'},
+  {t:50,type:'message',from:'client-3',kind:'lesson',cites:'client-3',text:'Fair. We never hit that because D3 lets us pass computed styles directly. The chart layer is the real risk here, not the shell.'},
+  {t:300,type:'status',agent:'client-3',state:'idle'},
+  {t:400,type:'message',from:'moderator',kind:'moderator',text:'Conflict on the chart layer: swap the chart library, or keep Recharts and inject tokens. Waiting for the owner.'},
+  {t:200,type:'step',n:3},{t:0,type:'narr',k:'05 · owner override',t_:'The debate pauses. The FDE can inject a constraint that every actor must respect.',s:'Type your own or press Enter for the suggested one.',cls:'fde'},
+  {t:200,type:'await-fde',suggestion:'Client 1 cannot change chart libraries. Recharts stays.'},
+];
+const AFTER_FDE=[
+  {t:150,type:'reeval',agents:['client-2','client-3','client-4','client-5']},
+  {t:0,type:'narr',k:'06 · live re-evaluation',t_:'The constraint reaches all four actors mid-debate. They adapt without restarting.',s:'This is the real-time part: a human steering a running multi-agent debate.',cls:'fde'},
+  {t:200,type:'sys',text:'override accepted by 4 actors · re-evaluating'},
+  {t:100,type:'log',a:'client-3',m:'constraint.accept(recharts_locked=true) → re-planning',c:'fde'},{t:100,type:'log',a:'client-5',m:'constraint.accept(recharts_locked=true) → fix #142 now applicable',c:'fde'},{t:100,type:'log',a:'client-2',m:'constraint.accept → no change',c:'fde'},{t:100,type:'log',a:'client-4',m:'constraint.accept → no change',c:'fde'},
+  {t:900,type:'status',agent:'client-5',state:'speaking'},
+  {t:50,type:'message',from:'client-5',kind:'revision',cites:'client-5',text:'Then the fix we eventually used applies directly. Read the theme tokens with getComputedStyle at mount, pass them to Recharts as props, and subscribe charts to a themechange event so they re-render. Recharts stays. About 40 minutes.'},
+  {t:300,type:'status',agent:'client-5',state:'idle'},
+  {t:300,type:'status',agent:'client-3',state:'speaking'},
+  {t:50,type:'message',from:'client-3',kind:'revision',cites:'client-3',text:'Agreed. Combine both: CSS variables for the app shell, explicit token injection for the chart layer, one themechange event bridging them.'},
+  {t:300,type:'status',agent:'client-3',state:'idle'},
+  {t:400,type:'message',from:'moderator',kind:'moderator',text:'Consensus reached. Drafting the plan for Client 1 with sources.'},
+  {t:200,type:'step',n:4},{t:0,type:'narr',k:'07 · plan',t_:'Consensus. The plan is drafted and every step carries its source.',s:'Client 1\'s own actor delivers it. Nothing from another client crosses the door.',cls:'ok'},
+  {t:500,type:'plan',for:'client-1',title:'Dark mode for Northwind Analytics',steps:[
+    {text:'Theme tokens as CSS variables on :root, toggled via data-theme, persisted in localStorage.',source:'client-3'},
+    {text:'Keep Recharts. Inject colours as props read from getComputedStyle at mount.',source:'client-5'},
+    {text:'Emit a themechange event and re-render charts on it so SVG never drifts from the shell.',source:'client-5'},
+    {text:'Do not swap chart libraries. Constraint from the owner.',source:'FDE'},
+    {text:'Test on Safari: tooltip clipping already seen in this deployment.',source:'client-1'},
+  ]},
+  {t:300,type:'deliver'},
+  {t:200,type:'step',n:5},{t:0,type:'narr',k:'08 · done',t_:'Delivered. 2 lessons, 1 objection, 1 override, 0 bytes of private data moved.',s:'Shelve the plan to the archive, or click any window to test the privacy wall.',cls:'ok'},
+  {t:300,type:'sys',text:'session closed · 2 lessons · 1 objection · 1 override · 0 cross-client reads'},
+];
+
+/* ---------- sound ---------- */
+let AC=null,sound=true;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
+function tone(f,d=.12,type='sine',g=.05,t0=0){const a=ac();if(!a||!sound)return;const o=a.createOscillator(),v=a.createGain();o.type=type;o.frequency.value=f;o.connect(v);v.connect(a.destination);const s=a.currentTime+t0;v.gain.setValueAtTime(g,s);v.gain.exponentialRampToValueAtTime(.0001,s+d);o.start(s);o.stop(s+d+.02)}
+const SFX={knock(){tone(90,.15,'triangle',.18);tone(80,.18,'triangle',.18,.25)},msg(){tone(720,.12,'sine',.03)},object(){tone(170,.25,'sawtooth',.04)},shout(){tone(520,.08,'square',.03);tone(780,.14,'square',.03,.09)},candy(){tone(1040,.12,'sine',.04);tone(1320,.2,'sine',.04,.1)},lock(){tone(200,.07,'square',.05);tone(170,.09,'square',.05,.09)}};
+
+/* ---------- build ---------- */
+const $=s=>document.querySelector(s);const NS='http://www.w3.org/2000/svg';
+const svg=$('#svg'),ov=$('#ov'),feed=$('#feed'),logEl=$('#log');
+function el(n,a={},p){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+(function buildSteps(){$('#steps').innerHTML=STEPS.map((s,i)=>`<div class="step" data-i="${i}"><i>${i+1}</i>${s}</div>`).join('')})();
+function setStep(n){[...document.querySelectorAll('.step')].forEach((e,i)=>{e.className='step'+(i<n?' done':i===n?' on':'')})}
+(function buildClients(){$('#clients').innerHTML=CLIENTS.map(c=>`<div class="client" id="cl-${c.id}"><span class="dot" style="background:${c.color}"></span><div><div class="nm">${c.name}</div><div class="st" id="cst-${c.id}">idle · ${c.mem} records</div></div><span class="lock" title="sealed actor">🔒</span></div>`).join('')})();
+const wins={};
+(function buildWins(){const g=$('#wins');CLIENTS.forEach(c=>{
+  const w=el('g',{class:'win',id:'win-'+c.id,transform:`translate(${c.x},${c.y})`,style:'cursor:pointer'},g);w.addEventListener('click',()=>askRoom(c.id));
+  el('rect',{x:-40,y:-30,width:80,height:56,rx:4,class:'pane'},w);
+  el('rect',{x:-40,y:-30,width:80,height:56,rx:4,class:'glow',filter:'url(#bl2)'},w);
+  el('rect',{x:-40,y:-30,width:80,height:56,rx:4,fill:'none',stroke:'#2a3040','stroke-width':1.2},w);
+  const gh=el('g',{class:'ghost',style:'transform-box:fill-box;transform-origin:center'},w);el('use',{href:'#ghost',x:-13,y:-20,width:26,height:32},gh);
+  const lock=el('g',{class:'lock'},w);el('rect',{x:28,y:14,width:8,height:7,rx:1.5,fill:'#3ecf8e'},lock);el('path',{d:'M30,14 v-3 a2,2 0 0 1 4,0 v3',fill:'none',stroke:'#3ecf8e','stroke-width':1.5},lock);
+  const t1=el('text',{x:-36,y:-19,class:'tag'},w);t1.textContent=c.name;
+  const t2=el('text',{x:-36,y:-10,class:'id'},w);t2.textContent=c.id;
+  const t3=el('text',{x:-36,y:21,class:'st'},w);t3.textContent='idle';
+  el('circle',{cx:34,cy:-23,r:2.5,fill:c.color},w);
+  wins[c.id]={c,w,st:t3};
+})})();
+function setState(id,state){const r=wins[id];if(!r)return;r.w.setAttribute('class','win '+(state==='idle'?'':state));r.st.textContent=state==='reeval'?'re-evaluating':state;
+  $('#cst-'+id).textContent=(state==='reeval'?'re-evaluating':state)+' · '+r.c.mem+' records';
+  const on=Object.values(wins).some(x=>/speaking|objecting|thinking|reeval/.test(x.w.getAttribute('class')));$('#relay').classList.toggle('on',on);$('#nav-live').textContent=on?'active':'idle'}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function toScreen(x,y){const r=svg.getBoundingClientRect(),sc=Math.min(r.width/560,r.height/360),ox=(r.width-560*sc)/2,oy=(r.height-360*sc)/2;const s=$('#council').getBoundingClientRect();return{x:r.left-s.left+ox+x*sc,y:r.top-s.top+oy+y*sc}}
+/* relay particle: window -> relay column -> seminar fire */
+function pulse(fromId,color){const c=BY[fromId];const p=el('circle',{r:3,fill:color,class:'pk',style:'color:'+color},svg);
+  p.animate([{transform:`translate(${c.x}px,${c.y}px)`,opacity:1},{transform:`translate(280px,${c.y}px)`,opacity:1,offset:.45},{transform:`translate(280px,300px)`,opacity:.2}],{duration:1000,easing:'cubic-bezier(.4,0,.2,1)'}).onfinish=()=>p.remove();
+  const b=$('#brew');b.animate([{fill:'#3ecf8e'},{fill:color},{fill:'#3ecf8e'}],{duration:1400,delay:800})}
+async function bubble(fromId,text,kind,extra){const a=fromId==='fde'?{x:280,y:188}:{x:BY[fromId].x,y:BY[fromId].y-30};const p=toScreen(a.x,a.y);
+  const b=document.createElement('div');b.className='bubble '+(kind||'');b.innerHTML=`<div class="who" style="color:${COLOR(fromId)}">${fromId==='fde'?'owner override':fromId}</div>${text.length>110?text.slice(0,107)+'…':text}${extra||''}`;
+  b.style.left=p.x+'px';b.style.top=(p.y-4)+'px';ov.appendChild(b);b.animate([{opacity:0,transform:'translate(-50%,-92%)'},{opacity:1,transform:'translate(-50%,-100%)'}],{duration:220,fill:'forwards'});
+  await sleep(kind==='none'?1300:2600);const t=toScreen(280,200);b.animate([{opacity:1,transform:'translate(-50%,-100%)'},{opacity:0,transform:`translate(calc(-50% + ${t.x-p.x}px),calc(-100% + ${t.y-p.y}px)) scale(.5)`}],{duration:600,easing:'ease-in',fill:'forwards'}).onfinish=()=>b.remove()}
+function knock(){const p=toScreen(280,282);const k=document.createElement('div');k.className='knock';k.textContent='knock · request received';k.style.left=p.x+'px';k.style.top=p.y+'px';ov.appendChild(k);k.animate([{opacity:0},{opacity:1},{opacity:1},{opacity:0}],{duration:1600}).onfinish=()=>k.remove()}
+function flicker(){[...$('#wins').children].forEach(w=>{w.classList.add('flick');setTimeout(()=>w.classList.remove('flick'),800)})}
+function shout(){SFX.shout();$('#ring').animate([{r:0,opacity:1},{r:260,opacity:0}],{duration:1000,easing:'ease-out'});flicker();$('#fdefig').animate([{transform:'translateY(0)'},{transform:'translateY(-5px)'},{transform:'translateY(0)'}],{duration:500,iterations:2})}
+async function kidWalk(toX,ms){const k=$('#kid'),from=k._x??-30;const bob=$('#kidbody').animate([{transform:'translateY(0)'},{transform:'translateY(-2px)'},{transform:'translateY(0)'}],{duration:240,iterations:Infinity});const a=k.animate([{transform:`translate(${from}px,318px)`},{transform:`translate(${toX}px,318px)`}],{duration:ms,easing:'linear',fill:'forwards'});await a.finished.catch(()=>{});bob.cancel();k._x=toX}
+async function arrive(){await kidWalk(236,1800);await sleep(150);SFX.knock();knock();$('#door').animate([{transform:'translateX(0)'},{transform:'translateX(-1px)'},{transform:'translateX(1px)'},{transform:'translateX(0)'}],{duration:260,iterations:2});await sleep(900)}
+async function deliver(plan){$('#fire').classList.add('on');const srcs=plan.steps.map(s=>s.source);
+  for(let i=0;i<srcs.length;i++){const col=COLOR(srcs[i]);const c=el('rect',{width:6,height:6,rx:1.5,fill:col,class:'pk',style:'color:'+col},svg);
+    c.animate([{transform:'translate(277px,300px) rotate(0)'},{transform:`translate(${255+i*5}px,280px) rotate(180deg)`,offset:.5},{transform:`translate(${244+i*3}px,312px) rotate(400deg)`}],{duration:800,delay:i*120,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'}).onfinish=()=>{c.remove();el('rect',{x:-3+(i%3)*3,y:-2-Math.floor(i/3)*3,width:4,height:4,rx:1,fill:col,transform:'rotate(45)'},$('#bagcandy'))};SFX.candy();await sleep(140)}
+  await sleep(500);$('#door').classList.add('open');setState(plan.for,'speaking');await bubble(plan.for,'Plan delivered. Every step is a lesson from a different window, none of them is a window.','plan');setState(plan.for,'idle');$('#door').classList.remove('open');$('#fire').classList.remove('on');await kidWalk(600,2200)}
+
+/* ---------- transcript / log / plan ---------- */
+let cancel=false;const lats=[];
+async function stream(node,text,speed=18){const w=text.split(' ');let out='';const cur=document.createElement('span');cur.className='cursor';for(let i=0;i<w.length;i++){if(cancel)return;out+=(i?' ':'')+w[i];node.textContent=out;node.appendChild(cur);feed.scrollTop=feed.scrollHeight;await sleep(speed+Math.random()*16)}cur.remove()}
+const K={cross:0,relay:0,redact:0,fde:0};function bump(k,n=1){K[k]+=n;const e=$('#k-'+k);e.textContent=K[k];e.animate([{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:250})}
+function log(a,m,c=''){const d=document.createElement('div');d.className='ln '+c;d.innerHTML=`<span class="t">${new Date().toLocaleTimeString([],{hour12:false,minute:'2-digit',second:'2-digit'})}.${String(Date.now()%1000).padStart(3,'0')}</span><span class="a" style="color:${COLOR(a)}">${a}</span><span class="m">${m}</span>`;logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight}
+async function addMessage(m,{withBubble=true}={}){
+  const who=m.from==='fde'?'FDE · owner':m.from==='moderator'?'Moderator':m.from;
+  const d=document.createElement('div');d.className='msg '+(m.kind||'');
+  d.innerHTML=`<div class="who"><b style="color:${m.from==='moderator'?'var(--muted)':COLOR(m.from)}">${who}</b>${BY[m.from]?BY[m.from].room:''}</div><div class="b"><span class="txt"></span></div>`;
+  feed.appendChild(d);feed.scrollTop=feed.scrollHeight;
+  const lat=m.latency??(80+Math.round(Math.random()*240));
+  if(BY[m.from]){bump('relay');const red=(REDACT[m.kind]||[]).length;if(red)bump('redact',red);lats.push(lat);const s=[...lats].sort((a,b)=>a-b);$('#k-lat').textContent=s[Math.floor(s.length/2)]+'ms';log(m.from,`relay.publish(${m.kind}) · ${lat}ms · scope=${m.kind}`,m.kind==='objection'?'warn':'')}
+  if(withBubble&&(BY[m.from]||m.from==='fde')){const extra=BY[m.from]&&m.kind!=='none'?`<div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap"><span class="chip cite">scope: ${m.kind} only</span><span class="chip red">redacted ${(REDACT[m.kind]||[]).length}</span></div>`:'';bubble(m.from,m.text,m.kind,extra);
+    if(BY[m.from]){pulse(m.from,m.kind==='objection'?'#f5a524':BY[m.from].color);m.kind==='objection'?SFX.object():SFX.msg()}}
+  await stream(d.querySelector('.txt'),m.text,m.kind==='none'?8:18);
+  const meta=[];if(m.kind&&!['moderator','request'].includes(m.kind))meta.push(`<span class="chip" style="border-color:${COLOR(m.from)}66;color:${COLOR(m.from)}">${m.kind}</span>`);
+  if(m.cites)meta.push(`<span class="chip cite">cites ${m.cites} memory only</span>`);
+  if(BY[m.from]&&m.kind!=='none')meta.push(`<span class="chip red">redacted: ${(REDACT[m.kind]||[]).join(', ')}</span>`);
+  meta.push(`<span class="chip">${lat}ms</span>`);d.querySelector('.b').insertAdjacentHTML('beforeend',`<div class="meta">${meta.join('')}</div>`);feed.scrollTop=feed.scrollHeight}
+function sys(t){const d=document.createElement('div');d.className='sys';d.textContent='— '+t+' —';feed.appendChild(d);feed.scrollTop=feed.scrollHeight}
+function narr(e){const n=$('#narr');n.className='narr '+(e.cls||'');$('#narr-k').textContent=e.k||'';$('#narr-t').textContent=e.t_||'';$('#narr-s').textContent=e.s||'';n.firstElementChild.animate([{opacity:.4,transform:'translateY(-3px)'},{opacity:1,transform:'none'}],{duration:300})}
+async function renderPlan(p){const e=$('#plan');$('#planstat').textContent='consensus · '+p.steps.length+' steps';e.innerHTML=`<ol id="planlist"></ol><div class="actions"><button class="primary" id="shelvebtn">Shelve to archive</button><button id="copybtn">Copy</button></div>`;
+  $('#shelvebtn').onclick=savePlan;$('#copybtn').onclick=copyPlan;const ol=$('#planlist');for(const s of p.steps){const li=document.createElement('li');li.innerHTML=`${s.text}<span class="src" style="color:${COLOR(s.source)};border-color:${COLOR(s.source)}66">${s.source==='FDE'?'owner':s.source}</span>`;ol.appendChild(li);await sleep(260)}e._plan=p}
+let plans=[];
+function savePlan(){const p=$('#plan')._plan;if(!p)return;plans.unshift({...p,at:new Date()});try{localStorage.setItem('fde-tool-plans',JSON.stringify(plans))}catch(e){}renderArch();toast('Shelved · plans table · request, plan, contributing clients, date · no private data');log('archive','supabase.insert(plans) → ok · private fields: none','ok');if(live)live.send(JSON.stringify({type:'save',plan:p}))}
+function renderArch(){const a=$('#arch');$('#nav-arch').textContent=plans.length;if(!plans.length){a.innerHTML='<div style="color:var(--muted);font-size:12px;padding:14px 4px;text-align:center">No plans shelved yet.</div>';return}
+  a.innerHTML=plans.map(p=>`<div class="row"><div><b>${p.title}</b><div class="k">${p.for} ← ${[...new Set(p.steps.map(s=>s.source))].join(', ')}</div></div><div class="k">${new Date(p.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`).join('');
+  const g=$('#books');g.innerHTML='';plans.slice(0,6).forEach((p,i)=>el('rect',{x:-20+i*7,y:-16,width:5,height:12,fill:COLOR(p.for)},g))}
+function copyPlan(){const p=$('#plan')._plan;if(!p)return;navigator.clipboard?.writeText(p.title+'\n'+p.steps.map((s,i)=>`${i+1}. ${s.text} [${s.source}]`).join('\n'));toast('Copied')}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),3000)}
+
+/* ---------- router ---------- */
+let running=false,awaiting=null,live=null,t_fde=0;
+async function handle(e){switch(e.type){
+  case 'step':setStep(e.n);break;case 'narr':narr(e);break;case 'log':log(e.a,e.m,e.c);break;
+  case 'arrive':await arrive();break;
+  case 'request':$('#reqname').textContent=e.from+' · '+e.text.slice(0,48)+'…';await addMessage({from:e.from,kind:'request',text:e.text});log(e.from,'request.submit → routed to own actor only','');break;
+  case 'status':setState(e.agent,e.state);break;case 'sys':sys(e.text);break;case 'message':await addMessage(e);break;
+  case 'fde':await addMessage({from:'fde',kind:'fde',text:e.text});break;case 'await-fde':armFde(e.suggestion);break;
+  case 'reeval':{const dt=((performance.now()-t_fde)/1000).toFixed(1);e.agents.forEach(a=>setState(a,'reeval'));log('relay',`override.broadcast → ${e.agents.length} actors in ${dt}s · mid-debate · no restart`,'fde');await sleep(1300);e.agents.forEach(a=>setState(a,'thinking'));break}
+  case 'plan':await renderPlan(e);$('#plan')._plan=e;break;case 'deliver':await deliver($('#plan')._plan);break}}
+function armFde(s){awaiting=s;$('#override').classList.add('armed');const i=$('#fdeinput');i.placeholder=s;i.focus();sys('debate paused · waiting for owner');log('relay','debate.pause → awaiting owner constraint','fde')}
+async function sendFde(){const i=$('#fdeinput');const text=i.value.trim()||awaiting||'';if(!text)return;i.value='';t_fde=performance.now();$('#override').classList.remove('armed');shout();bump('fde');
+  await addMessage({from:'fde',kind:'fde',text});if(live){live.send(JSON.stringify({type:'fde',text}));return}if(awaiting!==null){awaiting=null;await playList(AFTER_FDE)}}
+async function playList(list){for(const e of list){if(cancel)return;await sleep(e.t);if(cancel)return;await handle(e)}}
+async function start(){if(running)return;running=true;cancel=false;ac();$('#startbtn').textContent='● Running';if(live){live.send(JSON.stringify({type:'start'}));return}await playList(SCRIPT);$('#startbtn').textContent='▶ Run again';running=false}
+function reset(){cancel=true;running=false;awaiting=null;feed.innerHTML='';logEl.innerHTML='';ov.innerHTML='';lats.length=0;$('#k-lat').textContent='—';
+  $('#plan').innerHTML='<div class="empty">The plan appears once the council agrees. Every step is tagged with the client whose lesson it came from.</div>';$('#plan')._plan=null;$('#planstat').textContent='waiting for consensus';
+  $('#reqname').textContent='No active request';$('#override').classList.remove('armed');$('#fdeinput').placeholder='Add a constraint the council must respect…';$('#startbtn').textContent='▶ Run request';
+  CLIENTS.forEach(c=>setState(c.id,'idle'));const k=$('#kid');k.getAnimations().forEach(a=>a.cancel());k.setAttribute('transform','translate(-30,318)');k._x=-30;$('#bagcandy').innerHTML='';$('#door').classList.remove('open');$('#fire').classList.remove('on');
+  setStep(-1);narr({k:'Ready',t_:'Run a request to watch the council work.',s:'Each window is one client\'s sealed actor. The relay carries lessons only.'});for(const k in K){K[k]=0;$('#k-'+k).textContent='0'}setTimeout(()=>{cancel=false},60)}
+async function askRoom(id,about){const other=about||(id==='client-1'?'client-2':'client-1');narr({k:'privacy wall',t_:`Asking ${id}: "what did ${other} build?"`,s:'The actor has no access to any other client\'s memory. The answer is structural, not a prompt rule.',cls:'ok'});
+  setState(id,'thinking');log(id,`memory.read(${other}) → DENIED · actor has no handle to ${other}`,'ok');await sleep(500);setState(id,'walled');SFX.lock();
+  await addMessage({from:id,kind:'none',text:`Asked: "what did ${other} build?" → I hold no records for ${other}. Each actor is sealed. I can only share sanitized lessons on the relay, never another client's data.`},{withBubble:false});
+  bubble(id,`I hold no records for ${other}. This window is sealed.`,'plan');toast('Privacy wall held · 0 bytes crossed');await sleep(2400);setState(id,'idle')}
+
+/* live hook: tool.html?ws=ws://localhost:8787 consumes the same JSON events as SCRIPT; sends {type:'start'|'fde'|'save'} */
+window.FDE={push:handle,setState,clients:CLIENTS};
+(function(){const url=new URLSearchParams(location.search).get('ws');if(!url)return;try{const ws=new WebSocket(url);
+ws.onopen=()=>{live=ws;$('#livedot').textContent='live';$('#modepill').classList.add('live');$('#modepill').lastChild.textContent='live';toast('Connected to relay connector')};
+ws.onmessage=ev=>{try{handle(JSON.parse(ev.data))}catch(e){console.warn('bad event',ev.data)}};ws.onclose=()=>{live=null;$('#livedot').textContent='replay';$('#modepill').classList.remove('live');toast('Connector lost · replay mode')}}catch(e){}})();
+$('#startbtn').onclick=start;$('#resetbtn').onclick=reset;$('#sendbtn').onclick=sendFde;$('#sndbtn').onclick=()=>{sound=!sound;$('#sndbtn').textContent=sound?'🔊':'🔇'};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'){if(e.key==='Enter')sendFde();return}if(e.code==='Space'){e.preventDefault();start()}if(e.key==='r'||e.key==='R')reset();if(e.key==='w'||e.key==='W')askRoom('client-2','client-1')});
+try{plans=JSON.parse(localStorage.getItem('fde-tool-plans')||'[]')}catch(e){}renderArch();setStep(-1);
+</script>
+</body>
+</html>

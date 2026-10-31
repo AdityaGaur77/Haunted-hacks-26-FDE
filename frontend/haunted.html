@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE Council · Haunted House</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Creepster&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05060b;--panel:#0d0f17;--line:#1b1f2d;--text:#e9eaf2;--muted:#7f8597;
+  --c1:#8b7cff;--c2:#60a5fa;--c3:#5ee1ff;--c4:#4ade80;--c5:#ffb454;--fde:#ff6fb1;--ok:#4ade80;--warn:#ffb454;
+  --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',system-ui,sans-serif;--spooky:'Creepster',cursive}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
+#app{display:grid;grid-template-columns:1fr 400px;height:100vh}
+/* ---- scene ---- */
+.scene{position:relative;min-width:0;overflow:hidden;background:radial-gradient(1000px 500px at 50% 110%,#1a1230 0%,#0a0b14 55%,#05060b 100%)}
+.scene svg{position:absolute;inset:0;width:100%;height:100%}
+.topbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:14px;padding:14px 20px;z-index:5;pointer-events:none}
+.topbar>*{pointer-events:auto}
+.brand{font-family:var(--spooky);font-size:26px;letter-spacing:.04em;color:#ffb454;text-shadow:0 0 20px rgba(255,180,84,.5)}
+.brand small{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted);display:block;margin-top:-4px;text-transform:uppercase}
+.req{flex:1;font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:center;min-width:0}
+.req b{color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.req .tag{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--c3);border:1px solid rgba(94,225,255,.3);padding:3px 7px;border-radius:999px;white-space:nowrap}
+button{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text);background:rgba(13,15,23,.8);border:1px solid var(--line);padding:8px 12px;border-radius:9px;cursor:pointer;transition:.15s;backdrop-filter:blur(6px)}
+button:hover{border-color:var(--c5);transform:translateY(-1px)}
+button.primary{background:linear-gradient(135deg,#ff9d2e,#ff6a00);border-color:transparent;color:#1a0d00}
+.kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--line);padding:1px 5px;border-radius:5px;color:var(--muted)}
+/* bubbles overlay */
+.bubble{position:absolute;max-width:260px;background:rgba(13,15,23,.92);border:1px solid var(--line);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.4;z-index:4;pointer-events:none;transform:translate(-50%,-100%);box-shadow:0 10px 40px -10px rgba(0,0,0,.8)}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-7px;width:12px;height:12px;background:inherit;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.bubble .who{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.bubble.objection{border-color:var(--c5);box-shadow:0 0 30px -6px var(--c5)}
+.bubble.fde{border-color:var(--fde);box-shadow:0 0 30px -6px var(--fde)}
+.bubble.plan{border-color:var(--ok)}
+.knock{position:absolute;font-family:var(--spooky);font-size:28px;color:#fff;z-index:4;pointer-events:none;text-shadow:0 0 16px rgba(255,255,255,.6);transform:translate(-50%,-50%)}
+/* shout box */
+.shout{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(620px,calc(100% - 40px));z-index:5}
+.shout label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fde);display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.shout label .hint{margin-left:auto;color:var(--muted);text-transform:none;letter-spacing:0}
+.shout .row{display:flex;gap:8px}
+.shout input{flex:1;font-family:var(--sans);font-size:14px;color:var(--text);background:rgba(13,15,23,.9);border:1px solid var(--line);border-radius:12px;padding:13px 16px;outline:none;backdrop-filter:blur(8px);transition:.2s}
+.shout input:focus{border-color:var(--fde);box-shadow:0 0 0 3px rgba(255,111,177,.15)}
+.shout.armed input{border-color:var(--fde);animation:arm 1.3s infinite}
+@keyframes arm{0%,100%{box-shadow:0 0 0 3px rgba(255,111,177,.15),0 0 30px -6px var(--fde)}50%{box-shadow:0 0 0 7px rgba(255,111,177,.06),0 0 60px -6px var(--fde)}}
+.shout button{background:var(--fde);border-color:transparent;color:#2a0a18}
+/* ---- side panel ---- */
+.side{border-left:1px solid var(--line);background:var(--panel);display:grid;grid-template-rows:auto 1fr auto;min-height:0}
+.side h4{margin:0;padding:14px 16px 10px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+.feed{overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.msg{opacity:0;transform:translateY(6px);animation:in .35s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.msg .who{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;display:flex;gap:8px;align-items:center}
+.msg .who b{font-weight:500;color:var(--text)}
+.msg .b{background:#11141d;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:12.8px;line-height:1.5}
+.msg.lesson .b{border-color:rgba(94,225,255,.3)}
+.msg.objection .b{border-color:rgba(255,180,84,.5);background:linear-gradient(180deg,rgba(255,180,84,.07),#11141d)}
+.msg.revision .b{border-color:rgba(74,222,128,.35)}
+.msg.none .b{opacity:.5;font-size:12px;padding:6px 10px}
+.msg.fde .b{border-color:var(--fde);background:linear-gradient(180deg,rgba(255,111,177,.08),#11141d)}
+.msg.fde .who b{color:var(--fde)}
+.msg.request .b{border-color:var(--c1)}
+.msg.moderator .b{border-style:dashed;background:transparent;color:var(--muted);font-size:12px}
+.chip{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip.cite{border-color:rgba(94,225,255,.35);color:var(--c3)}
+.meta{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.cursor{display:inline-block;width:6px;height:13px;background:var(--c3);vertical-align:-2px;margin-left:2px;animation:blink .7s infinite}
+@keyframes blink{50%{opacity:.2}}
+.sys{align-self:center;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;opacity:0;animation:in .4s forwards;text-align:center}
+.planbox{border-top:1px solid var(--line);padding:14px 16px;max-height:46vh;overflow:auto}
+.plan{background:#11141d;border:1px solid var(--line);border-radius:14px;padding:12px 14px;transition:.4s}
+.plan.ready{border-color:rgba(74,222,128,.45);box-shadow:0 0 0 1px rgba(74,222,128,.2),0 20px 60px -20px rgba(74,222,128,.5)}
+.plan .empty{color:var(--muted);font-size:12px;line-height:1.5;text-align:center;padding:14px 4px}
+.plan .title{font-weight:600;font-size:13px;margin-bottom:10px}
+.plan ol{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:8px;font-size:12.3px;line-height:1.45}
+.plan li{opacity:0;animation:in .4s forwards}
+.candy{display:inline-block;width:10px;height:10px;border-radius:3px;transform:rotate(45deg);margin:0 6px 0 2px;vertical-align:-1px;box-shadow:0 0 8px currentColor;background:currentColor}
+.plan li .src{font-family:var(--mono);font-size:9.5px;margin-left:4px;color:var(--muted)}
+.plan .actions{margin-top:12px;display:flex;gap:8px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#11141d;border:1px solid rgba(74,222,128,.5);color:var(--text);padding:10px 16px;border-radius:12px;font-size:13px;opacity:0;transition:.3s;z-index:60;display:flex;gap:8px;align-items:center;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast .k{color:var(--ok)}
+/* overlay */
+.overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(5,6,11,.82);backdrop-filter:blur(8px);z-index:70;transition:.5s}
+.overlay.hide{opacity:0;pointer-events:none}
+.overlay .box{text-align:center;max-width:560px;padding:20px}
+.overlay h1{font-family:var(--spooky);font-size:64px;margin:0 0 6px;color:#ffb454;letter-spacing:.04em;text-shadow:0 0 40px rgba(255,180,84,.5)}
+.overlay p{color:var(--muted);font-size:16px;line-height:1.6;margin:0 0 24px}
+.overlay .keys{margin-top:16px;color:var(--muted);font-size:11px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+/* svg states */
+.room .glass{fill:#0c0e18;transition:fill .4s}
+.room .glow{opacity:0;transition:opacity .4s}
+.room .ghost{opacity:.35;transition:opacity .4s,transform .3s}
+.room .lbl{fill:#7f8597;font-family:var(--mono);font-size:10px}
+.room .nm{fill:#c9ccd8;font-family:var(--sans);font-size:11px;font-weight:600}
+.room .st{fill:#555b6b;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase}
+.room.thinking .glass{fill:#1a1626}.room.thinking .ghost{opacity:.7;animation:bob 1s infinite}.room.thinking .st{fill:#c9ccd8}
+.room.asking .glass{fill:#1b1738}.room.asking .glow{opacity:.9;fill:var(--c1)}.room.asking .ghost{opacity:1}.room.asking .st{fill:var(--c1)}
+.room.speaking .glass{fill:#0f2230}.room.speaking .glow{opacity:1;fill:var(--c3)}.room.speaking .ghost{opacity:1;animation:bob .6s infinite}.room.speaking .st{fill:var(--c3)}
+.room.objecting .glass{fill:#2a1a0a}.room.objecting .glow{opacity:1;fill:var(--c5)}.room.objecting .ghost{opacity:1;animation:shake .35s infinite}.room.objecting .st{fill:var(--c5)}
+.room.walled .glass{fill:#0b1a12}.room.walled .glow{opacity:.9;fill:var(--ok)}.room.walled .ghost{opacity:1}.room.walled .st{fill:var(--ok)}
+.room .lock{opacity:0;transition:.3s}
+.room.walled .lock{opacity:1;animation:rattle .3s 3}
+@keyframes bob{50%{transform:translateY(-4px)}}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes rattle{25%{transform:translateX(-2px) rotate(-4deg)}75%{transform:translateX(2px) rotate(4deg)}}
+.flicker{animation:flick .12s 6}
+@keyframes flick{50%{opacity:.2}}
+.bat{animation:fly 9s linear infinite}
+@keyframes fly{0%{transform:translate(-100px,80px)}50%{transform:translate(500px,30px)}100%{transform:translate(1100px,90px)}}
+.fog{animation:drift 30s linear infinite;opacity:.35}
+@keyframes drift{from{transform:translateX(-300px)}to{transform:translateX(300px)}}
+.cauldron .bub{animation:rise 1.6s infinite;transform-origin:center}
+@keyframes rise{0%{transform:translateY(0);opacity:.9}100%{transform:translateY(-26px);opacity:0}}
+.cauldron .fire{opacity:.25;transition:.4s}
+.cauldron.on .fire{opacity:1;animation:flick2 .5s infinite}
+@keyframes flick2{50%{transform:scaleY(1.2)}}
+.stairs{opacity:.25;transition:.4s}
+.stairs.on{opacity:1}
+.relay-pk{filter:drop-shadow(0 0 6px currentColor)}
+.door{transform-origin:470px 600px;transition:transform .6s}
+.door.open{transform:rotateY(70deg)}
+@media (max-width:980px){#app{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="scene" id="scene">
+    <svg id="svg" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="moon"><stop offset="0" stop-color="#fff7d6"/><stop offset=".7" stop-color="#ffe9a8"/><stop offset="1" stop-color="#ffd978"/></radialGradient>
+        <radialGradient id="moonglow"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".35"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></radialGradient>
+        <linearGradient id="wall" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1b1a28"/><stop offset="1" stop-color="#121120"/></linearGradient>
+        <linearGradient id="roof" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2a2238"/><stop offset="1" stop-color="#171325"/></linearGradient>
+        <linearGradient id="stair" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5ee1ff" stop-opacity=".0"/><stop offset=".5" stop-color="#5ee1ff" stop-opacity=".9"/><stop offset="1" stop-color="#8b7cff" stop-opacity=".0"/></linearGradient>
+        <filter id="blur"><feGaussianBlur stdDeviation="14"/></filter>
+        <filter id="blur2"><feGaussianBlur stdDeviation="4"/></filter>
+        <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+        <symbol id="ghost" viewBox="-20 -24 40 50"><path d="M0,-20 a14,14 0 0 1 14,14 v22 l-4.7,-4 -4.7,4 -4.6,-4 -4.6,4 -4.7,-4 -4.7,4 v-22 a14,14 0 0 1 14,-14 z" fill="#e9eaf2" opacity=".95"/><circle cx="-5" cy="-6" r="2.2" fill="#1b1f2d"/><circle cx="5" cy="-6" r="2.2" fill="#1b1f2d"/><ellipse cx="0" cy="1" rx="2.4" ry="3.2" fill="#1b1f2d"/></symbol>
+      </defs>
+      <!-- sky -->
+      <circle cx="840" cy="110" r="120" fill="url(#moonglow)"/>
+      <circle cx="840" cy="110" r="46" fill="url(#moon)"/>
+      <g fill="#fff" opacity=".7" id="stars"></g>
+      <g class="bat" fill="#0a0a12"><path d="M0,0 q10,-12 20,0 q6,-8 12,0 q-6,4 -12,2 q-10,10 -20,0 q-6,4 -12,2 q6,-8 12,-4z" transform="scale(1.6)"/></g>
+      <g class="bat" style="animation-delay:-4s" fill="#0a0a12"><path d="M0,0 q10,-12 20,0 q6,-8 12,0 q-6,4 -12,2 q-10,10 -20,0 q-6,4 -12,2 q6,-8 12,-4z" transform="translate(0,60) scale(1.1)"/></g>
+      <!-- ground + fog -->
+      <ellipse cx="500" cy="650" rx="700" ry="80" fill="#0e0d18"/>
+      <rect x="0" y="612" width="1000" height="100" fill="#0a0912"/>
+      <path d="M470,612 q30,-8 60,0 v90 h-60z" fill="#1a1726"/>
+      <path d="M470,612 L270,700 h460 L530,612z" fill="#141220"/>
+      <g class="fog" filter="url(#blur)"><ellipse cx="300" cy="620" rx="260" ry="26" fill="#6d6a8a"/><ellipse cx="750" cy="630" rx="300" ry="22" fill="#6d6a8a"/></g>
+      <!-- graveyard bits -->
+      <g fill="#1f1d2c"><path d="M80,612 v-40 a14,14 0 0 1 28,0 v40z"/><path d="M150,612 v-28 a10,10 0 0 1 20,0 v28z"/><path d="M880,612 v-36 a12,12 0 0 1 24,0 v36z"/></g>
+      <g stroke="#2a2838" stroke-width="2" fill="none"><path d="M60,560 q-12,-50 -40,-70 M60,560 q10,-60 44,-70 M60,560 v52"/><path d="M940,560 q12,-50 40,-70 M940,560 q-10,-60 -44,-70 M940,560 v52"/></g>
+      <!-- house -->
+      <g id="house">
+        <!-- roof -->
+        <path d="M230,210 L500,60 L770,210 Z" fill="url(#roof)"/>
+        <path d="M230,210 L500,60 L770,210" fill="none" stroke="#3a3250" stroke-width="3"/>
+        <rect x="690" y="90" width="26" height="70" fill="#1b1a28"/><rect x="686" y="86" width="34" height="8" fill="#2a2238"/>
+        <!-- walls -->
+        <rect x="250" y="210" width="500" height="402" fill="url(#wall)" stroke="#2c2840" stroke-width="2"/>
+        <!-- floor lines -->
+        <line x1="250" y1="290" x2="750" y2="290" stroke="#2c2840" stroke-width="2"/>
+        <line x1="250" y1="420" x2="750" y2="420" stroke="#2c2840" stroke-width="2"/>
+        <!-- relay staircase (center column) -->
+        <g class="stairs" id="stairs">
+          <rect x="455" y="214" width="90" height="396" fill="url(#stair)" opacity=".35" filter="url(#blur2)"/>
+          <g stroke="#5ee1ff" stroke-width="1.5" opacity=".6">
+            <path d="M460,290 l80,-22 M460,316 l80,-22 M460,342 l80,-22 M460,368 l80,-22 M460,394 l80,-22"/>
+            <path d="M460,560 l80,-22 M460,534 l80,-22 M460,508 l80,-22 M460,482 l80,-22 M460,456 l80,-22"/>
+          </g>
+          <text x="500" y="228" text-anchor="middle" fill="#5ee1ff" font-family="JetBrains Mono" font-size="8" letter-spacing="2" opacity=".8">RELAY</text>
+        </g>
+        <!-- rooms (built by JS) -->
+        <g id="rooms"></g>
+        <!-- FDE balcony on middle landing -->
+        <g id="fde" transform="translate(500,355)">
+          <rect x="-44" y="22" width="88" height="6" fill="#3a3250"/>
+          <g stroke="#3a3250" stroke-width="2"><line x1="-40" y1="22" x2="-40" y2="6"/><line x1="-20" y1="22" x2="-20" y2="6"/><line x1="0" y1="22" x2="0" y2="6"/><line x1="20" y1="22" x2="20" y2="6"/><line x1="40" y1="22" x2="40" y2="6"/><line x1="-44" y1="6" x2="44" y2="6"/></g>
+          <!-- the FDE: a figure with a lantern -->
+          <g id="fdefig">
+            <circle cx="0" cy="-22" r="8" fill="#f1d2b6"/><path d="M-9,-26 q9,-14 18,0 z" fill="#2a2238"/>
+            <path d="M-10,-12 h20 l4,30 h-28z" fill="#ff6fb1"/>
+            <line x1="12" y1="-6" x2="22" y2="-2" stroke="#f1d2b6" stroke-width="3"/>
+            <g id="lantern"><rect x="19" y="-2" width="8" height="12" rx="2" fill="#ffb454"/><circle cx="23" cy="4" r="12" fill="#ffb454" opacity=".25" filter="url(#blur2)"/></g>
+          </g>
+          <text x="0" y="44" text-anchor="middle" fill="#ff6fb1" font-family="JetBrains Mono" font-size="8.5" letter-spacing="1.5">FDE · HOUSE OWNER</text>
+        </g>
+        <!-- foyer with cauldron -->
+        <g id="cauldron" class="cauldron" transform="translate(500,520)">
+          <g class="fire"><path d="M-16,36 q4,-18 8,-8 q2,-16 8,-4 q4,-14 8,0 q4,-10 8,12 z" fill="#ff8a2a"/><path d="M-8,36 q3,-10 6,-4 q2,-8 5,0 q3,-6 5,8z" fill="#ffd166"/></g>
+          <ellipse cx="0" cy="34" rx="24" ry="5" fill="#0a0912"/>
+          <path d="M-26,8 q0,30 26,30 q26,0 26,-30 z" fill="#1c1a2a" stroke="#3a3250" stroke-width="2"/>
+          <ellipse cx="0" cy="8" rx="26" ry="7" fill="#2a2238" stroke="#3a3250" stroke-width="2"/>
+          <ellipse cx="0" cy="8" rx="20" ry="4" fill="#4ade80" opacity=".9" id="brew"/>
+          <g fill="#4ade80" opacity=".8"><circle class="bub" cx="-8" cy="4" r="3"/><circle class="bub" cx="6" cy="2" r="2.4" style="animation-delay:-.6s"/><circle class="bub" cx="0" cy="6" r="2" style="animation-delay:-1.1s"/></g>
+          <text x="0" y="56" text-anchor="middle" fill="#7f8597" font-family="JetBrains Mono" font-size="8" letter-spacing="1.5">THE SEMINAR</text>
+        </g>
+        <!-- door -->
+        <g id="doorframe"><path d="M468,612 v-72 a32,32 0 0 1 64,0 v72z" fill="#0a0912"/>
+          <g id="door" class="door"><path d="M470,612 v-70 a30,30 0 0 1 60,0 v70z" fill="#2a2238" stroke="#3a3250" stroke-width="2"/><circle cx="520" cy="575" r="3" fill="#ffb454"/><path d="M482,560 h36 M482,585 h36" stroke="#1b1a28" stroke-width="2"/></g>
+          <g id="doorghost" opacity="0"><use href="#ghost" x="480" y="548" width="40" height="50"/></g>
+        </g>
+        <!-- plan archive shelf (history) on right ground floor -->
+        <g id="shelf" transform="translate(560,430)">
+          <rect x="0" y="0" width="160" height="172" fill="#0f0e1a"/>
+          <g stroke="#2c2840" stroke-width="3"><line x1="4" y1="50" x2="156" y2="50"/><line x1="4" y1="100" x2="156" y2="100"/><line x1="4" y1="150" x2="156" y2="150"/></g>
+          <g id="books"></g>
+          <text x="80" y="166" text-anchor="middle" fill="#7f8597" font-family="JetBrains Mono" font-size="8" letter-spacing="1.5">PLAN ARCHIVE · SUPABASE</text>
+          <g fill="#2c2840"><rect x="10" y="6" width="22" height="40"/><rect x="36" y="14" width="14" height="32"/><rect x="54" y="8" width="18" height="38"/><rect x="100" y="60" width="16" height="36"/><rect x="120" y="66" width="20" height="30"/></g>
+          <!-- spider -->
+          <g transform="translate(146,0)"><line x1="0" y1="0" x2="0" y2="24" stroke="#3a3250" stroke-width="1"/><circle cx="0" cy="26" r="4" fill="#0a0912"/><path d="M-6,22 l-4,-4 M6,22 l4,-4 M-6,28 l-4,2 M6,28 l4,2" stroke="#0a0912" stroke-width="1.2"/></g>
+        </g>
+        <!-- wall signs -->
+        <text x="500" y="640" text-anchor="middle" fill="#55596a" font-family="JetBrains Mono" font-size="8" letter-spacing="2">EVERY ROOM IS SEALED · ONLY LESSONS USE THE STAIRS</text>
+      </g>
+      <!-- shout ring -->
+      <circle id="ring" cx="500" cy="340" r="0" fill="none" stroke="#ff6fb1" stroke-width="3" opacity="0"/>
+      <!-- trick or treater -->
+      <g id="kid" transform="translate(-80,588)">
+        <g id="kidbody">
+          <rect x="-7" y="0" width="6" height="20" fill="#2a2238"/><rect x="2" y="0" width="6" height="20" fill="#2a2238"/>
+          <path d="M-12,-26 h24 l3,28 h-30z" fill="#4a3a7a"/>
+          <circle cx="0" cy="-36" r="13" fill="#ff8a2a"/><path d="M-6,-40 l4,5 h-8z M6,-40 l-4,5 h8z M-6,-31 q6,6 12,0" fill="#1a0d00"/><rect x="-2" y="-52" width="4" height="6" fill="#2d6b2d"/>
+          <g id="bag" transform="translate(18,-6)"><path d="M-9,-8 h18 l2,20 h-22z" fill="#5a2a0a"/><path d="M-9,-8 q9,-12 18,0" fill="none" stroke="#5a2a0a" stroke-width="2"/><g id="bagcandy"></g></g>
+        </g>
+      </g>
+    </svg>
+    <div class="topbar">
+      <div class="brand">FDE Council<small>Haunted house · every room a sealed actor</small></div>
+      <div class="req"><span class="tag" id="reqtag">quiet night</span><b id="reqtext">No one at the door…</b></div>
+      <span class="kbd" id="modebadge">replay</span>
+      <button onclick="toggleSound()" id="sndbtn">🔊</button>
+      <button onclick="reset()">↺ Reset</button>
+      <button class="primary" id="startbtn" onclick="start()">🎃 Run</button>
+    </div>
+    <div class="shout" id="shout">
+      <label>Shout from the balcony <span class="hint">Enter to shout · empty Enter uses the suggestion</span></label>
+      <div class="row"><input id="fdeinput" placeholder="Add a constraint the council must respect…" autocomplete="off"><button onclick="sendFde()">Shout</button></div>
+    </div>
+    <div id="bubbles"></div>
+  </div>
+
+  <div class="side">
+    <h4>Live transcript · Agent Relay <span id="livedot" class="kbd">replay</span></h4>
+    <div class="feed" id="feed"></div>
+    <div class="planbox">
+      <h4 style="padding:0 0 10px;border:0">The candy · plan with provenance <span class="kbd">W = try a locked door</span></h4>
+      <div class="plan" id="plan"><div class="empty">The cauldron brews a plan once the seminar agrees.<br>Each candy is the colour of the room it came from.</div></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"><span class="k">✓</span><span id="toasttext"></span></div>
+<div class="overlay" id="overlay">
+  <div class="box">
+    <h1>FDE Council</h1>
+    <p>A haunted house. Five sealed rooms, one client each.<br>When a trick-or-treater knocks, the ghosts hold a seminar on the stairs and brew the right candy.<br>Nothing ever leaves a room except a lesson.</p>
+    <button class="primary" onclick="start()">🎃 Open the house</button>
+    <div class="keys"><span><span class="kbd">space</span> run</span><span><span class="kbd">R</span> reset</span><span><span class="kbd">W</span> locked door</span><span><span class="kbd">M</span> sound</span><span><span class="kbd">click a room</span> ask it about another client</span></div>
+  </div>
+</div>
+
+<script>
+/* ---------- clients + rooms ---------- */
+const CLIENTS=[
+  {id:'client-1',name:'Northwind Analytics',room:'West Chamber',stack:'Next.js · Recharts · Postgres',color:'#8b7cff',x:255,y:295,w:195,h:120,mem:'12 deployments. Last incident: chart tooltips clipped on Safari.'},
+  {id:'client-2',name:'Harbor Logistics',room:'East Chamber',stack:'Django · HTMX · MySQL',color:'#60a5fa',x:550,y:295,w:195,h:120,mem:'Server-rendered. No theming layer. Last fix: slow route query, added index.'},
+  {id:'client-3',name:'Lumen Health',room:'West Attic',stack:'React · D3 · Supabase',color:'#5ee1ff',x:285,y:150,w:165,h:135,mem:'Dark mode shipped in 2h via CSS variables. D3 reads computed styles.'},
+  {id:'client-4',name:'Atlas Fintech',room:'East Attic',stack:'Vue · ECharts · Snowflake',color:'#4ade80',x:550,y:150,w:165,h:135,mem:'Compliance-locked UI. Theming needs a change-control ticket.'},
+  {id:'client-5',name:'Orbit Retail',room:'Cellar Study',stack:'Next.js · Recharts · BigQuery',color:'#ffb454',x:255,y:425,w:195,h:180,mem:'CSS-variable dark mode broke all charts. Fix: inject tokens via getComputedStyle.'},
+];
+const BY=Object.fromEntries(CLIENTS.map(c=>[c.id,c]));
+const COLOR=id=>id==='FDE'||id==='fde'?'#ff6fb1':(BY[id]?.color||'#8a90a3');
+
+/* ---------- scripted feed ---------- */
+const SCRIPT=[
+  {t:200, type:'arrive'},
+  {t:200, type:'request',from:'client-1',text:'Add dark mode to the analytics dashboard. Marketing wants it before the Q4 launch.'},
+  {t:300, type:'status',agent:'client-1',state:'asking'},
+  {t:500, type:'sys',text:'knock heard in every room · 4 ghosts consult private memory'},
+  {t:100, type:'status',agent:'client-2',state:'thinking'},
+  {t:100, type:'status',agent:'client-3',state:'thinking'},
+  {t:100, type:'status',agent:'client-4',state:'thinking'},
+  {t:100, type:'status',agent:'client-5',state:'thinking'},
+  {t:1400,type:'status',agent:'client-3',state:'speaking'},
+  {t:50,  type:'message',from:'client-3',kind:'lesson',cites:'client-3',text:'We shipped dark mode in about two hours. CSS custom properties on :root, a data-theme attribute toggled by a tiny hook, preference persisted in localStorage. No component rewrites, and our D3 charts picked up the colours because they read computed styles.'},
+  {t:300, type:'status',agent:'client-3',state:'idle'},
+  {t:300, type:'status',agent:'client-2',state:'speaking'},
+  {t:50,  type:'message',from:'client-2',kind:'none',text:'No relevant experience. Server-rendered Django, no theming layer.'},
+  {t:200, type:'status',agent:'client-2',state:'idle'},
+  {t:200, type:'status',agent:'client-4',state:'speaking'},
+  {t:50,  type:'message',from:'client-4',kind:'none',text:'No relevant experience. Theming is blocked by change control on our side.'},
+  {t:200, type:'status',agent:'client-4',state:'idle'},
+  {t:600, type:'status',agent:'client-5',state:'objecting'},
+  {t:50,  type:'message',from:'client-5',kind:'objection',cites:'client-5',text:'Objection. We tried exactly that CSS-variable approach and it broke every chart. Recharts resolves colours as props at render time, not from CSS, so the SVG stayed light-mode on a dark page. We lost half a day. Client 1 is on Recharts too.'},
+  {t:700, type:'status',agent:'client-5',state:'idle'},
+  {t:300, type:'status',agent:'client-3',state:'speaking'},
+  {t:50,  type:'message',from:'client-3',kind:'lesson',cites:'client-3',text:'Fair. We never hit that because D3 lets us pass computed styles directly. The chart layer is the real risk here, not the shell.'},
+  {t:300, type:'status',agent:'client-3',state:'idle'},
+  {t:500, type:'message',from:'moderator',kind:'moderator',text:'Conflict on the chart layer. Swap the chart library, or keep Recharts and inject tokens. The seminar waits for the house owner.'},
+  {t:200, type:'await-fde',suggestion:'Client 1 cannot change chart libraries. Recharts stays.'},
+];
+const AFTER_FDE=[
+  {t:300, type:'sys',text:'the owner has spoken · ghosts re-evaluate'},
+  {t:100, type:'status',agent:'client-3',state:'thinking'},
+  {t:100, type:'status',agent:'client-5',state:'thinking'},
+  {t:1300,type:'status',agent:'client-5',state:'speaking'},
+  {t:50,  type:'message',from:'client-5',kind:'revision',cites:'client-5',text:'Then the fix we eventually used applies directly. Read the theme tokens with getComputedStyle at mount, pass them to Recharts as props, and subscribe charts to a themechange event so they re-render. Recharts stays. About 40 minutes.'},
+  {t:300, type:'status',agent:'client-5',state:'idle'},
+  {t:300, type:'status',agent:'client-3',state:'speaking'},
+  {t:50,  type:'message',from:'client-3',kind:'revision',cites:'client-3',text:'Agreed. Combine both: CSS variables for the app shell, explicit token injection for the chart layer, one themechange event bridging them. That is the whole plan.'},
+  {t:300, type:'status',agent:'client-3',state:'idle'},
+  {t:500, type:'message',from:'moderator',kind:'moderator',text:'Consensus. The cauldron brews the candy for Client 1.'},
+  {t:800, type:'plan',for:'client-1',title:'Dark mode for Northwind Analytics',steps:[
+    {text:'Theme tokens as CSS variables on :root, toggled via data-theme, persisted in localStorage.',source:'client-3'},
+    {text:'Keep Recharts. Inject colours as props read from getComputedStyle at mount.',source:'client-5'},
+    {text:'Emit a themechange event and re-render charts on it so SVG never drifts from the shell.',source:'client-5'},
+    {text:'Do not swap chart libraries. Constraint from the house owner.',source:'FDE'},
+    {text:'Test on Safari: tooltip clipping already seen in this deployment.',source:'client-1'},
+  ]},
+  {t:600, type:'deliver'},
+  {t:400, type:'sys',text:'seminar closed · 2 lessons · 1 objection · 1 owner constraint · 0 bytes of private data left any room'},
+];
+
+/* ---------- sound ---------- */
+let AC=null,sound=true;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
+function tone(f,d=0.12,type='sine',g=0.08,t0=0){const a=ac();if(!a||!sound)return;const o=a.createOscillator(),v=a.createGain();o.type=type;o.frequency.value=f;v.gain.value=g;o.connect(v);v.connect(a.destination);const s=a.currentTime+t0;o.start(s);v.gain.setValueAtTime(g,s);v.gain.exponentialRampToValueAtTime(0.0001,s+d);o.stop(s+d+.02)}
+const SFX={knock(){tone(90,.18,'triangle',.25);tone(80,.2,'triangle',.25,.28)},whoosh(){tone(600,.25,'sine',.04);tone(900,.2,'sine',.03,.05)},object(){tone(160,.3,'sawtooth',.06);tone(120,.35,'sawtooth',.06,.1)},shout(){tone(440,.1,'square',.05);tone(660,.1,'square',.05,.1);tone(880,.25,'square',.05,.2)},brew(){[0,.1,.2,.3].forEach((d,i)=>tone(300+i*120,.2,'sine',.05,d))},candy(){tone(1040,.15,'sine',.06);tone(1320,.25,'sine',.06,.12)},lock(){tone(200,.08,'square',.08);tone(180,.08,'square',.08,.1);tone(160,.1,'square',.08,.2)}};
+function toggleSound(){sound=!sound;document.getElementById('sndbtn').textContent=sound?'🔊':'🔇'}
+
+/* ---------- build scene ---------- */
+const $=s=>document.querySelector(s);
+const svg=$('#svg'),roomsG=$('#rooms'),feed=$('#feed'),bubbles=$('#bubbles');
+const NS='http://www.w3.org/2000/svg';
+function el(n,a={},parent){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(parent)parent.appendChild(e);return e}
+(function stars(){const g=$('#stars');for(let i=0;i<70;i++){el('circle',{cx:Math.random()*1000,cy:Math.random()*300,r:Math.random()*1.4+.3,opacity:Math.random()*.8+.2},g)}})();
+function buildRooms(){
+  roomsG.innerHTML='';
+  CLIENTS.forEach(c=>{
+    const g=el('g',{class:'room',id:'room-'+c.id,'data-id':c.id,style:'cursor:pointer'},roomsG);
+    g.addEventListener('click',()=>askRoom(c.id));
+    el('rect',{x:c.x,y:c.y,width:c.w,height:c.h,fill:'#0c0e18',class:'glass',rx:4},g);
+    el('rect',{x:c.x,y:c.y,width:c.w,height:c.h,class:'glow',rx:4,opacity:0,filter:'url(#blur2)'},g);
+    // room interior frame
+    el('rect',{x:c.x,y:c.y,width:c.w,height:c.h,fill:'none',stroke:'#2c2840','stroke-width':2,rx:4},g);
+    // small furniture: a desk + screen (the client's stack)
+    el('rect',{x:c.x+c.w-56,y:c.y+c.h-34,width:40,height:6,fill:'#2a2238'},g);
+    el('rect',{x:c.x+c.w-48,y:c.y+c.h-54,width:24,height:18,fill:'#121a2a',stroke:'#2c2840'},g);
+    // ghost
+    const gh=el('g',{class:'ghost',style:'transform-box:fill-box;transform-origin:center'},g);
+    el('use',{href:'#ghost',x:c.x+c.w/2-22,y:c.y+c.h/2-40,width:44,height:55},gh);
+    // door with lock (privacy wall) at bottom-left
+    el('rect',{x:c.x+10,y:c.y+c.h-40,width:22,height:38,fill:'#1a1726',stroke:'#2c2840'},g);
+    const lock=el('g',{class:'lock',style:'transform-box:fill-box;transform-origin:center'},g);
+    el('rect',{x:c.x+15,y:c.y+c.h-24,width:12,height:10,rx:2,fill:'#4ade80'},lock);
+    el('path',{d:`M${c.x+17},${c.y+c.h-24} v-4 a4,4 0 0 1 8,0 v4`,fill:'none',stroke:'#4ade80','stroke-width':2},lock);
+    // labels
+    const t1=el('text',{x:c.x+8,y:c.y+14,class:'nm'},g);t1.textContent=c.name;
+    const t2=el('text',{x:c.x+8,y:c.y+26,class:'lbl'},g);t2.textContent=c.id+' · '+c.room;
+    const t3=el('text',{x:c.x+8,y:c.y+c.h-8,class:'st'},g);t3.textContent='idle';
+    const t4=el('text',{x:c.x+c.w-8,y:c.y+c.h-8,class:'lbl','text-anchor':'end',style:'font-size:8px'},g);t4.textContent=c.stack;
+    // color dot
+    el('circle',{cx:c.x+c.w-12,cy:c.y+12,r:4,fill:c.color},g);
+  });
+}
+function setState(id,state){
+  const g=$('#room-'+id);if(!g)return;
+  g.setAttribute('class','room '+(state==='idle'?'':state));
+  g.querySelector('.st').textContent=state;
+  const anyOn=[...roomsG.children].some(r=>/speaking|objecting|thinking/.test(r.getAttribute('class')));
+  $('#stairs').classList.toggle('on',anyOn);
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* svg -> screen coords */
+function toScreen(x,y){const r=svg.getBoundingClientRect(),sc=Math.min(r.width/1000,r.height/700),ox=(r.width-1000*sc)/2,oy=(r.height-700*sc)/2;const s=$('#scene').getBoundingClientRect();return{x:r.left-s.left+ox+x*sc,y:r.top-s.top+oy+y*sc,sc}}
+function roomAnchor(id){const c=BY[id];return{x:c.x+c.w/2,y:c.y+6}}
+
+/* relay particle along the stairs: from room to cauldron */
+function relayPulse(fromId,color){
+  const c=BY[fromId];if(!c)return;
+  const x0=c.x+c.w/2,y0=c.y+c.h/2;const midX=500,midY=y0;const ex=500,ey=505;
+  const p=el('circle',{r:5,fill:color,class:'relay-pk',style:'color:'+color},svg);
+  p.animate([{transform:`translate(${x0}px,${y0}px)`,opacity:1},{transform:`translate(${midX}px,${midY}px)`,opacity:1,offset:.45},{transform:`translate(${ex}px,${ey}px)`,opacity:.2}],{duration:1100,easing:'cubic-bezier(.4,0,.2,1)'}).onfinish=()=>p.remove();
+  const brew=$('#brew');brew.animate([{fill:brew.getAttribute('fill')||'#4ade80'},{fill:color},{fill:'#4ade80'}],{duration:1400,delay:900});
+}
+/* speech bubble over the room, then drifts to the stairs */
+async function bubble(fromId,text,kind){
+  const a=fromId==='fde'?{x:500,y:322}:roomAnchor(fromId);
+  const p=toScreen(a.x,a.y);
+  const b=document.createElement('div');b.className='bubble '+(kind||'');
+  const who=fromId==='fde'?'house owner':fromId;
+  b.innerHTML=`<div class="who" style="color:${COLOR(fromId)}">${who}</div>${text.length>110?text.slice(0,107)+'…':text}`;
+  b.style.left=p.x+'px';b.style.top=(p.y-6)+'px';bubbles.appendChild(b);
+  b.animate([{opacity:0,transform:'translate(-50%,-90%) scale(.9)'},{opacity:1,transform:'translate(-50%,-100%) scale(1)'}],{duration:250,fill:'forwards'});
+  await sleep(kind==='none'?1400:2600);
+  const t=toScreen(500,330);
+  b.animate([{opacity:1,transform:'translate(-50%,-100%) scale(1)'},{opacity:0,transform:`translate(calc(-50% + ${t.x-p.x}px), calc(-100% + ${t.y-p.y}px)) scale(.4)`}],{duration:700,easing:'ease-in',fill:'forwards'}).onfinish=()=>b.remove();
+}
+function knockText(){const p=toScreen(500,520);const k=document.createElement('div');k.className='knock';k.textContent='knock knock';k.style.left=p.x+'px';k.style.top=p.y+'px';bubbles.appendChild(k);k.animate([{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-70%) scale(1.1)'},{opacity:0,transform:'translate(-50%,-110%) scale(1)'}],{duration:1400}).onfinish=()=>k.remove()}
+function flickerAll(){[...roomsG.children].forEach(r=>{r.classList.add('flicker');setTimeout(()=>r.classList.remove('flicker'),800)});$('#lantern').classList.add('flicker');setTimeout(()=>$('#lantern').classList.remove('flicker'),800)}
+function shoutRing(){const r=$('#ring');r.animate([{r:0,opacity:1},{r:420,opacity:0}],{duration:1100,easing:'ease-out'});flickerAll();SFX.shout()}
+
+/* trick-or-treater */
+async function kidWalk(toX,ms){
+  const k=$('#kid'),body=$('#kidbody');const from=k._x??-80;
+  const walk=body.animate([{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(0)'}],{duration:260,iterations:Infinity});
+  const a=k.animate([{transform:`translate(${from}px,588px)`},{transform:`translate(${toX}px,588px)`}],{duration:ms,easing:'linear',fill:'forwards'});
+  await a.finished.catch(()=>{});walk.cancel();k._x=toX;
+}
+async function arrive(){await kidWalk(430,2200);await sleep(200);const d=$('#door');d.animate([{transform:'translateX(0)'},{transform:'translateX(-2px)'},{transform:'translateX(2px)'},{transform:'translateX(0)'}],{duration:300,iterations:2});SFX.knock();knockText();await sleep(900)}
+async function deliver(plan){
+  $('#cauldron').classList.add('on');SFX.brew();
+  // candies pop out of the cauldron and fly to the door
+  const sources=plan.steps.map(s=>s.source);
+  for(let i=0;i<sources.length;i++){
+    const col=COLOR(sources[i]);
+    const c=el('rect',{width:10,height:10,rx:2,fill:col,style:'color:'+col,class:'relay-pk'},svg);
+    c.animate([{transform:`translate(495px,520px) rotate(0deg)`,opacity:1},{transform:`translate(${440+i*12}px,${470}px) rotate(180deg)`,opacity:1,offset:.5},{transform:`translate(${445+i*10}px,575px) rotate(405deg)`,opacity:1}],{duration:900,delay:i*140,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'}).onfinish=()=>{c.remove();const bc=el('rect',{x:-6+ (i%3)*5,y:-4-Math.floor(i/3)*5,width:7,height:7,rx:2,fill:col,transform:'rotate(45)'},$('#bagcandy'));};
+    SFX.candy();await sleep(160);
+  }
+  await sleep(600);
+  $('#door').classList.add('open');$('#doorghost').animate([{opacity:0},{opacity:1}],{duration:400,fill:'forwards'});
+  setState(plan.for,'speaking');
+  await bubble(plan.for,'Here is your candy. Every piece is a lesson from a different room, and none of them is a room.','plan');
+  await sleep(300);setState(plan.for,'idle');
+  $('#doorghost').animate([{opacity:1},{opacity:0}],{duration:400,fill:'forwards'});$('#door').classList.remove('open');$('#cauldron').classList.remove('on');
+  await kidWalk(1100,2600);
+}
+
+/* ---------- transcript ---------- */
+async function stream(node,text,speed=20){const w=text.split(' ');let out='';const cur=document.createElement('span');cur.className='cursor';for(let i=0;i<w.length;i++){if(cancel)return;out+=(i?' ':'')+w[i];node.textContent=out;node.appendChild(cur);feed.scrollTop=feed.scrollHeight;await sleep(speed+Math.random()*20)}cur.remove()}
+async function addMessage(m,{withBubble=true}={}){
+  const who=m.from==='fde'?'FDE · house owner':m.from==='moderator'?'Seminar':m.from;
+  const d=document.createElement('div');d.className='msg '+(m.kind||'');
+  d.innerHTML=`<div class="who"><b style="color:${m.from==='moderator'?'var(--muted)':COLOR(m.from)}">${who}</b>${BY[m.from]?BY[m.from].room:''}</div><div class="b"><span class="txt"></span></div>`;
+  feed.appendChild(d);feed.scrollTop=feed.scrollHeight;
+  if(withBubble&&(BY[m.from]||m.from==='fde')){bubble(m.from,m.text,m.kind);if(BY[m.from]){relayPulse(m.from,m.kind==='objection'?'#ffb454':BY[m.from].color);m.kind==='objection'?SFX.object():SFX.whoosh()}}
+  await stream(d.querySelector('.txt'),m.text,m.kind==='none'?8:20);
+  const meta=[];if(m.kind&&!['moderator','request'].includes(m.kind))meta.push(`<span class="chip" style="border-color:${COLOR(m.from)}55;color:${COLOR(m.from)}">${m.kind}</span>`);
+  if(m.cites)meta.push(`<span class="chip cite">cites ${m.cites} memory only</span>`);
+  meta.push(`<span class="chip">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`);
+  d.querySelector('.b').insertAdjacentHTML('beforeend',`<div class="meta">${meta.join('')}</div>`);feed.scrollTop=feed.scrollHeight;
+}
+function sys(t){const d=document.createElement('div');d.className='sys';d.textContent='— '+t+' —';feed.appendChild(d);feed.scrollTop=feed.scrollHeight}
+async function renderPlan(p){
+  const e=$('#plan');e.classList.add('ready');
+  e.innerHTML=`<div class="title">🍬 ${p.title}</div><ol id="planlist"></ol><div class="actions"><button class="primary" onclick="savePlan()">Shelve in archive</button><button onclick="copyPlan()">Copy</button></div>`;
+  const ol=$('#planlist');
+  for(const s of p.steps){const li=document.createElement('li');li.innerHTML=`<span class="candy" style="color:${COLOR(s.source)}"></span>${s.text}<span class="src">${s.source==='FDE'?'house owner':'from '+s.source}</span>`;ol.appendChild(li);await sleep(300)}
+  e._plan=p;
+}
+let plans=[];
+function savePlan(){
+  const p=$('#plan')._plan;if(!p)return;
+  plans.unshift(p);try{localStorage.setItem('fde-haunted-plans',JSON.stringify(plans))}catch(e){}
+  renderBooks();toast('Shelved in the plan archive · Supabase plans table · no private data');
+  if(live)live.send(JSON.stringify({type:'save',plan:p}));
+}
+function renderBooks(){
+  const g=$('#books');g.innerHTML='';
+  plans.slice(0,9).forEach((p,i)=>{const shelf=Math.floor(i/5),x=12+(i%5)*26,y=58+shelf*50;const col=COLOR(p.for);
+    const b=el('rect',{x,y:y-36,width:18,height:36,rx:1,fill:col,opacity:.85},g);
+    el('rect',{x:x+3,y:y-30,width:12,height:3,fill:'#0a0912',opacity:.5},g);
+    if(i===0)b.animate([{transform:'translateY(-30px)',opacity:0},{transform:'translateY(0)',opacity:.85}],{duration:500,easing:'ease-out'});
+  });
+}
+function copyPlan(){const p=$('#plan')._plan;if(!p)return;navigator.clipboard?.writeText(p.title+'\n'+p.steps.map((s,i)=>`${i+1}. ${s.text} [${s.source}]`).join('\n'));toast('Copied')}
+function toast(t){const e=$('#toast');$('#toasttext').textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),3000)}
+
+/* ---------- event router (replay + live share this) ---------- */
+let running=false,awaiting=null,cancel=false,live=null;
+async function handle(e){
+  switch(e.type){
+    case 'arrive':await arrive();break;
+    case 'request':$('#reqtag').textContent='knock · '+e.from;$('#reqtext').textContent=e.text;await addMessage({from:e.from,kind:'request',text:e.text});break;
+    case 'status':setState(e.agent,e.state);break;
+    case 'sys':sys(e.text);break;
+    case 'message':await addMessage(e);break;
+    case 'fde':await addMessage({from:'fde',kind:'fde',text:e.text});break;
+    case 'await-fde':armFde(e.suggestion);break;
+    case 'plan':await renderPlan(e);$('#reqtag').textContent='candy ready';$('#plan')._plan=e;break;
+    case 'deliver':await deliver($('#plan')._plan);$('#reqtag').textContent='delivered';break;
+  }
+}
+function armFde(s){awaiting=s;$('#shout').classList.add('armed');const i=$('#fdeinput');i.placeholder=s;i.focus();sys('seminar paused · the house owner may speak');$('#fdefig').animate([{transform:'translateY(0)'},{transform:'translateY(-6px)'},{transform:'translateY(0)'}],{duration:600,iterations:3})}
+async function sendFde(){
+  const i=$('#fdeinput');const text=i.value.trim()||awaiting||'';if(!text)return;i.value='';
+  $('#shout').classList.remove('armed');shoutRing();
+  await addMessage({from:'fde',kind:'fde',text});
+  if(live){live.send(JSON.stringify({type:'fde',text}));return}
+  if(awaiting!==null){awaiting=null;await play(AFTER_FDE)}
+}
+async function play(list){for(const e of list){if(cancel)return;await sleep(e.t);if(cancel)return;await handle(e)}}
+async function start(){if(running)return;running=true;cancel=false;ac();$('#overlay').classList.add('hide');$('#startbtn').textContent='● Night in progress';if(live){live.send(JSON.stringify({type:'start'}));return}await play(SCRIPT);$('#startbtn').textContent='🎃 Run again';running=false;}
+function reset(){
+  cancel=true;running=false;awaiting=null;feed.innerHTML='';bubbles.innerHTML='';
+  $('#plan').className='plan';$('#plan').innerHTML='<div class="empty">The cauldron brews a plan once the seminar agrees.<br>Each candy is the colour of the room it came from.</div>';$('#plan')._plan=null;
+  $('#reqtag').textContent='quiet night';$('#reqtext').textContent='No one at the door…';$('#shout').classList.remove('armed');$('#fdeinput').placeholder='Add a constraint the council must respect…';
+  $('#startbtn').textContent='🎃 Run';CLIENTS.forEach(c=>setState(c.id,'idle'));
+  const k=$('#kid');k.getAnimations().forEach(a=>a.cancel());k.setAttribute('transform','translate(-80,588)');k._x=-80;$('#bagcandy').innerHTML='';
+  $('#door').classList.remove('open');$('#cauldron').classList.remove('on');
+  setTimeout(()=>{cancel=false},60);
+}
+
+/* ---------- privacy wall: try a locked door ---------- */
+async function askRoom(id,about){
+  const other=about||(id==='client-1'?'client-2':'client-1');
+  const c=BY[id];
+  const p=toScreen(c.x+21,c.y+c.h-40);
+  const k=document.createElement('div');k.className='knock';k.style.fontSize='18px';k.textContent='rattle';k.style.left=p.x+'px';k.style.top=p.y+'px';bubbles.appendChild(k);
+  k.animate([{opacity:0},{opacity:1},{opacity:0}],{duration:900}).onfinish=()=>k.remove();
+  setState(id,'thinking');await sleep(500);setState(id,'walled');SFX.lock();
+  await addMessage({from:id,kind:'none',text:`Asked: "what did ${other} build?" → I hold no records for ${other}. Each room is a sealed actor. I can only share sanitized lessons on the stairs, never another client's data.`},{withBubble:false});
+  bubble(id,`I hold no records for ${other}. This door only opens from the inside.`,'plan');
+  toast('Privacy wall held · door stayed locked · 0 bytes crossed');
+  await sleep(2600);setState(id,'idle');
+}
+
+/* ---------- live connector hook ----------
+   haunted.html?ws=ws://localhost:8787 → consumes the same JSON events as SCRIPT.
+   Sends back {type:'start'} {type:'fde',text} {type:'save',plan}. Also window.FDE.push(event). */
+window.FDE={push:handle,setState,clients:CLIENTS};
+(function(){const url=new URLSearchParams(location.search).get('ws');if(!url)return;try{const ws=new WebSocket(url);
+ws.onopen=()=>{live=ws;$('#livedot').textContent='live';$('#livedot').style.color='var(--ok)';$('#modebadge').textContent='live';toast('Connected to relay connector')};
+ws.onmessage=ev=>{try{handle(JSON.parse(ev.data))}catch(e){console.warn('bad event',ev.data)}};
+ws.onclose=()=>{live=null;$('#livedot').textContent='replay';$('#modebadge').textContent='replay';toast('Connector lost · replay mode')}}catch(e){}})();
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'){if(e.key==='Enter')sendFde();return}
+  if(e.code==='Space'){e.preventDefault();start()}
+  if(e.key==='r'||e.key==='R')reset();
+  if(e.key==='w'||e.key==='W')askRoom('client-2','client-1');
+  if(e.key==='m'||e.key==='M')toggleSound();
+});
+buildRooms();
+try{plans=JSON.parse(localStorage.getItem('fde-haunted-plans')||'[]')}catch(e){}
+renderBooks();
+</script>
+</body>
+</html>

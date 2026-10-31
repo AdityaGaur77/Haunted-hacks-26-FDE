@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE Council</title>
+<meta name="description" content="Five sealed client minds. One live debate. A human who can interrupt. Private data never leaves its actor, only lessons do.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07080c;--text:#eceef4;--muted:#8a90a3;--line:#1b1f2c;--panel:#0e1016;--accent:#8b7cff;--accent2:#5ee1ff;--warn:#ffb454;--fde:#ff6fb1;--ok:#4ade80;
+  --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5;
+  background-image:radial-gradient(900px 500px at 50% -10%,rgba(139,124,255,.18),transparent 60%)}
+a{color:inherit}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:26px 0;font-size:13px}
+nav .brand{font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+nav .brand i{width:8px;height:8px;border-radius:50%;background:var(--accent2);box-shadow:0 0 10px var(--accent2)}
+nav a{color:var(--muted);text-decoration:none;margin-left:22px}
+nav a.cta{color:var(--text);border:1px solid var(--line);padding:8px 14px;border-radius:999px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent2);margin-bottom:22px}
+h1{font-size:clamp(40px,7vw,78px);line-height:.98;letter-spacing:-.045em;margin:0 0 24px;font-weight:800}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:clamp(28px,4.2vw,46px);letter-spacing:-.035em;line-height:1.04;margin:0 0 18px;font-weight:800}
+h2 em{font-style:normal;color:var(--accent2)}
+.sub{font-size:19px;color:var(--muted);max-width:620px;margin:0 auto 34px}
+.lead{font-size:17.5px;color:var(--muted);max-width:640px;margin:0 0 30px}
+.btn{display:inline-block;text-decoration:none;font-weight:600;font-size:14px;padding:14px 24px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#6a5cff);color:#fff;box-shadow:0 10px 40px -10px rgba(139,124,255,.7);transition:.15s}
+.btn:hover{transform:translateY(-2px)}
+.btn.ghost{background:transparent;border:1px solid var(--line);box-shadow:none;color:var(--muted);margin-left:10px}
+.hero{padding:70px 0 40px;text-align:center}
+.pill{display:inline-flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;border:1px solid var(--line);padding:6px 12px;border-radius:999px;color:var(--muted);margin-top:18px}
+.pill b{color:var(--ok);font-weight:500}
+/* diagram */
+.diagram{position:relative;width:min(560px,100%);height:270px;margin:56px auto 0}
+.node{position:absolute;width:66px;height:66px;border-radius:16px;border:1px solid var(--line);background:#0e1016;display:grid;place-items:center;font-family:var(--mono);font-size:10px;color:var(--muted);transform:translate(-50%,-50%);transition:.3s;text-align:center;line-height:1.2}
+.node small{display:block;font-size:8px;opacity:.6}
+.node.on{border-color:var(--accent2);color:var(--accent2);box-shadow:0 0 0 1px rgba(94,225,255,.3),0 10px 40px -10px rgba(94,225,255,.6)}
+.node.obj{border-color:var(--warn);color:var(--warn);box-shadow:0 0 0 1px rgba(255,180,84,.3),0 10px 40px -10px rgba(255,180,84,.6)}
+.node.ask{border-color:var(--accent);color:var(--accent)}
+.node.fde{border-radius:50%;border-color:var(--fde);color:var(--fde);background:rgba(255,111,177,.06)}
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:120px;height:44px;border-radius:999px;border:1px dashed var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em}
+.hub::after{content:"";position:absolute;inset:-6px;border-radius:999px;border:1px solid rgba(139,124,255,.25);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{transform:scale(.9);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+svg.lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+svg.lines line{stroke:var(--line);stroke-width:1}
+.pk{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 12px var(--accent2);transform:translate(-50%,-50%);pointer-events:none}
+.caption{text-align:center;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:14px;min-height:18px}
+/* sections */
+section{padding:84px 0;border-top:1px solid var(--line)}
+.num{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.story{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:34px}
+.beat{border:1px solid var(--line);border-radius:16px;padding:20px;background:var(--panel)}
+.beat .when{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.beat h3{margin:0 0 8px;font-size:16px;letter-spacing:-.01em}
+.beat p{margin:0;font-size:13.5px;color:var(--muted)}
+.beat.bad{border-color:rgba(255,180,84,.35)}
+.beat.bad .when{color:var(--warn)}
+.big{font-size:clamp(26px,4vw,40px);letter-spacing:-.03em;line-height:1.15;font-weight:700;max-width:760px;margin:0}
+.big em{font-style:normal;color:var(--accent2)}
+.big .strike{text-decoration:line-through;color:var(--muted);text-decoration-color:var(--warn)}
+.steps{counter-reset:s;display:grid;gap:14px;max-width:680px;margin-top:30px}
+.step{display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start;font-size:15.5px;color:var(--muted)}
+.step::before{counter-increment:s;content:counter(s,decimal-leading-zero);font-family:var(--mono);font-size:12px;color:var(--accent2);padding-top:4px}
+.step b{color:var(--text);font-weight:600;display:block}
+.step.fde::before{color:var(--fde)}
+.step.fde b{color:var(--fde)}
+/* transcript */
+.tx{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:22px 24px;display:grid;gap:12px;max-width:720px;margin-top:30px;position:relative;overflow:hidden}
+.tx::before{content:"LIVE · AGENT RELAY";position:absolute;top:12px;right:16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--ok)}
+.line{display:grid;grid-template-columns:84px 1fr;gap:14px;font-size:14px;line-height:1.5}
+.line .w{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;padding-top:2px}
+.line .w b{display:block;color:var(--text);font-weight:500}
+.line.l3 .w b{color:var(--accent2)}.line.l5 .w b{color:var(--warn)}.line.fde .w b{color:var(--fde)}.line.plan .w b{color:var(--ok)}
+.line .b{border-left:2px solid var(--line);padding-left:14px}
+.line.l5 .b{border-color:var(--warn)}.line.fde .b{border-color:var(--fde)}.line.plan .b{border-color:var(--ok)}
+.line .b .src{font-family:var(--mono);font-size:10px;color:var(--accent2);border:1px solid rgba(94,225,255,.3);padding:1px 6px;border-radius:999px;margin-left:6px;vertical-align:1px}
+.line .b .src.fde{color:var(--fde);border-color:rgba(255,111,177,.4)}
+.line.sys{grid-template-columns:1fr;font-family:var(--mono);font-size:10.5px;color:var(--muted);text-align:center;letter-spacing:.08em;text-transform:uppercase}
+/* compare */
+.cmp{display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:14px;margin-top:30px}
+.cmp .c{border:1px solid var(--line);border-radius:16px;padding:20px;background:var(--panel)}
+.cmp .c.win{border-color:rgba(94,225,255,.4);box-shadow:0 0 0 1px rgba(94,225,255,.15),0 20px 60px -20px rgba(94,225,255,.4)}
+.cmp h3{margin:0 0 6px;font-size:15px}
+.cmp .tag{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;color:var(--warn)}
+.cmp .c.win .tag{color:var(--ok)}
+.cmp ul{margin:0;padding-left:16px;font-size:13.5px;color:var(--muted);display:grid;gap:6px}
+.cmp .c.win ul{color:var(--text)}
+/* arch */
+.arch{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:30px}
+.arch .a{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--panel)}
+.arch .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);margin-bottom:8px}
+.arch h3{margin:0 0 6px;font-size:14.5px}
+.arch p{margin:0;font-size:12.5px;color:var(--muted)}
+.wall{border:1px solid rgba(74,222,128,.35);border-radius:16px;padding:18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.7;background:rgba(74,222,128,.04);max-width:680px;margin-top:30px}
+.wall .q{color:var(--muted)}.wall .a{color:var(--ok)}
+.quote{border-left:2px solid var(--accent);padding:6px 0 6px 20px;font-size:22px;letter-spacing:-.015em;max-width:680px;margin:30px 0 0;line-height:1.35}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:40px}
+.stat .n{font-size:34px;letter-spacing:-.03em;font-weight:800}.stat .l{font-size:12.5px;color:var(--muted)}
+.rt{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px}
+.rt .r{border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--panel)}
+.rt h3{margin:0 0 6px;font-size:15px}.rt p{margin:0;font-size:13.5px;color:var(--muted)}
+.markets{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.markets span{font-size:13px;border:1px solid var(--line);padding:8px 14px;border-radius:999px;color:var(--muted)}
+footer{padding:80px 0 70px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12.5px}
+footer .close{font-size:clamp(30px,5vw,54px);letter-spacing:-.04em;color:var(--text);font-weight:800;margin-bottom:12px;line-height:1.02}
+footer .close em{font-style:normal;color:var(--fde)}
+footer p{max-width:520px;margin:0 auto 28px;font-size:16px}
+@media (max-width:820px){.story,.cmp{grid-template-columns:1fr}.arch,.stats{grid-template-columns:1fr 1fr}.rt{grid-template-columns:1fr}}
+@media (max-width:520px){.arch,.stats{grid-template-columns:1fr}nav a:not(.cta){display:none}.btn.ghost{margin:10px 0 0}.line{grid-template-columns:1fr}.line .w{text-align:left}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="brand"><i></i>FDE Council</div>
+    <div><a href="#problem">Problem</a><a href="#demo">Demo</a><a href="#why">Why</a><a href="#tech">Tech</a><a class="cta" href="app3.html">Open the demo →</a></div>
+  </nav>
+
+  <div class="hero">
+    <div class="eyebrow">Haunted Hacks · Real-time AI edition · built on Terse + Agent Relay</div>
+    <h1>Your clients' secrets,<br>in one room.<br><em>Nothing leaks.</em></h1>
+    <p class="sub">FDE Council gives every client its own sealed AI actor, puts the actors in a live debate, and lets the engineer interrupt them mid-argument. Lessons cross the wall. Data never does.</p>
+    <a class="btn" href="app3.html">▶ Watch the council run</a><a class="btn ghost" href="#demo">60-second walkthrough</a>
+    <div><span class="pill">privacy wall <b>held</b> · private bytes shared <b>0</b> · human override <b>live</b></span></div>
+
+    <div class="diagram" id="diagram">
+      <svg class="lines" id="lines"></svg>
+      <div class="hub">RELAY</div>
+    </div>
+    <div class="caption" id="caption">&nbsp;</div>
+  </div>
+
+  <section id="problem">
+    <div class="num">01 · The problem</div>
+    <h2>One engineer. Five clients.<br>The same bug, solved <em>five times.</em></h2>
+    <p class="lead">A forward-deployed engineer lives inside their clients' stacks. Client 3 shipped dark mode last month. Client 5 tried the same trick and broke every chart. Client 1 is about to do both again, because the one thing an FDE is never allowed to do is pool client knowledge.</p>
+    <div class="story">
+      <div class="beat"><div class="when">Monday · client 3</div><h3>Dark mode in two hours</h3><p>CSS variables, a theme toggle, done. The lesson lands in one Slack thread and one head.</p></div>
+      <div class="beat bad"><div class="when">Wednesday · client 5</div><h3>Same approach, broken charts</h3><p>Recharts reads colours as props, not CSS. Half a day lost before anyone notices.</p></div>
+      <div class="beat bad"><div class="when">Friday · client 1</div><h3>"Can we add dark mode?"</h3><p>Same stack as client 5. The engineer remembers roughly. The AI assistant remembers nothing, by policy.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="num">02 · The insight</div>
+    <p class="big">The knowledge already exists. The wall between clients is the problem.<br><span class="strike">So remove the wall.</span><br>So <em>teach the wall to talk.</em></p>
+    <p class="lead" style="margin-top:26px">Each client gets its own durable actor that remembers everything about that deployment: what was built, what broke, how it was fixed, which stack. Actors cannot read each other. They can only speak on a shared channel, and only in lessons. That is not a prompt rule. It is the architecture.</p>
+  </section>
+
+  <section id="demo">
+    <div class="num">03 · The demo, in 60 seconds</div>
+    <h2>Watch five minds argue.<br>Then <em>interrupt them.</em></h2>
+    <div class="tx">
+      <div class="line"><div class="w"><b>client-1</b>asks</div><div class="b">Add dark mode to the analytics dashboard before the Q4 launch.</div></div>
+      <div class="line sys">4 actors consulting private memory</div>
+      <div class="line l3"><div class="w"><b>client-3</b>lesson</div><div class="b">We shipped dark mode in two hours. CSS variables on :root, data-theme toggle. Our D3 charts picked it up automatically.<span class="src">cites client-3 memory</span></div></div>
+      <div class="line"><div class="w"><b>client-2</b>—</div><div class="b" style="opacity:.55">No relevant experience.</div></div>
+      <div class="line l5"><div class="w"><b>client-5</b>objection</div><div class="b">Objection. That exact approach broke every chart for us. Recharts resolves colours at render time, not from CSS. Client 1 is on Recharts too.<span class="src">cites client-5 memory</span></div></div>
+      <div class="line sys">council paused · waiting for FDE</div>
+      <div class="line fde"><div class="w"><b>FDE</b>human</div><div class="b">Client 1 cannot change chart libraries. Recharts stays.</div></div>
+      <div class="line l5"><div class="w"><b>client-5</b>revision</div><div class="b">Then our eventual fix applies: read tokens via getComputedStyle, pass as props, re-render on themechange. About 40 minutes.</div></div>
+      <div class="line plan"><div class="w"><b>plan</b>client-1</div><div class="b">CSS variables for the shell<span class="src">client-3</span> · token injection for charts<span class="src">client-5</span> · no library swap<span class="src fde">FDE</span></div></div>
+      <div class="line sys">debate closed · 0 bytes of private data shared</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div><b>A client asks.</b> The request is broadcast on the relay.</div></div>
+      <div class="step"><div><b>Every actor checks its own memory.</b> A lesson, or "no relevant experience". Nothing else crosses.</div></div>
+      <div class="step"><div><b>They challenge each other.</b> The conflict surfaces in seconds instead of on Wednesday.</div></div>
+      <div class="step fde"><div><b>The human interrupts.</b> One constraint, typed live. The actors re-evaluate in real time.</div></div>
+      <div class="step"><div><b>A plan with provenance.</b> Every step tagged with where it came from, saved to a history that holds no private data.</div></div>
+    </div>
+    <div style="margin-top:30px"><a class="btn" href="app3.html">▶ Run it yourself</a></div>
+  </section>
+
+  <section id="why">
+    <div class="num">04 · Why five actors, not one AI</div>
+    <h2>The obvious options <em>both fail.</em></h2>
+    <div class="cmp">
+      <div class="c"><div class="tag">Option A</div><h3>One big brain</h3><ul><li>Knows every client</li><li>One wrong prompt and client A's architecture lands in client B's plan</li><li>Forbidden under every FDE contract</li></ul></div>
+      <div class="c"><div class="tag">Option B</div><h3>Separate chats</h3><ul><li>Data stays apart</li><li>Every lesson is lost at the wall</li><li>Every fix rediscovered from zero</li></ul></div>
+      <div class="c win"><div class="tag">FDE Council</div><h3>Sealed actors that debate</h3><ul><li>Each actor physically holds only its client's state</li><li>Lessons cross. Code and data cannot</li><li>A human steers the room, live</li></ul></div>
+    </div>
+    <div class="wall">
+      <div class="q">&gt; ask client-2: "What did client 1 build?"</div>
+      <div class="a">[client-2] I hold no records for client-1. Each client's history lives in its own isolated actor. I can only share sanitized lessons on the relay, never another client's data.</div>
+    </div>
+  </section>
+
+  <section id="tech">
+    <div class="num">05 · The tech</div>
+    <h2>Real time is not a feature here.<br>It is <em>the whole point.</em></h2>
+    <p class="lead">A batch system could summarise five histories. It could not let an engineer type a constraint while actors are mid-argument and watch them change course. That moment only exists because the actors are durable, the channel is live, and the human is in the loop.</p>
+    <div class="arch">
+      <div class="a"><div class="k">Terse</div><h3>One durable actor per client</h3><p>Private memory: request, solution, what broke, fix, stack. Survives restarts. Never shared.</p></div>
+      <div class="a"><div class="k">Agent Relay</div><h3>The shared channel</h3><p>Lessons, objections and revisions stream live. The FDE can inject at any point.</p></div>
+      <div class="a"><div class="k">Connector</div><h3>Relay ↔ actors</h3><p>Routes channel messages to each actor and sanitized replies back. The riskiest piece, built first.</p></div>
+      <div class="a"><div class="k">Supabase</div><h3>Shared, non-private</h3><p>Two tables: clients and plans. Feeds the cards and the history page. No client data, ever.</p></div>
+    </div>
+    <div class="rt">
+      <div class="r"><h3>Streaming debate</h3><p>Every actor's turn streams token by token to the screen, with the client it cites attached.</p></div>
+      <div class="r"><h3>Mid-debate override</h3><p>The engineer's constraint arrives on the same channel as the actors. They treat it as law and revise on the spot.</p></div>
+    </div>
+    <p class="quote">"Private client data lives in isolated actors. Only approved, sanitized plans reach the shared database."</p>
+    <div class="stats">
+      <div class="stat"><div class="n">5</div><div class="l">sealed durable actors</div></div>
+      <div class="stat"><div class="n">1</div><div class="l">live relay channel</div></div>
+      <div class="stat"><div class="n">0</div><div class="l">bytes of private data shared</div></div>
+      <div class="stat"><div class="n">1 day</div><div class="l">from idea to working council</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="num">06 · Beyond the FDE</div>
+    <h2>Every team that serves many accounts under NDA <em>has this problem.</em></h2>
+    <p class="lead">Sealed memory per account, shared lessons across them, a human who can step into the room at any moment. The FDE is the sharpest case. It is not the only one.</p>
+    <div class="markets"><span>Dev agencies</span><span>Consultancies</span><span>Law firms</span><span>Managed service providers</span><span>Customer success</span><span>Fractional CTOs</span><span>Venture platform teams</span></div>
+  </section>
+
+  <footer>
+    <div class="close">Five sealed minds.<br>One live debate.<br><em>One human in control.</em></div>
+    <p>Open the demo, let the council argue, then type a constraint and watch them change their minds.</p>
+    <a class="btn" href="app3.html">▶ Open the live demo</a>
+    <div style="margin-top:34px">FDE Council · built in one day at Haunted Hacks · Oct 31, 2026</div>
+  </footer>
+</div>
+
+<script>
+const dia=document.getElementById('diagram'),svg=document.getElementById('lines'),cap=document.getElementById('caption');
+const W=()=>dia.clientWidth,H=()=>dia.clientHeight;
+const nodes=[];const ids=['client-1','client-2','client-3','client-4','client-5'];
+function layout(){
+  svg.innerHTML='';
+  const cx=W()/2,cy=H()/2,rx=Math.min(240,W()/2-40),ry=100;
+  ids.forEach((id,i)=>{
+    const a=-Math.PI/2+i*(2*Math.PI/5),x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a);
+    let n=nodes[i]; if(!n){n=document.createElement('div');n.className='node';n.innerHTML=`${id}<small>sealed actor</small>`;dia.appendChild(n);nodes[i]=n;}
+    n.style.left=x+'px';n.style.top=y+'px';n._x=x;n._y=y;
+    const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',x);l.setAttribute('y1',y);l.setAttribute('x2',cx);l.setAttribute('y2',cy);svg.appendChild(l);
+  });
+  if(!dia._fde){const f=document.createElement('div');f.className='node fde';f.innerHTML='FDE<small>human</small>';dia.appendChild(f);dia._fde=f;}
+  dia._fde.style.left=cx+'px';dia._fde.style.top=(cy+ry+45)+'px';dia._fde.style.display='none';
+}
+function pk(x0,y0,x1,y1,color){
+  const p=document.createElement('div');p.className='pk';if(color){p.style.background=color;p.style.boxShadow='0 0 12px '+color}
+  dia.appendChild(p);
+  p.animate([{left:x0+'px',top:y0+'px',opacity:1},{left:x1+'px',top:y1+'px',opacity:.2}],{duration:600,easing:'ease-in-out'}).onfinish=()=>p.remove();
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function loop(){
+  const beats=[
+    [0,'ask','client-1 asks: add dark mode',null],
+    [2,'on','client-3: CSS variables, shipped in 2h',null],
+    [4,'obj','client-5 objects: that broke our charts','#ffb454'],
+    ['fde','','FDE interrupts: client 1 cannot change chart libraries','#ff6fb1'],
+    [4,'on','client-5 revises: keep Recharts, inject tokens',null],
+    [0,'ask','plan drafted for client-1 · every step sourced · 0 bytes leaked','#4ade80'],
+  ];
+  while(true){
+    const cx=W()/2,cy=H()/2;
+    for(const [i,cls,text,color] of beats){
+      nodes.forEach(n=>n.className='node');dia._fde.style.display='none';
+      cap.textContent=text;
+      if(i==='fde'){dia._fde.style.display='grid';pk(cx,cy+145,cx,cy,color);}
+      else{const n=nodes[i];n.className='node '+cls;pk(n._x,n._y,cx,cy,color);await sleep(300);nodes.forEach((m,j)=>{if(j!==i)pk(cx,cy,m._x,m._y,color)});}
+      await sleep(1800);
+    }
+  }
+}
+layout();window.addEventListener('resize',layout);loop();
+</script>
+</body>
+</html>
