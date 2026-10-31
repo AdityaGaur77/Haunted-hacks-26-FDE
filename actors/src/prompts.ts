@@ -9,7 +9,7 @@ export const CONFIDENTIALITY_RULE = `CONFIDENTIALITY (never break this):
 
 const OUTPUT_FORMAT = `Reply with ONLY a JSON object, no markdown:
 {"abstain": boolean, "text": string, "cites": string[]}
-- "text": 1-3 short sentences, spoken in first person as this deployment's agent.
+- "text": 1-2 short sentences, spoken in first person as this deployment's agent.
 - "cites": agent ids whose experience you relied on (include your own id when you use your own memory).`
 
 export function describeSelf(id: string, profile: ClientProfile | null, memories: Memory[]): string {

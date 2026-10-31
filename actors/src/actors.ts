@@ -8,6 +8,29 @@ import type { Approval, ClientId, ClientProfile, CouncilEvent, EventType, Memory
 export type { Approval, ApprovalState, ClientId, ClientProfile, CouncilEvent, EventType, Memory, SeminarStatus } from "./types.js"
 
 const MODEL = process.env.OPENAI_MODEL ?? "gpt-5-mini"
+// Reasoning models think before answering; "minimal" keeps the live debate fast.
+const REASONING_EFFORT = process.env.OPENAI_REASONING_EFFORT ?? "minimal"
+const IS_REASONING_MODEL = /^(gpt-5|o\d)/.test(MODEL)
+// Minimum time per agent turn (ms). The reply "types out" word by word over this time,
+// so the live debate is readable on video. 0 = as fast as possible.
+const MIN_TURN_MS = Number(process.env.MIN_TURN_MS ?? 0)
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+/** Type the final text out word by word over the remaining turn time. */
+async function paceTyping(from: string, seminarId: string, text: string, startedAt: number): Promise<void> {
+    const remaining = MIN_TURN_MS - (Date.now() - startedAt)
+    if (remaining <= 0 || !text) return
+    const words = text.split(" ")
+    // ~2 updates per second: enough to look like typing without flooding the seminar's mailbox.
+    const steps = Math.min(words.length, Math.max(1, Math.floor(remaining / 500)))
+    const perStep = remaining / steps
+    for (let i = 1; i <= steps; i++) {
+        const shown = words.slice(0, Math.ceil((words.length * i) / steps)).join(" ")
+        SeminarActor.get(seminarId).typing(from, shown).catch(() => {})
+        await sleep(perStep)
+    }
+}
 
 type LlmReply = { abstain: boolean; text: string; cites: string[] }
 
@@ -23,13 +46,20 @@ function partialText(raw: string): string {
  * website shows the agent "typing". Streaming failures never break the reply.
  */
 async function askLlm(system: string, prompt: string, from?: string, seminarId?: string): Promise<LlmReply> {
-    const result = streamText({ model: openai(MODEL), system, prompt })
+    const startedAt = Date.now()
+    const pacing = MIN_TURN_MS > 0 && Boolean(seminarId && from)
+    const result = streamText({
+        model: openai(MODEL),
+        system,
+        prompt,
+        ...(IS_REASONING_MODEL ? { providerOptions: { openai: { reasoningEffort: REASONING_EFFORT } } } : {})
+    })
     let text = ""
     let lastSent = 0
     let lastShown = ""
     for await (const chunk of result.textStream) {
         text += chunk
-        if (!seminarId || !from) continue
+        if (!seminarId || !from || pacing) continue
         const now = Date.now()
         const shown = partialText(text)
         if (shown && shown !== lastShown && now - lastSent > 250) {
@@ -38,16 +68,19 @@ async function askLlm(system: string, prompt: string, from?: string, seminarId?:
             SeminarActor.get(seminarId).typing(from, shown).catch(() => {})
         }
     }
+    let reply: LlmReply
     try {
         const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1))
-        return {
+        reply = {
             abstain: Boolean(json.abstain),
             text: String(json.text ?? "").trim(),
             cites: Array.isArray(json.cites) ? json.cites.map(String) : []
         }
     } catch {
-        return { abstain: false, text: text.trim(), cites: [] }
+        reply = { abstain: false, text: text.trim(), cites: [] }
     }
+    if (pacing) await paceTyping(from!, seminarId!, reply.text, startedAt)
+    return reply
 }
 
 function makeEvent(id: string, type: EventType, r: LlmReply): CouncilEvent {
