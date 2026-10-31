@@ -3,9 +3,9 @@ import { streamText } from "ai"
 import { Actor, type ActorSocket, Emittable, Interleave, Persisted } from "durable-actors"
 
 import { describeSelf, planPrompt, challengePrompt, respondPrompt } from "./prompts.js"
-import type { ClientId, ClientProfile, CouncilEvent, EventType, Memory, SeminarStatus } from "./types.js"
+import type { Approval, ClientId, ClientProfile, CouncilEvent, EventType, Memory, SeminarStatus } from "./types.js"
 
-export type { ClientId, ClientProfile, CouncilEvent, EventType, Memory, SeminarStatus } from "./types.js"
+export type { Approval, ApprovalState, ClientId, ClientProfile, CouncilEvent, EventType, Memory, SeminarStatus } from "./types.js"
 
 const MODEL = process.env.OPENAI_MODEL ?? "gpt-5-mini"
 
@@ -143,7 +143,10 @@ export class ClientActor extends Actor {
 // Append-only event log, pushed live to the website over WebSocket.
 // The FDE jumps in by sending { type: "fde", text } over the socket.
 // ---------------------------------------------------------------------------
-type SeminarIncoming = { type: "fde"; text: string }
+type SeminarIncoming =
+    | { type: "fde"; text: string }
+    | { type: "approve" }
+    | { type: "reject"; text: string }
 type SeminarOutgoing =
     | { type: "event"; event: CouncilEvent }
     | { type: "typing"; from: string; text: string }
@@ -154,12 +157,14 @@ export class SeminarActor extends Actor<null, SeminarIncoming, SeminarOutgoing> 
     @Persisted @Emittable requestingClient: string | null = null
     @Persisted @Emittable request: string | null = null
     @Persisted @Emittable events: CouncilEvent[] = []
+    @Persisted @Emittable approval: Approval = { state: "none" }
 
     async start(requestingClient: ClientId, request: string): Promise<CouncilEvent> {
         this.status = "running"
         this.requestingClient = requestingClient
         this.request = request
         this.events = []
+        this.approval = { state: "none" }
         const e: CouncilEvent = { type: "request", from: requestingClient, text: request, ts: Date.now() }
         await this.append(e)
         return e
@@ -177,8 +182,8 @@ export class SeminarActor extends Actor<null, SeminarIncoming, SeminarOutgoing> 
         return this.events.filter(e => e.type === "fde").map(e => e.text)
     }
 
-    async getState(): Promise<{ status: SeminarStatus; requestingClient: string | null; request: string | null; events: CouncilEvent[] }> {
-        return { status: this.status, requestingClient: this.requestingClient, request: this.request, events: this.events }
+    async getState(): Promise<{ status: SeminarStatus; requestingClient: string | null; request: string | null; events: CouncilEvent[]; approval: Approval }> {
+        return { status: this.status, requestingClient: this.requestingClient, request: this.request, events: this.events, approval: this.approval }
     }
 
     /** Live partial text while an agent is generating. Not saved; the final reply arrives as an event. */
@@ -190,7 +195,35 @@ export class SeminarActor extends Actor<null, SeminarIncoming, SeminarOutgoing> 
         this.status = "done"
     }
 
+    /** The draft plan is in: wait for the FDE to approve or reject it. */
+    async requestApproval(): Promise<void> {
+        this.status = "awaiting_approval"
+        this.approval = { state: "pending" }
+    }
+
+    async getApproval(): Promise<Approval> {
+        return this.approval
+    }
+
+    /** FDE signs off on the latest plan. */
+    async approve(): Promise<void> {
+        if (this.approval.state !== "pending") return
+        this.approval = { state: "approved" }
+        await this.append({ type: "fde", from: "fde", text: "Approved the plan.", ts: Date.now() })
+    }
+
+    /** FDE rejects the plan; the feedback becomes a constraint for the rewrite. */
+    async reject(feedback: string): Promise<void> {
+        if (this.approval.state !== "pending") return
+        const text = String(feedback ?? "").trim() || "Rejected the plan. Revise it."
+        this.approval = { state: "rejected", feedback: text }
+        this.status = "running"
+        await this.append({ type: "fde", from: "fde", text, ts: Date.now() })
+    }
+
     async onMessage(_socket: SeminarSocket, message: SeminarIncoming): Promise<void> {
+        if (message?.type === "approve") return this.approve()
+        if (message?.type === "reject") return this.reject(message.text)
         if (message?.type !== "fde" || !String(message.text ?? "").trim()) return
         await this.append({ type: "fde", from: "fde", text: String(message.text).trim(), ts: Date.now() })
     }
