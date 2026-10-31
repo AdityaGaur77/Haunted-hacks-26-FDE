@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE Council</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080c; --panel:#0e1016; --panel2:#13161e; --line:#1c2030; --text:#e8eaf0; --muted:#7c8294;
+  --accent:#8b7cff; --accent2:#5ee1ff; --warn:#ffb454; --ok:#4ade80; --fde:#ff6fb1;
+  --mono:'JetBrains Mono',ui-monospace,monospace; --sans:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;
+  background-image:
+    radial-gradient(1200px 600px at 20% -10%, rgba(139,124,255,.14), transparent 60%),
+    radial-gradient(900px 500px at 90% 110%, rgba(94,225,255,.10), transparent 60%),
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size:auto,auto,40px 40px,40px 40px;}
+#app{display:grid;grid-template-rows:56px 1fr;height:100vh}
+header{display:flex;align-items:center;gap:18px;padding:0 22px;border-bottom:1px solid var(--line);background:rgba(14,16,22,.7);backdrop-filter:blur(10px)}
+.brand{font-weight:700;letter-spacing:-.02em;font-size:15px;display:flex;align-items:center;gap:10px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.brand .dot.live{background:var(--ok);box-shadow:0 0 0 0 rgba(74,222,128,.6);animation:ping 1.6s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(74,222,128,.6)}100%{box-shadow:0 0 0 10px rgba(74,222,128,0)}}
+.request{flex:1;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--muted);min-width:0}
+.request b{color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.request .tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);border:1px solid rgba(94,225,255,.3);padding:3px 7px;border-radius:999px}
+.controls{display:flex;gap:8px}
+button{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text);background:var(--panel2);border:1px solid var(--line);padding:8px 12px;border-radius:9px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--accent);transform:translateY(-1px)}
+button.primary{background:linear-gradient(135deg,var(--accent),#6a5cff);border-color:transparent}
+button.ghost{background:transparent}
+main{display:grid;grid-template-columns:272px 1fr 340px;gap:0;min-height:0}
+section{min-height:0;display:flex;flex-direction:column}
+.col-l{border-right:1px solid var(--line);padding:18px 14px;gap:10px;overflow:auto}
+.col-c{padding:0;position:relative}
+.col-r{border-left:1px solid var(--line);padding:18px 16px;gap:12px;overflow:auto}
+h4{margin:0 0 6px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+/* cards */
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;transition:all .35s cubic-bezier(.2,.8,.2,1);opacity:.55}
+.card .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .name{font-weight:600;font-size:13.5px}
+.card .id{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.card .stack{margin-top:6px;font-family:var(--mono);font-size:10.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px}
+.card .stack span{border:1px solid var(--line);padding:2px 6px;border-radius:6px}
+.card .state{position:absolute;top:10px;right:12px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+.card .state::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.card .mem{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.45;max-height:0;overflow:hidden;transition:max-height .4s}
+.card.asking{opacity:1;border-color:var(--accent);box-shadow:0 0 0 1px rgba(139,124,255,.3),0 10px 40px -10px rgba(139,124,255,.5)}
+.card.asking .state{color:var(--accent)}
+.card.thinking{opacity:.9;border-color:rgba(255,255,255,.18)}
+.card.thinking .state{color:#c3c7d4}
+.card.thinking .state::before{animation:blink .8s infinite}
+@keyframes blink{50%{opacity:.2}}
+.card.speaking{opacity:1;border-color:var(--accent2);transform:translateX(6px) scale(1.02);box-shadow:0 0 0 1px rgba(94,225,255,.35),0 16px 50px -12px rgba(94,225,255,.55)}
+.card.speaking .state{color:var(--accent2)}
+.card.speaking .mem{max-height:80px}
+.card.objecting{opacity:1;border-color:var(--warn);transform:translateX(6px) scale(1.02);box-shadow:0 0 0 1px rgba(255,180,84,.35),0 16px 50px -12px rgba(255,180,84,.6);animation:shake .4s}
+.card.objecting .state{color:var(--warn)}
+.card.objecting .mem{max-height:80px}
+@keyframes shake{0%,100%{transform:translateX(6px) scale(1.02)}25%{transform:translateX(2px) scale(1.02)}75%{transform:translateX(9px) scale(1.02)}}
+.card.walled{opacity:1;border-color:var(--ok)}
+.card.walled .state{color:var(--ok)}
+.lock{position:absolute;left:-1px;top:-1px;bottom:-1px;width:3px;border-radius:14px 0 0 14px;background:linear-gradient(var(--ok),transparent);opacity:.7}
+/* transcript */
+.feed{flex:1;overflow:auto;padding:22px 26px 10px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.msg{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:start;opacity:0;transform:translateY(8px);animation:in .35s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.msg .who{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:9px;text-align:right}
+.msg .who b{display:block;color:var(--text);font-weight:500}
+.bubble{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 14px;font-size:13.5px;line-height:1.55;position:relative;max-width:720px}
+.bubble .meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip.cite{border-color:rgba(94,225,255,.35);color:var(--accent2)}
+.chip.kind-objection{border-color:rgba(255,180,84,.4);color:var(--warn)}
+.chip.kind-revision{border-color:rgba(74,222,128,.4);color:var(--ok)}
+.msg.lesson .bubble{border-color:rgba(94,225,255,.25)}
+.msg.objection .bubble{border-color:rgba(255,180,84,.45);background:linear-gradient(180deg,rgba(255,180,84,.06),transparent)}
+.msg.revision .bubble{border-color:rgba(74,222,128,.35)}
+.msg.none .bubble{opacity:.5;font-size:12.5px;padding:7px 12px}
+.msg.fde .bubble{border-color:var(--fde);background:linear-gradient(180deg,rgba(255,111,177,.08),transparent);box-shadow:0 0 30px -10px var(--fde)}
+.msg.fde .who b{color:var(--fde)}
+.msg.moderator .bubble{background:transparent;border-style:dashed;color:var(--muted);font-size:12.5px}
+.msg.request .bubble{border-color:var(--accent);background:linear-gradient(180deg,rgba(139,124,255,.1),transparent)}
+.cursor{display:inline-block;width:7px;height:14px;background:var(--accent2);vertical-align:-2px;margin-left:2px;animation:blink .7s infinite}
+.sys{align-self:center;font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;opacity:0;animation:in .4s forwards}
+/* fde box */
+.fdebox{border-top:1px solid var(--line);padding:14px 26px 18px;background:rgba(14,16,22,.6);backdrop-filter:blur(8px)}
+.fdebox label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fde);font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.fdebox label .hint{color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;margin-left:auto}
+.inputwrap{display:flex;gap:8px;position:relative}
+.inputwrap input{flex:1;font-family:var(--sans);font-size:14px;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 16px;outline:none;transition:.2s}
+.inputwrap input:focus{border-color:var(--fde);box-shadow:0 0 0 3px rgba(255,111,177,.15)}
+.fdebox.armed .inputwrap input{border-color:var(--fde);box-shadow:0 0 0 3px rgba(255,111,177,.18),0 0 40px -8px var(--fde);animation:arm 1.4s infinite}
+@keyframes arm{50%{box-shadow:0 0 0 6px rgba(255,111,177,.08),0 0 60px -8px var(--fde)}}
+.inputwrap button{background:var(--fde);border-color:transparent;color:#1b0a12}
+/* plan */
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;min-height:200px;transition:.4s;flex:1}
+.plan.ready{border-color:rgba(74,222,128,.45);box-shadow:0 0 0 1px rgba(74,222,128,.2),0 20px 60px -20px rgba(74,222,128,.5)}
+.plan .empty{color:var(--muted);font-size:12.5px;line-height:1.5;padding:30px 6px;text-align:center}
+.plan .title{font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.plan ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:12.8px;line-height:1.5}
+.plan li{opacity:0;animation:in .4s forwards}
+.plan li .src{display:inline-block;margin-left:6px;font-family:var(--mono);font-size:10px;color:var(--accent2);border:1px solid rgba(94,225,255,.3);padding:1px 6px;border-radius:999px;vertical-align:1px}
+.plan li .src.fde{color:var(--fde);border-color:rgba(255,111,177,.4)}
+.plan .actions{margin-top:14px;display:flex;gap:8px}
+.history{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:12px}
+.history .item{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line);color:var(--muted)}
+.history .item:first-child{border-top:0}
+.history .item b{color:var(--text);font-weight:500}
+.history .item .cl{font-family:var(--mono);font-size:10px;color:var(--accent2)}
+.ask{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.ask .r{display:flex;gap:6px;margin-top:8px}
+.ask select,.ask input{font-family:var(--sans);font-size:12px;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none}
+.ask input{flex:1}
+.ask .ans{margin-top:10px;font-size:12.5px;line-height:1.5;color:var(--muted);min-height:18px}
+.ask .ans.wall{color:var(--ok);font-family:var(--mono);font-size:11.5px}
+/* particles */
+.fly{position:fixed;width:8px;height:8px;border-radius:50%;background:var(--accent2);box-shadow:0 0 14px var(--accent2);pointer-events:none;z-index:50}
+.fly.warn{background:var(--warn);box-shadow:0 0 14px var(--warn)}
+.fly.fde{background:var(--fde);box-shadow:0 0 14px var(--fde)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid rgba(74,222,128,.5);color:var(--text);padding:10px 16px;border-radius:12px;font-size:13px;opacity:0;transition:.3s;z-index:60;display:flex;gap:8px;align-items:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast .k{color:var(--ok)}
+.kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--line);padding:1px 5px;border-radius:5px;color:var(--muted)}
+.overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(7,8,12,.75);backdrop-filter:blur(6px);z-index:70;transition:.4s}
+.overlay.hide{opacity:0;pointer-events:none}
+.overlay .box{text-align:center;max-width:520px}
+.overlay h1{font-size:34px;letter-spacing:-.03em;margin:0 0 10px}
+.overlay p{color:var(--muted);font-size:15px;line-height:1.6;margin:0 0 22px}
+.overlay .ring{width:110px;height:110px;margin:0 auto 22px;position:relative}
+.overlay .ring i{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--accent);left:50%;top:50%;margin:-6px;animation:orbit 4s linear infinite;box-shadow:0 0 16px var(--accent)}
+.overlay .ring i:nth-child(2){animation-delay:-.8s;background:var(--accent2);box-shadow:0 0 16px var(--accent2)}
+.overlay .ring i:nth-child(3){animation-delay:-1.6s}
+.overlay .ring i:nth-child(4){animation-delay:-2.4s;background:var(--accent2);box-shadow:0 0 16px var(--accent2)}
+.overlay .ring i:nth-child(5){animation-delay:-3.2s}
+@keyframes orbit{from{transform:rotate(0) translateX(48px) rotate(0)}to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
+@media (max-width:1100px){main{grid-template-columns:230px 1fr 300px}}
+@media (max-width:860px){main{grid-template-columns:1fr}.col-l,.col-r{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><span class="dot" id="livedot"></span> FDE Council</div>
+    <div class="request"><span class="tag" id="reqtag">idle</span><b id="reqtext">Waiting for a client request…</b></div>
+    <div class="controls">
+      <span class="kbd" id="modebadge">replay</span>
+      <button class="ghost" onclick="reset()">↺ Reset</button>
+      <button class="primary" id="startbtn" onclick="start()">▶ Run</button>
+    </div>
+  </header>
+  <main>
+    <section class="col-l">
+      <h4>Client actors <span id="actorcount">5 isolated</span></h4>
+      <div id="cards"></div>
+    </section>
+    <section class="col-c">
+      <div class="feed" id="feed"></div>
+      <div class="fdebox" id="fdebox">
+        <label>FDE override <span class="hint">Enter to send · empty Enter uses the suggestion</span></label>
+        <div class="inputwrap">
+          <input id="fdeinput" placeholder="Add a constraint the council must respect…" autocomplete="off">
+          <button onclick="sendFde()">Interject</button>
+        </div>
+      </div>
+    </section>
+    <section class="col-r">
+      <h4>Plan for requesting client</h4>
+      <div class="plan" id="plan"><div class="empty">The plan appears once the council reaches consensus.<br>Each step is tagged with the client whose lesson it came from.</div></div>
+      <h4>Privacy wall <span class="kbd">W</span></h4>
+      <div class="ask">
+        <div style="font-size:12px;color:var(--muted)">Ask any actor about any client. It only knows its own.</div>
+        <div class="r">
+          <select id="askwho"></select>
+          <input id="askq" placeholder="What did client 1 build?">
+          <button onclick="askAgent()">Ask</button>
+        </div>
+        <div class="ans" id="askans"></div>
+      </div>
+      <h4>History <span id="histcount">0 plans</span></h4>
+      <div class="history" id="history"><div style="color:var(--muted);font-size:12px">No saved plans yet.</div></div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"><span class="k">✓</span><span id="toasttext"></span></div>
+<div class="overlay" id="overlay">
+  <div class="box">
+    <div class="ring"><i></i><i></i><i></i><i></i><i></i></div>
+    <h1>FDE Council</h1>
+    <p>Five isolated client actors. One live debate.<br>Private data never leaves its actor. Only lessons do.</p>
+    <button class="primary" onclick="start()">▶ Run the council</button>
+    <div style="margin-top:14px;color:var(--muted);font-size:11px"><span class="kbd">space</span> run &nbsp; <span class="kbd">R</span> reset &nbsp; <span class="kbd">W</span> privacy wall &nbsp; <span class="kbd">?ws=</span> live connector</div>
+  </div>
+</div>
+
+<script>
+/* ---------- client memory (fake, planted) ---------- */
+const CLIENTS = [
+  {id:'client-1',name:'Northwind Analytics',stack:['Next.js','Recharts','Postgres'],mem:'12 deployments. Last incident: chart tooltips clipped on Safari. Owner: data team.'},
+  {id:'client-2',name:'Harbor Logistics',stack:['Django','HTMX','MySQL'],mem:'Server-rendered. No theming layer. Last fix: slow route planner query, added index.'},
+  {id:'client-3',name:'Lumen Health',stack:['React','D3','Supabase'],mem:'Dark mode shipped in 2h via CSS variables + data-theme. D3 reads computed styles.'},
+  {id:'client-4',name:'Atlas Fintech',stack:['Vue','ECharts','Snowflake'],mem:'Compliance-locked UI. Theming requires change-control ticket. No dark mode.'},
+  {id:'client-5',name:'Orbit Retail',stack:['Next.js','Recharts','BigQuery'],mem:'Dark mode attempt via CSS variables broke all charts. Fix: inject tokens via getComputedStyle, re-render on theme change.'},
+];
+const NAME = Object.fromEntries(CLIENTS.map(c=>[c.id,c.name]));
+
+/* ---------- scripted feed (event contract) ---------- */
+const SCRIPT = [
+  {t:300,  type:'request', from:'client-1', text:'Add dark mode to the analytics dashboard. Marketing wants it before the Q4 launch.'},
+  {t:200,  type:'status', agent:'client-1', state:'asking'},
+  {t:500,  type:'sys', text:'request broadcast on relay · 4 actors consulting private memory'},
+  {t:150,  type:'status', agent:'client-2', state:'thinking'},
+  {t:150,  type:'status', agent:'client-3', state:'thinking'},
+  {t:150,  type:'status', agent:'client-4', state:'thinking'},
+  {t:150,  type:'status', agent:'client-5', state:'thinking'},
+  {t:1400, type:'status', agent:'client-3', state:'speaking'},
+  {t:100,  type:'message', from:'client-3', kind:'lesson', cites:'client-3', text:'We shipped dark mode in about two hours. CSS custom properties on :root, a data-theme attribute toggled by a tiny hook, preference persisted in localStorage. No component rewrites, and our D3 charts picked up the colours because they read computed styles.'},
+  {t:400,  type:'status', agent:'client-3', state:'idle'},
+  {t:300,  type:'status', agent:'client-2', state:'speaking'},
+  {t:50,   type:'message', from:'client-2', kind:'none', text:'No relevant experience. Server-rendered Django, no theming layer.'},
+  {t:200,  type:'status', agent:'client-2', state:'idle'},
+  {t:300,  type:'status', agent:'client-4', state:'speaking'},
+  {t:50,   type:'message', from:'client-4', kind:'none', text:'No relevant experience. Theming is blocked by change control on our side.'},
+  {t:200,  type:'status', agent:'client-4', state:'idle'},
+  {t:600,  type:'status', agent:'client-5', state:'objecting'},
+  {t:100,  type:'message', from:'client-5', kind:'objection', cites:'client-5', text:'Objection. We tried exactly that CSS-variable approach and it broke every chart. Recharts resolves colours as props at render time, not from CSS, so the SVG layer stayed light-mode on a dark page. We lost half a day before we noticed. Client 1 is on Recharts too.'},
+  {t:800,  type:'status', agent:'client-5', state:'idle'},
+  {t:300,  type:'status', agent:'client-3', state:'speaking'},
+  {t:50,   type:'message', from:'client-3', kind:'lesson', cites:'client-3', text:'Fair point. We never hit that because D3 lets us pass computed styles directly. The chart layer is the real risk here, not the shell.'},
+  {t:300,  type:'status', agent:'client-3', state:'idle'},
+  {t:600,  type:'message', from:'moderator', kind:'moderator', text:'Conflict detected on the chart layer. Options on the table: swap chart library, or keep Recharts and inject tokens. Waiting for FDE constraint before drafting.'},
+  {t:200,  type:'await-fde', suggestion:'Client 1 cannot change chart libraries. Recharts stays.'},
+];
+const AFTER_FDE = [
+  {t:300,  type:'sys', text:'constraint accepted · re-evaluating'},
+  {t:100,  type:'status', agent:'client-3', state:'thinking'},
+  {t:100,  type:'status', agent:'client-5', state:'thinking'},
+  {t:1400, type:'status', agent:'client-5', state:'speaking'},
+  {t:50,   type:'message', from:'client-5', kind:'revision', cites:'client-5', text:'Then the fix we eventually used applies directly. Read the theme tokens with getComputedStyle at mount, pass them to Recharts as props, and subscribe charts to a themechange event so they re-render. Recharts stays. About 40 minutes.'},
+  {t:400,  type:'status', agent:'client-5', state:'idle'},
+  {t:300,  type:'status', agent:'client-3', state:'speaking'},
+  {t:50,   type:'message', from:'client-3', kind:'revision', cites:'client-3', text:'Agreed. Combine both: CSS variables for the app shell, explicit token injection for the chart layer, one themechange event bridging them. That is the whole plan.'},
+  {t:400,  type:'status', agent:'client-3', state:'idle'},
+  {t:500,  type:'message', from:'moderator', kind:'moderator', text:'Consensus reached. Drafting plan for Client 1 with sources.'},
+  {t:900,  type:'plan', for:'client-1', title:'Dark mode for Northwind Analytics', steps:[
+    {text:'Define theme tokens as CSS variables on :root, toggle via data-theme, persist in localStorage.',source:'client-3'},
+    {text:'Keep Recharts. Inject colours as props read from getComputedStyle at mount.',source:'client-5'},
+    {text:'Emit a themechange event and re-render charts on it so SVG never drifts from the shell.',source:'client-5'},
+    {text:'Do not swap chart libraries. Constraint from FDE.',source:'FDE'},
+    {text:'Test on Safari: tooltip clipping already seen in this deployment.',source:'client-1'},
+  ]},
+  {t:400,  type:'status', agent:'client-1', state:'idle'},
+  {t:200,  type:'sys', text:'debate closed · 2 lessons · 1 objection · 1 fde constraint · 0 bytes of private data shared'},
+];
+
+/* ---------- state ---------- */
+let running=false, awaiting=null, cancel=false, live=null, plans=[];
+const $=s=>document.querySelector(s);
+const feed=$('#feed'), cardsEl=$('#cards');
+
+function renderCards(){
+  cardsEl.innerHTML='';
+  CLIENTS.forEach(c=>{
+    const d=document.createElement('div');d.className='card';d.id='card-'+c.id;
+    d.innerHTML=`<div class="lock"></div><div class="row"><div><div class="name">${c.name}</div><div class="id">${c.id} · durable actor</div></div></div>
+    <div class="state">idle</div>
+    <div class="stack">${c.stack.map(s=>`<span>${s}</span>`).join('')}</div>
+    <div class="mem">▸ memory: ${c.mem}</div>`;
+    cardsEl.appendChild(d);
+  });
+  const sel=$('#askwho');sel.innerHTML=CLIENTS.map(c=>`<option value="${c.id}">${c.id}</option>`).join('');sel.value='client-2';
+}
+function setState(id,state){
+  const el=$('#card-'+id); if(!el) return;
+  el.className='card '+(state==='idle'?'':state);
+  el.querySelector('.state').textContent=state;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function fly(fromId,kind){
+  const from=$('#card-'+fromId); if(!from) return;
+  const a=from.getBoundingClientRect(), b=feed.getBoundingClientRect();
+  const dot=document.createElement('div');dot.className='fly '+(kind==='objection'?'warn':'');
+  document.body.appendChild(dot);
+  const x0=a.right-6,y0=a.top+a.height/2,x1=b.left+60,y1=Math.min(b.bottom-80,feed.lastElementChild?feed.lastElementChild.getBoundingClientRect().bottom+20:b.top+40);
+  dot.animate([{transform:`translate(${x0}px,${y0}px)`,opacity:1},{transform:`translate(${(x0+x1)/2}px,${y0-20}px)`,opacity:1},{transform:`translate(${x1}px,${y1}px)`,opacity:0}],{duration:520,easing:'cubic-bezier(.3,.7,.2,1)'}).onfinish=()=>dot.remove();
+}
+
+async function stream(el,text,speed=22){
+  const words=text.split(' ');let out='';
+  const cur=document.createElement('span');cur.className='cursor';
+  for(let i=0;i<words.length;i++){
+    if(cancel) return;
+    out+= (i?' ':'')+words[i]; el.textContent=out; el.appendChild(cur);
+    feed.scrollTop=feed.scrollHeight;
+    await sleep(speed+Math.random()*25);
+  }
+  cur.remove();
+}
+
+async function addMessage(m){
+  const who=m.from==='fde'?'FDE':m.from==='moderator'?'Council':m.from;
+  const sub=m.from==='fde'?'human override':m.from==='moderator'?'moderator':NAME[m.from]||'';
+  const d=document.createElement('div');d.className='msg '+(m.kind||'');
+  d.innerHTML=`<div class="who"><b>${who}</b>${sub}</div><div class="bubble"><span class="txt"></span></div>`;
+  feed.appendChild(d);feed.scrollTop=feed.scrollHeight;
+  if(m.from && m.from.startsWith('client')) fly(m.from,m.kind);
+  await stream(d.querySelector('.txt'),m.text,m.kind==='none'?8:22);
+  const meta=[];
+  if(m.kind&&m.kind!=='moderator'&&m.kind!=='request') meta.push(`<span class="chip kind-${m.kind}">${m.kind}</span>`);
+  if(m.cites) meta.push(`<span class="chip cite">cites ${m.cites} memory</span>`);
+  meta.push(`<span class="chip">${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`);
+  d.querySelector('.bubble').insertAdjacentHTML('beforeend',`<div class="meta">${meta.join('')}</div>`);
+  feed.scrollTop=feed.scrollHeight;
+}
+function sys(text){const d=document.createElement('div');d.className='sys';d.textContent='— '+text+' —';feed.appendChild(d);feed.scrollTop=feed.scrollHeight;}
+
+async function renderPlan(p){
+  const el=$('#plan');el.classList.add('ready');
+  el.innerHTML=`<div class="title">✦ ${p.title}</div><ol id="planlist"></ol><div class="actions"><button class="primary" onclick="savePlan()">Save to history</button><button class="ghost" onclick="copyPlan()">Copy</button></div>`;
+  const ol=$('#planlist');
+  for(const s of p.steps){
+    const li=document.createElement('li');li.innerHTML=`${s.text}<span class="src ${s.source==='FDE'?'fde':''}">${s.source==='FDE'?'FDE':'from '+s.source}</span>`;
+    ol.appendChild(li);await sleep(380);
+  }
+  el._plan=p;
+}
+function savePlan(){
+  const p=$('#plan')._plan; if(!p) return;
+  const sources=[...new Set(p.steps.map(s=>s.source))];
+  plans.unshift({title:p.title,for:p.for,sources,at:new Date()});
+  try{localStorage.setItem('fde-plans',JSON.stringify(plans))}catch(e){}
+  renderHistory();toast('Plan saved to Supabase · plans table · no private data included');
+  if(live) live.send(JSON.stringify({type:'save',plan:p}));
+}
+function copyPlan(){const p=$('#plan')._plan;if(!p)return;navigator.clipboard?.writeText(p.title+'\n'+p.steps.map((s,i)=>`${i+1}. ${s.text} [${s.source}]`).join('\n'));toast('Copied');}
+function renderHistory(){
+  const h=$('#history');$('#histcount').textContent=plans.length+' plan'+(plans.length===1?'':'s');
+  if(!plans.length){h.innerHTML='<div style="color:var(--muted);font-size:12px">No saved plans yet.</div>';return}
+  h.innerHTML=plans.map(p=>`<div class="item"><div><b>${p.title}</b><div class="cl">${p.for} ← ${p.sources.join(', ')}</div></div><div>${new Date(p.at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div></div>`).join('');
+}
+function toast(t){const el=$('#toast');$('#toasttext').textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2800);}
+
+/* ---------- event handler: same path for replay and live ---------- */
+async function handle(e){
+  switch(e.type){
+    case 'request': $('#reqtag').textContent='request · '+e.from; $('#reqtext').textContent=e.text; await addMessage({from:e.from,kind:'request',text:e.text}); break;
+    case 'status': setState(e.agent,e.state); break;
+    case 'sys': sys(e.text); break;
+    case 'message': await addMessage(e); break;
+    case 'fde': await addMessage({from:'fde',kind:'fde',text:e.text}); break;
+    case 'await-fde': armFde(e.suggestion); break;
+    case 'plan': await renderPlan(e); $('#reqtag').textContent='resolved'; break;
+  }
+}
+function armFde(suggestion){
+  awaiting=suggestion;const box=$('#fdebox');box.classList.add('armed');
+  const inp=$('#fdeinput');inp.placeholder=suggestion;inp.focus();
+  sys('council paused · waiting for FDE');
+}
+async function sendFde(){
+  const inp=$('#fdeinput');const text=inp.value.trim()||awaiting||'';
+  if(!text) return; inp.value='';
+  $('#fdebox').classList.remove('armed');
+  const dot=document.createElement('div');dot.className='fly fde';document.body.appendChild(dot);
+  const a=inp.getBoundingClientRect();
+  dot.animate([{transform:`translate(${a.left+40}px,${a.top}px)`,opacity:1},{transform:`translate(${a.left+120}px,${a.top-120}px)`,opacity:0}],{duration:500}).onfinish=()=>dot.remove();
+  await addMessage({from:'fde',kind:'fde',text});
+  if(live){ live.send(JSON.stringify({type:'fde',text})); return; }
+  if(awaiting!==null){ awaiting=null; await play(AFTER_FDE); }
+}
+async function play(list){
+  for(const e of list){ if(cancel) return; await sleep(e.t); if(cancel) return; await handle(e); }
+}
+
+/* ---------- controls ---------- */
+async function start(){
+  if(running) return; running=true;cancel=false;
+  $('#overlay').classList.add('hide');$('#startbtn').textContent='● Running';
+  if(live){ live.send(JSON.stringify({type:'start'})); return; }
+  await play(SCRIPT);
+}
+function reset(){
+  cancel=true;running=false;awaiting=null;
+  feed.innerHTML='';$('#plan').className='plan';$('#plan').innerHTML='<div class="empty">The plan appears once the council reaches consensus.<br>Each step is tagged with the client whose lesson it came from.</div>';
+  $('#reqtag').textContent='idle';$('#reqtext').textContent='Waiting for a client request…';
+  $('#fdebox').classList.remove('armed');$('#fdeinput').placeholder='Add a constraint the council must respect…';
+  $('#startbtn').textContent='▶ Run';$('#askans').textContent='';
+  CLIENTS.forEach(c=>setState(c.id,'idle'));
+  setTimeout(()=>{cancel=false},50);
+}
+
+/* ---------- privacy wall ---------- */
+async function askAgent(){
+  const who=$('#askwho').value, q=$('#askq').value.trim()||'What did client 1 build?';
+  const ans=$('#askans');ans.className='ans';ans.textContent='…';
+  setState(who,'thinking');await sleep(700);
+  const other=(q.match(/client[- ]?(\d)/i)||[])[1];
+  const otherId=other?'client-'+other:null;
+  if(otherId && otherId!==who){
+    setState(who,'walled');ans.className='ans wall';
+    ans.textContent=`[${who}] I hold no records for ${otherId}. Each client's history lives in its own isolated actor. I can only share sanitized lessons on the relay, never another client's data.`;
+    toast('Privacy wall held · 0 bytes crossed');
+  } else {
+    setState(who,'speaking');const c=CLIENTS.find(c=>c.id===who);
+    ans.textContent=`[${who}] From my memory: ${c.mem}`;
+  }
+  await sleep(2200);setState(who,'idle');
+}
+
+/* ---------- live connector hook ----------
+   Open demo.html?ws=ws://localhost:8787 and the page will consume JSON events
+   in the same contract as SCRIPT above. The page sends:
+   {type:'start'} {type:'fde',text} {type:'save',plan}
+-------------------------------------------- */
+window.FDE={push:handle,setState,clients:CLIENTS};
+(function(){
+  const url=new URLSearchParams(location.search).get('ws');
+  if(!url) return;
+  try{
+    const ws=new WebSocket(url);
+    ws.onopen=()=>{live=ws;$('#livedot').classList.add('live');$('#modebadge').textContent='live';toast('Connected to relay connector');};
+    ws.onmessage=ev=>{try{handle(JSON.parse(ev.data))}catch(e){console.warn('bad event',ev.data)}};
+    ws.onclose=()=>{live=null;$('#livedot').classList.remove('live');$('#modebadge').textContent='replay';toast('Connector lost · replay mode');};
+  }catch(e){}
+})();
+
+/* ---------- keys ---------- */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'){ if(e.key==='Enter'&&e.target.id==='fdeinput') sendFde(); if(e.key==='Enter'&&e.target.id==='askq') askAgent(); return; }
+  if(e.code==='Space'){e.preventDefault();start();}
+  if(e.key==='r'||e.key==='R') reset();
+  if(e.key==='w'||e.key==='W'){$('#askwho').value='client-2';$('#askq').value='What did client 1 build?';askAgent();}
+});
+renderCards();
+try{plans=JSON.parse(localStorage.getItem('fde-plans')||'[]')}catch(e){}
+renderHistory();
+</script>
+</body>
+</html>

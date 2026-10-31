@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE Council</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f7f9;--surf:#ffffff;--surf2:#f1f2f5;--line:#e5e7ec;--line2:#d5d8e0;--text:#111827;--text2:#4b5563;--muted:#8b93a5;
+  --accent:#5b5bd6;--accent2:#eef0ff;--green:#16a34a;--green2:#e8f7ee;--amber:#d97706;--amber2:#fdf2e3;--pink:#db2777;--pink2:#fde8f1;--orange:#f97316;--cyan:#0891b2;--cyan2:#e6f6fa;--purple:#7c3aed;--purple2:#f1e9fe;
+  --sans:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;--r:10px}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;font-family:var(--sans);font-size:13.5px;color:var(--text);background:var(--bg);line-height:1.45;-webkit-font-smoothing:antialiased;overflow:hidden}
+#app{display:grid;grid-template-columns:240px 1fr;height:100vh}
+/* sidebar */
+.sb{background:var(--surf);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px 10px}
+.ws{display:flex;align-items:center;gap:9px;padding:6px 8px 14px;font-weight:600;font-size:13.5px}
+.ws .lg{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#f97316,#ea580c);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+.nav a{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;color:var(--text2);text-decoration:none;font-weight:500;cursor:pointer}
+.nav a:hover{background:var(--surf2)}.nav a.on{background:var(--accent2);color:var(--accent)}
+.nav a .ic{width:16px;text-align:center;font-size:12px;opacity:.8}
+.nav a .bd{margin-left:auto;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--surf2);color:var(--muted)}
+.nav a .bd.hot{background:var(--pink);color:#fff}
+.sec{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:16px 9px 6px}
+.pj{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer}.pj:hover{background:var(--surf2)}
+.pj i{width:8px;height:8px;border-radius:3px;flex:none}
+.pj .ag{margin-left:auto;width:16px;height:16px}
+.sb .me{margin-top:auto;display:flex;align-items:center;gap:9px;padding:10px 8px;border-top:1px solid var(--line);font-size:12.5px}
+.sb .me .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#5b5bd6,#8b5cf6);color:#fff;display:grid;place-items:center;font-size:10.5px;font-weight:600}
+.sb .me small{display:block;color:var(--muted);font-size:11px}
+/* main */
+.main{display:flex;flex-direction:column;min-height:0}
+.top{height:48px;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--surf);font-size:13px}
+.crumb{color:var(--muted)}.crumb b{color:var(--text);font-weight:600}.crumb span{margin:0 6px}
+.top .sp{flex:1}
+.search{display:flex;align-items:center;gap:8px;background:var(--surf2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--muted);width:260px;font-size:12.5px}
+.search .k{margin-left:auto;font-family:var(--mono);font-size:10px;border:1px solid var(--line2);padding:0 5px;border-radius:4px}
+button{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--text);background:var(--surf);border:1px solid var(--line2);padding:7px 12px;border-radius:8px;cursor:pointer;transition:.15s}
+button:hover{background:var(--surf2)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}button.primary:hover{background:#4f4fc8}
+button.green{background:var(--green);border-color:var(--green);color:#fff}button.green:hover{background:#15803d}
+button.soft{background:var(--accent2);border-color:transparent;color:var(--accent)}
+button.ghost{background:transparent;border-color:transparent;color:var(--text2)}button.ghost:hover{background:var(--surf2)}
+button:disabled{opacity:.5;cursor:default}
+.view{flex:1;overflow:auto;padding:28px 32px;display:none}.view.on{display:block}
+.h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
+.sub{color:var(--muted);margin-top:4px;font-size:13px}
+.row{display:flex;gap:14px;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
+.stat{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.stat .n{font-size:22px;font-weight:700;letter-spacing:-.02em}.stat .l{font-size:12px;color:var(--muted);margin-top:2px}
+.stat .d{font-size:11.5px;margin-top:6px;color:var(--green);font-weight:500}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.card .hd{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);font-weight:600;font-size:13px}
+.card .hd .r{margin-left:auto;font-weight:400;color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--muted);font-size:11.5px;padding:8px 16px;border-bottom:1px solid var(--line);background:#fafbfc}
+td{padding:10px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}tr.click{cursor:pointer}tr.click:hover td{background:#fafbfd}
+.pname{display:flex;align-items:center;gap:9px;font-weight:600}.pname i{width:8px;height:8px;border-radius:3px}
+.stack{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:999px;background:var(--surf2);color:var(--text2)}
+.chip i{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.chip.ok{background:var(--green2);color:var(--green)}.chip.ok i{background:var(--green)}
+.chip.busy{background:var(--accent2);color:var(--accent)}.chip.busy i{background:var(--accent);animation:blink 1s infinite}
+.chip.warn{background:var(--amber2);color:var(--amber)}.chip.warn i{background:var(--amber)}
+.chip.pink{background:var(--pink2);color:var(--pink)}.chip.pink i{background:var(--pink)}
+.chip.purple{background:var(--purple2);color:var(--purple)}.chip.purple i{background:var(--purple)}
+@keyframes blink{50%{opacity:.25}}
+.agentcell{display:flex;align-items:center;gap:8px}.agentcell svg{width:22px;height:22px}
+.task{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);font-size:13px}.task:last-child{border-bottom:0}
+.task .cb{width:15px;height:15px;border:1.5px solid var(--line2);border-radius:4px;flex:none}.task.done .cb{background:var(--green);border-color:var(--green)}
+.task .t{flex:1}.task.done .t{color:var(--muted);text-decoration:line-through}
+.task .due{font-size:11.5px;color:var(--muted)}.task .tag{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--surf2);color:var(--text2)}
+.task.new{animation:pop .5s}@keyframes pop{0%{background:var(--accent2)}100%{background:transparent}}
+.empty{padding:32px 16px;text-align:center;color:var(--muted);font-size:13px}
+.empty b{display:block;color:var(--text2);font-weight:600;margin-bottom:4px}
+.req{display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;animation:slidein .5s}
+.req:hover{background:#fafbfd}
+@keyframes slidein{from{opacity:0;transform:translateY(-6px);background:var(--accent2)}}
+.req .ic{width:34px;height:34px;border-radius:8px;background:var(--surf2);display:grid;place-items:center;font-size:14px}
+.req .s{font-weight:600}.req .f{font-size:12px;color:var(--muted);margin-top:1px}
+.req .prog{width:140px;height:5px;background:var(--surf2);border-radius:4px;overflow:hidden}.req .prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .6s}
+/* toast */
+.toast{position:fixed;top:60px;right:20px;width:340px;background:var(--surf);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;box-shadow:0 20px 50px -20px rgba(17,24,39,.35);display:flex;gap:12px;align-items:flex-start;transform:translateX(380px);transition:.45s cubic-bezier(.2,.8,.2,1);z-index:50;cursor:pointer}
+.toast.show{transform:none}
+.toast .ic{width:32px;height:32px;border-radius:8px;background:var(--accent2);display:grid;place-items:center;font-size:14px;flex:none}
+.toast b{display:block;font-size:13px}.toast small{color:var(--muted);font-size:12px}
+/* request detail */
+.detail{display:grid;grid-template-columns:1fr 420px;gap:18px;align-items:start}
+.email{padding:18px 20px}
+.email .from{display:flex;gap:10px;align-items:center;margin-bottom:12px}.email .from .av{width:32px;height:32px;border-radius:50%;background:#e0e7ff;color:#3730a3;display:grid;place-items:center;font-weight:600;font-size:12px}
+.email .from b{display:block;font-size:13px}.email .from small{color:var(--muted);font-size:12px}
+.email h2{font-size:17px;margin:0 0 10px;letter-spacing:-.01em}
+.email p{margin:0 0 10px;color:var(--text2);font-size:13.5px;line-height:1.6}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.act{padding:4px 0}
+.act .it{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:start;padding:9px 16px;border-bottom:1px solid var(--line);font-size:13px;opacity:0;animation:in .35s forwards}
+.act .it:last-child{border-bottom:0}
+.act .it .ck{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line2);display:grid;place-items:center;font-size:10px;color:#fff;margin-top:1px}
+.act .it.done .ck{background:var(--green);border-color:var(--green)}.act .it.run .ck{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+.act .it.warn .ck{background:var(--amber);border-color:var(--amber)}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes in{to{opacity:1}}
+.act .it small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.act .it .t{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.cta{padding:12px 16px;border-top:1px solid var(--line);background:#fafbfc;display:flex;gap:8px;align-items:center}
+.cta .m{flex:1;font-size:12.5px;color:var(--text2)}
+/* next step card */
+.next{border-color:var(--line2)}
+.next .hd{background:var(--green2);color:#166534}
+.next .hd.v2{background:var(--pink2);color:#9d174d}
+.next .body{padding:16px}
+.next h3{margin:0 0 4px;font-size:16px;letter-spacing:-.01em}
+.next .why{color:var(--text2);font-size:13px;margin-bottom:12px}
+.next ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--text2)}
+.next li{opacity:0;animation:in .4s forwards}.next li.changed{color:var(--text)}.next li.changed::marker{color:var(--pink);font-weight:700}
+.next li .src{font-size:11px;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--surf2);color:var(--text2);font-weight:500}
+.next li .src.chg{background:var(--pink2);color:var(--pink)}
+.next .kv{display:flex;gap:10px;margin:14px 0 0}.next .kv div{flex:1;background:var(--surf2);border-radius:8px;padding:8px 10px}.next .kv .n{font-weight:700;font-size:14px}.next .kv .l{font-size:11px;color:var(--muted)}
+.next .actions{display:flex;gap:8px;margin-top:14px}
+.adjust{margin-top:10px;display:none}.adjust.show{display:block}
+.adjust input{width:100%;font-family:var(--sans);font-size:13px;padding:9px 12px;border:1px solid var(--pink);border-radius:8px;outline:none;box-shadow:0 0 0 3px var(--pink2)}
+.adjust small{display:block;color:var(--muted);margin-top:5px;font-size:11.5px}
+.draft{margin-top:12px;border:1px dashed var(--line2);border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--text2);display:none}.draft.show{display:block}
+.draft .k{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px}
+/* council view */
+.council{display:grid;grid-template-columns:1fr 400px;gap:18px;height:calc(100vh - 48px - 56px)}
+.netcard{position:relative;overflow:hidden;background:linear-gradient(180deg,#fbfbfd,#f3f4f8)}
+.netcard svg{position:absolute;inset:0;width:100%;height:100%}
+.ov{position:absolute;inset:0;pointer-events:none}
+.nl{position:absolute;transform:translate(-50%,0);text-align:center;pointer-events:none;width:160px}
+.nl b{font-size:12.5px;display:block}.nl .st{font-size:10.5px;color:var(--muted);display:inline-block;margin-top:2px;padding:1px 8px;border-radius:999px;background:#fff;border:1px solid var(--line)}
+.nl.thinking .st{color:var(--text2);animation:blink .9s infinite}.nl.asking .st{color:var(--purple);border-color:var(--purple)}.nl.speaking .st{color:var(--cyan);border-color:var(--cyan)}.nl.objecting .st{color:var(--amber);border-color:var(--amber)}.nl.reeval .st{color:var(--pink);border-color:var(--pink)}
+.bub{position:absolute;transform:translate(-50%,-100%);max-width:240px;background:#fff;border:1px solid var(--line2);border-radius:10px;padding:8px 11px;font-size:12.3px;line-height:1.4;pointer-events:none;box-shadow:0 12px 30px -12px rgba(17,24,39,.35)}
+.bub .who{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.bub.objection{border-color:var(--amber)}.bub.fde{border-color:var(--pink)}
+.edge{stroke:#dfe2ea;stroke-width:1.5;transition:.3s}.edge.on{stroke:#0891b2;stroke-width:2}
+.hub .core{fill:#fff;stroke:#d5d8e0;stroke-width:1.5}.hub .glow{opacity:0;transition:.4s}.hub.on .glow{opacity:.5}
+.pk .ring{stroke:transparent;transition:.3s}.pk .face{fill:#1f1307;transition:.3s}.pk .inner{opacity:0;transition:.3s}
+.pk.thinking .ring{stroke:#9ca3af}.pk.asking .ring{stroke:#7c3aed}.pk.asking .inner{opacity:.9}.pk.speaking .ring{stroke:#0891b2}.pk.speaking .inner{opacity:1}.pk.objecting .ring{stroke:#d97706}.pk.objecting .inner{opacity:1;fill:#fff1cc}.pk.reeval .ring{stroke:#db2777}.pk.reeval .inner{opacity:.9;fill:#ffe4ef}
+.pk.speaking .g,.pk.objecting .g{animation:bob .6s infinite}.pk.thinking .g{animation:bob 1.1s infinite}.pk.objecting .g{animation:shake .35s infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}@keyframes shake{25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+.dot{filter:drop-shadow(0 0 4px currentColor)}
+.cap{position:absolute;left:0;right:0;top:16px;text-align:center;pointer-events:none}
+.cap .t{font-size:15px;font-weight:600}.cap .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+.feedcard{display:flex;flex-direction:column;min-height:0}
+.feed{flex:1;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth}
+.msg{opacity:0;transform:translateY(4px);animation:in .3s forwards}
+.msg .who{font-size:11.5px;color:var(--muted);margin-bottom:3px;display:flex;gap:8px;align-items:center}.msg .who b{font-weight:600}
+.msg .b{background:var(--surf2);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:12.8px;line-height:1.5}
+.msg.lesson .b{border-color:#a5e3ee;background:var(--cyan2)}.msg.objection .b{border-color:#f5c98a;background:var(--amber2)}.msg.revision .b{border-color:#a7e3c2;background:var(--green2)}.msg.none .b{opacity:.6;font-size:12px}.msg.fde .b{border-color:#f3a7c9;background:var(--pink2)}.msg.request .b{border-color:#c9b5f5;background:var(--purple2)}.msg.moderator .b{border-style:dashed;background:transparent;color:var(--text2);font-size:12px}
+.sys{align-self:center;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;opacity:0;animation:in .4s forwards}
+.cursor{display:inline-block;width:6px;height:12px;background:var(--cyan);vertical-align:-2px;margin-left:2px;animation:blink .7s infinite}
+.tiny{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.legend{display:flex;gap:12px;font-size:11.5px;color:var(--muted);position:absolute;left:16px;bottom:12px}.legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="sb">
+    <div class="ws"><div class="lg">FC</div>FDE Council</div>
+    <nav class="nav">
+      <a class="on" data-v="home"><span class="ic">⌂</span>Home</a>
+      <a data-v="home"><span class="ic">▤</span>Requests<span class="bd" id="bd-req">0</span></a>
+      <a data-v="home"><span class="ic">◎</span>Agents<span class="bd">5</span></a>
+      <a data-v="home"><span class="ic">▦</span>Archive</a>
+    </nav>
+    <div class="sec">Projects</div>
+    <div id="sbproj"></div>
+    <div class="me"><div class="av">GF</div><div>Geart Ferhati<small>Forward-deployed engineer</small></div></div>
+  </aside>
+  <div class="main">
+    <div class="top">
+      <div class="crumb" id="crumb"><b>Home</b></div>
+      <div class="sp"></div>
+      <div class="search">⌕ Search projects, tasks, requests<span class="k">⌘K</span></div>
+      <button class="ghost" id="resetbtn">Reset</button>
+      <button class="primary" id="demobtn">Simulate incoming email</button>
+    </div>
+
+    <!-- HOME -->
+    <section class="view on" id="v-home">
+      <div class="row"><div><h1 class="h1">Good afternoon, Geart</h1><div class="sub" id="today"></div></div></div>
+      <div class="stats">
+        <div class="stat"><div class="n">5</div><div class="l">Projects</div><div class="d">All agents listening</div></div>
+        <div class="stat"><div class="n" id="s-tasks">7</div><div class="l">Open tasks</div><div class="d" style="color:var(--muted)">2 due this week</div></div>
+        <div class="stat"><div class="n" id="s-req">0</div><div class="l">Requests</div><div class="d" style="color:var(--muted)" id="s-req-d">Nothing waiting on you</div></div>
+        <div class="stat"><div class="n">5</div><div class="l">Agents</div><div class="d">Synced · Email, Slack, GitHub, Linear</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="hd">Requests <span class="r" id="reqhint">Agents watch email, Slack and Linear</span></div><div id="reqlist"><div class="empty"><b>No requests</b>When a client writes in, the project's agent picks it up and you will see it here.</div></div></div>
+      <div class="grid2">
+        <div class="card"><div class="hd">Projects <span class="r">5 active</span></div><table><thead><tr><th>Project</th><th>Client stack</th><th>Agent</th><th>Open</th><th>Synced</th></tr></thead><tbody id="ptable"></tbody></table></div>
+        <div class="card"><div class="hd">My tasks <span class="r" id="taskcount">7 open</span></div><div id="tasks"></div></div>
+      </div>
+    </section>
+
+    <!-- REQUEST DETAIL -->
+    <section class="view" id="v-req">
+      <div class="row" style="margin-bottom:18px"><button class="ghost" id="backhome">← Requests</button><div><h1 class="h1" id="r-title">Request</h1><div class="sub" id="r-sub"></div></div><div style="margin-left:auto" id="r-chip"></div></div>
+      <div class="detail">
+        <div>
+          <div class="card email" id="emailcard"></div>
+          <div class="card next" id="nextcard" style="margin-top:16px;display:none">
+            <div class="hd" id="next-hd">Suggested next step <span class="r" id="next-ver">v1 · from the council</span></div>
+            <div class="body">
+              <h3 id="n-title"></h3><div class="why" id="n-why"></div>
+              <ol id="n-steps"></ol>
+              <div class="kv"><div><div class="n" id="n-eta">—</div><div class="l">Estimated effort</div></div><div><div class="n" id="n-conf">—</div><div class="l">Council confidence</div></div><div><div class="n" id="n-src">—</div><div class="l">Projects consulted</div></div></div>
+              <div class="actions"><button class="green" id="approve">Approve</button><button id="adjustbtn">Adjust</button><button class="ghost" id="skip">Skip</button><button class="ghost" id="seecouncil2" style="margin-left:auto">See discussion →</button></div>
+              <div class="adjust" id="adjust"><input id="fdeinput" placeholder="Add a constraint the council must respect…" autocomplete="off"><small>Press Enter. The council re-discusses with your constraint and returns a new version in seconds.</small></div>
+              <div class="draft" id="draft"><div class="k">DRAFT REPLY · ready for your review</div><div id="draft-t"></div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card"><div class="hd">Agent activity <span class="r"><span class="chip busy" id="actchip"><i></i>handling</span></span></div><div class="act" id="act"></div>
+            <div class="cta" id="cta" style="display:none"><div class="m">The council is discussing this request with the other project agents.</div><button class="soft" id="seecouncil">See the discussion →</button></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COUNCIL -->
+    <section class="view" id="v-council" style="padding:20px 24px">
+      <div class="row" style="margin-bottom:12px"><button class="ghost" id="backreq">← Back to request</button><div><h1 class="h1" style="font-size:18px">Council discussion</h1><div class="sub">Five project agents. Each holds only its own project's context. Only lessons cross.</div></div><div style="margin-left:auto" class="tiny" id="cstat">0 cross-project reads · 0 messages</div></div>
+      <div class="council">
+        <div class="card netcard"><svg id="svg" viewBox="0 0 900 560" preserveAspectRatio="xMidYMid meet"><defs><filter id="bl"><feGaussianBlur stdDeviation="10"/></filter></defs><g id="edges"></g><g id="hub" class="hub" transform="translate(450,290)"><circle class="glow" r="70" fill="#0891b2" filter="url(#bl)"/><circle class="core" r="40"/><text y="-3" text-anchor="middle" fill="#111827" font-family="Inter" font-size="11" font-weight="700">COUNCIL</text><text y="11" text-anchor="middle" fill="#8b93a5" font-family="JetBrains Mono" font-size="8" letter-spacing="1.5" id="hubst">IDLE</text></g><g id="nodes"></g></svg><div class="ov" id="ov"></div>
+          <div class="cap"><div class="t" id="cap-t">Waiting for the discussion to start.</div><div class="s" id="cap-s"></div></div>
+          <div class="legend"><span><i style="background:#7c3aed"></i>asking</span><span><i style="background:#0891b2"></i>lesson</span><span><i style="background:#d97706"></i>objection</span><span><i style="background:#db2777"></i>your constraint</span></div></div>
+        <div class="card feedcard"><div class="hd">Transcript <span class="r" id="feedst">live</span></div><div class="feed" id="feed"></div></div>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast"><div class="ic">✉</div><div><b id="toast-b"></b><small id="toast-s"></small></div></div>
+
+<script>
+/* ---------- data ---------- */
+const P=[
+  {id:'northwind',name:'Northwind Analytics',color:'#7c3aed',stack:'Next.js · Recharts · Postgres',open:3,synced:'2m',angle:-90},
+  {id:'harbor',name:'Harbor Logistics',color:'#2563eb',stack:'Django · HTMX · MySQL',open:1,synced:'9m',angle:-18},
+  {id:'lumen',name:'Lumen Health',color:'#0891b2',stack:'React · D3 · Supabase',open:2,synced:'1m',angle:54},
+  {id:'atlas',name:'Atlas Fintech',color:'#16a34a',stack:'Vue · ECharts · Snowflake',open:0,synced:'14m',angle:126},
+  {id:'orbit',name:'Orbit Retail',color:'#d97706',stack:'Next.js · Recharts · BigQuery',open:1,synced:'3m',angle:198},
+];
+const BY=Object.fromEntries(P.map(p=>[p.id,p]));const COLOR=id=>id==='fde'?'#db2777':(BY[id]?.color||'#8b93a5');
+const TASKS=[['Review Lumen HIPAA follow-ups','lumen','Today'],['Harbor: confirm release freeze dates','harbor','Tomorrow'],['Northwind weekly sync prep','northwind','Thu'],['Atlas change-control ticket for Q4','atlas','Fri'],['Orbit: close incident #142 retro','orbit','Fri'],['Update onboarding runbook','lumen','Next week'],['Quarterly client health summary','northwind','Nov 12']];
+const EMAIL={from:'Dana Whitfield',role:'Head of Product · Northwind Analytics',subj:'Dark mode before the Q4 launch?',body:['Hi Geart,','Marketing wants the analytics dashboard in dark mode for the Q4 launch on Nov 14. Several enterprise customers asked for it in the last QBR.','Is this realistic in the next two weeks without disrupting the chart work? Happy to jump on a call.','Thanks, Dana']};
+const PUMP=`<g class="g" style="transform-box:fill-box;transform-origin:center"><circle class="ring" cx="0" cy="2" r="30" fill="none" stroke-width="2.5"/><rect x="-3.5" y="-31" width="7" height="10" rx="2.5" fill="#4d7c3a"/><ellipse cx="-13" cy="2" rx="12" ry="21" fill="#ea6a1a"/><ellipse cx="13" cy="2" rx="12" ry="21" fill="#ea6a1a"/><ellipse cx="0" cy="2" rx="14" ry="23" fill="#f97d2a"/><ellipse cx="-4" cy="-8" rx="6" ry="9" fill="#fb9a4a" opacity=".6"/><path class="inner" d="M-13,-6 l6,7 h-12z M13,-6 l-6,7 h12z M-11,8 q11,10 22,0 l-3,5 h-16z" fill="#fff4cc"/><path class="face" d="M-13,-6 l6,7 h-12z M13,-6 l-6,7 h12z"/><path class="face" d="M-11,8 q11,10 22,0 l-3,5 h-16z"/></g>`;
+const pumpSVG=(cls='')=>`<svg viewBox="-32 -34 64 68" class="pk ${cls}">${PUMP}</svg>`;
+const SCRIPT=[
+  {t:400,type:'act',id:'a1',text:'Northwind agent picked up the email',sub:'via Gmail · matched to project by sender domain',state:'run'},
+  {t:1400,type:'actdone',id:'a1'},
+  {t:200,type:'act',id:'a2',text:'Assembled project context',sub:'Recharts 2.8 pinned · 12 deployments · open incident NW-212 (Safari) · launch Nov 14 · design lead prefers CSS variables',state:'run'},
+  {t:1800,type:'actdone',id:'a2'},
+  {t:200,type:'act',id:'a3',text:'Asked the council',sub:'Question sent to 4 other project agents. Only lessons come back, never code or client data.',state:'run'},
+  {t:300,type:'cta'},
+  /* council discussion starts here (also animated in the council view) */
+  {t:200,type:'cstat',a:'northwind',s:'asking'},{t:0,type:'cap',t_:'Northwind asks the council.',s:'Four agents search their own project context.'},{t:0,type:'hub',on:true},
+  {t:0,type:'message',from:'northwind',kind:'request',text:'Client asks for dark mode on the analytics dashboard before the Q4 launch (Nov 14). Stack: Next.js + Recharts. Open incident NW-212.'},
+  {t:200,type:'cstat',a:'harbor',s:'thinking'},{t:80,type:'cstat',a:'lumen',s:'thinking'},{t:80,type:'cstat',a:'atlas',s:'thinking'},{t:80,type:'cstat',a:'orbit',s:'thinking'},
+  {t:1200,type:'actdone',id:'a3'},{t:0,type:'act',id:'a4',text:'4 agents responded',sub:'Lumen: lesson · Orbit: objection · Harbor, Atlas: no relevant experience',state:'run'},
+  {t:200,type:'cstat',a:'lumen',s:'speaking'},{t:0,type:'cap',t_:'Lumen shares a lesson.',s:'Dark mode shipped in 2 hours with CSS variables.'},
+  {t:50,type:'message',from:'lumen',kind:'lesson',text:'We shipped dark mode in two hours: CSS variables on :root, a data-theme toggle, preference in localStorage. Our D3 charts picked it up because they read computed styles.'},
+  {t:200,type:'cstat',a:'lumen',s:'idle'},
+  {t:150,type:'cstat',a:'harbor',s:'speaking'},{t:50,type:'message',from:'harbor',kind:'none',text:'No relevant experience. Server-rendered, no theming layer.'},{t:150,type:'cstat',a:'harbor',s:'idle'},
+  {t:150,type:'cstat',a:'atlas',s:'speaking'},{t:50,type:'message',from:'atlas',kind:'none',text:'No relevant experience. Theming is blocked by change control.'},{t:150,type:'cstat',a:'atlas',s:'idle'},
+  {t:300,type:'cstat',a:'orbit',s:'objecting'},{t:0,type:'cap',t_:'Orbit objects.',s:'The same approach broke all of its charts. Same chart library as Northwind.'},
+  {t:50,type:'message',from:'orbit',kind:'objection',text:'Objection. We did exactly that and it broke every chart. Recharts resolves colours as props at render time, not from CSS. We lost half a day (incident #142). Northwind is on Recharts too.'},
+  {t:500,type:'cstat',a:'orbit',s:'idle'},
+  {t:100,type:'actdone',id:'a4'},{t:0,type:'act',id:'a5',text:'Conflict detected on the chart layer',sub:'Lumen\'s approach vs Orbit\'s incident #142. The council resolved it by proposing a chart migration.',state:'warn'},
+  {t:300,type:'message',from:'moderator',kind:'moderator',text:'Two lessons, one conflict on the chart layer. Drafting a next step for the FDE.'},
+  {t:200,type:'hub',on:false},{t:0,type:'cstat',a:'northwind',s:'idle'},{t:0,type:'cap',t_:'Consensus reached.',s:'One next step drafted for you.'},
+  {t:200,type:'act',id:'a6',text:'Next step drafted',sub:'Review it below. You can approve, adjust with a constraint, or skip.',state:'done'},
+  {t:200,type:'suggest',ver:'v1 · from the council',title:'Ship dark mode with CSS variables and migrate charts to D3',why:'Lumen\'s proven 2-hour pattern for the shell. Because Orbit showed Recharts ignores CSS variables, the council proposes moving the 6 charts to D3.',eta:'~1.5 days',conf:'61%',steps:[
+    {text:'Theme tokens as CSS variables on :root, toggled via data-theme, persisted in localStorage.',src:'lumen'},
+    {text:'Migrate the 6 dashboard charts from Recharts to D3 so they read computed styles.',src:'orbit'},
+    {text:'Re-test NW-212 Safari tooltip clipping after the migration.',src:'northwind'},
+    {text:'Reply to Dana with the plan and a Nov 10 target.',src:'northwind'}]},
+  {t:300,type:'hint'},
+];
+const AFTER_FDE=[
+  {t:100,type:'hub',on:true},{t:0,type:'cap',t_:'Your constraint reaches every agent.',s:'They re-evaluate mid-discussion, without restarting.'},
+  {t:0,type:'reeval',agents:['harbor','lumen','atlas','orbit']},
+  {t:0,type:'act',id:'a7',text:'Your constraint sent to the council',sub:'"Recharts stays." Accepted by 4 agents · re-evaluating',state:'run'},
+  {t:1000,type:'cstat',a:'orbit',s:'speaking'},
+  {t:50,type:'message',from:'orbit',kind:'revision',text:'Then our fix applies directly: read tokens with getComputedStyle at mount, pass them to Recharts as props, re-render on a themechange event. Recharts stays. About 40 minutes.'},
+  {t:200,type:'cstat',a:'orbit',s:'idle'},
+  {t:150,type:'cstat',a:'lumen',s:'speaking'},{t:50,type:'message',from:'lumen',kind:'revision',text:'Agreed. CSS variables for the shell, token injection for charts, one event bridging them.'},{t:150,type:'cstat',a:'lumen',s:'idle'},
+  {t:300,type:'message',from:'moderator',kind:'moderator',text:'Consensus. Updated next step, two steps changed, effort down from 1.5 days to about 3 hours.'},
+  {t:100,type:'hub',on:false},{t:0,type:'cap',t_:'Updated next step ready.',s:'Two steps changed, effort cut to about 3 hours.'},
+  {t:100,type:'actdone',id:'a7'},{t:0,type:'act',id:'a8',text:'Next step updated (v2)',sub:'Chart migration replaced by Orbit\'s incident fix.',state:'done'},
+  {t:200,type:'suggest',ver:'v2 · adjusted by you',v2:true,title:'Ship dark mode with CSS variables, keep Recharts via token injection',why:'Your constraint removed the migration. Orbit\'s incident fix replaces it. Effort drops from 1.5 days to about 3 hours and the Nov 14 launch is safe.',eta:'~3 hours',conf:'88%',steps:[
+    {text:'Theme tokens as CSS variables on :root, toggled via data-theme, persisted in localStorage.',src:'lumen'},
+    {text:'Keep Recharts. Inject colours as props read from getComputedStyle at mount.',src:'orbit',changed:true},
+    {text:'Emit a themechange event and re-render charts on it.',src:'orbit',changed:true},
+    {text:'Re-test NW-212 Safari tooltip clipping.',src:'northwind'},
+    {text:'Reply to Dana with the plan and a Nov 7 target.',src:'northwind',changed:true}]},
+];
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);const NS='http://www.w3.org/2000/svg';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function el(n,a={},p){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+$('#today').textContent=new Date().toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'})+' · 5 agents listening across email, Slack, GitHub and Linear';
+$('#sbproj').innerHTML=P.map(p=>`<div class="pj"><i style="background:${p.color}"></i>${p.name.split(' ')[0]}<span class="ag">${pumpSVG()}</span></div>`).join('');
+function renderProjects(){$('#ptable').innerHTML=P.map(p=>`<tr class="click"><td><div class="pname"><i style="background:${p.color}"></i>${p.name}</div></td><td class="stack">${p.stack}</td><td><div class="agentcell">${pumpSVG()}<span class="chip ${p.state==='handling'?'busy':'ok'}" id="pst-${p.id}"><i></i>${p.state==='handling'?'handling request':'listening'}</span></div></td><td>${p.open}</td><td class="tiny">${p.synced} ago</td></tr>`).join('')}
+renderProjects();
+function renderTasks(){$('#tasks').innerHTML=TASKS.map((t,i)=>`<div class="task ${t[3]||''}"><div class="cb"></div><div class="t">${t[0]}</div><span class="tag" style="color:${BY[t[1]].color}">${BY[t[1]].name.split(' ')[0]}</span><span class="due">${t[2]}</span></div>`).join('');$('#taskcount').textContent=TASKS.length+' open';$('#s-tasks').textContent=TASKS.length}
+renderTasks();
+const views={home:'Home',req:'Requests',council:'Council'};
+function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$('#crumb').innerHTML=v==='home'?'<b>Home</b>':v==='req'?'Requests<span>/</span><b>Northwind · Dark mode</b>':'Requests<span>/</span>Northwind · Dark mode<span>/</span><b>Council</b>';if(v==='council')layout()}
+document.querySelectorAll('.nav a').forEach(a=>a.onclick=()=>{document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');show(a.dataset.v)});
+function toast(b,s){$('#toast-b').textContent=b;$('#toast-s').textContent=s;const t=$('#toast');t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),6000)}
+$('#toast').onclick=()=>{$('#toast').classList.remove('show');openRequest()};
+/* ---------- request arrival ---------- */
+let reqOpen=false,started=false,progress=0;
+async function receive(){if(started)return;started=true;$('#demobtn').disabled=true;$('#demobtn').textContent='Email received';
+  toast('New email · Northwind Analytics',EMAIL.subj+' — agent is handling it');
+  $('#reqlist').innerHTML=`<div class="req" id="reqrow"><div class="ic">✉</div><div><div class="s">${EMAIL.subj}</div><div class="f">${EMAIL.from} · ${EMAIL.role} · just now</div></div><div class="prog"><i id="reqprog"></i></div><span class="chip busy" id="reqchip"><i></i>agents handling</span></div>`;
+  $('#reqrow').onclick=openRequest;$('#bd-req').textContent='1';$('#bd-req').classList.add('hot');$('#s-req').textContent='1';$('#s-req-d').textContent='1 being handled by agents';$('#s-req-d').style.color='var(--accent)';
+  BY.northwind.state='handling';renderProjects();$('#reqhint').textContent='Click the request to follow the agents';
+  $('#emailcard').innerHTML=`<div class="from"><div class="av">DW</div><div><b>${EMAIL.from}</b><small>${EMAIL.role} · to you · 2 min ago</small></div></div><h2>${EMAIL.subj}</h2>${EMAIL.body.map(p=>`<p>${p}</p>`).join('')}<div class="meta"><span class="chip purple"><i></i>Northwind Analytics</span><span class="chip">Gmail</span><span class="chip">matched by sender domain</span></div>`;
+  $('#r-title').textContent=EMAIL.subj;$('#r-sub').textContent='From '+EMAIL.from+' · '+EMAIL.role;$('#r-chip').innerHTML='<span class="chip busy" id="rchip"><i></i>agents handling</span>';
+  await playList(SCRIPT)}
+function openRequest(){reqOpen=true;show('req');document.querySelectorAll('.nav a').forEach((x,i)=>x.classList.toggle('on',i===1))}
+$('#backhome').onclick=()=>{show('home');document.querySelectorAll('.nav a').forEach((x,i)=>x.classList.toggle('on',i===0))};
+$('#backreq').onclick=()=>show('req');$('#seecouncil').onclick=()=>show('council');$('#seecouncil2').onclick=()=>show('council');
+/* ---------- activity ---------- */
+function act(e){const d=document.createElement('div');d.className='it '+e.state;d.id='act-'+e.id;d.innerHTML=`<div class="ck">${e.state==='done'?'✓':e.state==='warn'?'!':''}</div><div>${e.text}<small>${e.sub}</small></div><div class="t">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</div>`;$('#act').appendChild(d);progress=Math.min(100,progress+16);const pr=$('#reqprog');if(pr)pr.style.width=progress+'%'}
+function actdone(id){const d=$('#act-'+id);if(!d)return;d.className='it done';d.querySelector('.ck').textContent='✓'}
+/* ---------- council network ---------- */
+const nodes={},CX=450,CY=290,R=205;
+P.forEach(p=>{const a=p.angle*Math.PI/180;p.x=CX+Math.cos(a)*R;p.y=CY+Math.sin(a)*R*.8;el('line',{x1:p.x,y1:p.y,x2:CX,y2:CY,class:'edge',id:'edge-'+p.id},$('#edges'));
+  const g=el('g',{class:'pk',transform:`translate(${p.x},${p.y})`},$('#nodes'));g.innerHTML=PUMP;
+  const lbl=document.createElement('div');lbl.className='nl';lbl.innerHTML=`<b>${p.name}</b><span class="st">listening</span>`;$('#ov').appendChild(lbl);nodes[p.id]={p,g,lbl}});
+function toScreen(x,y){const svg=$('#svg'),r=svg.getBoundingClientRect(),sc=Math.min(r.width/900,r.height/560),ox=(r.width-900*sc)/2,oy=(r.height-560*sc)/2;return{x:ox+x*sc,y:oy+y*sc}}
+function layout(){for(const id in nodes){const n=nodes[id];const s=toScreen(n.p.x,n.p.y+36);n.lbl.style.left=s.x+'px';n.lbl.style.top=s.y+'px'}}
+window.addEventListener('resize',layout);
+let msgs=0;
+function cstat(id,state){const n=nodes[id];n.g.setAttribute('class','pk '+(state==='idle'?'':state));n.lbl.className='nl '+(state==='idle'?'':state);n.lbl.querySelector('.st').textContent=state==='idle'?'listening':state==='reeval'?'re-evaluating':state;$('#edge-'+id).classList.toggle('on',/speaking|objecting|asking|reeval|thinking/.test(state))}
+function pulse(fromId,color,fan){const p=BY[fromId];const d=el('circle',{r:5,fill:color,class:'dot',style:'color:'+color},$('#svg'));
+  d.animate([{transform:`translate(${p.x}px,${p.y}px)`,opacity:1},{transform:`translate(${CX}px,${CY}px)`,opacity:.9}],{duration:650,easing:'ease-in'}).onfinish=()=>{d.remove();if(!fan)return;P.filter(q=>q.id!==fromId).forEach((q,i)=>{const d2=el('circle',{r:3.5,fill:color,class:'dot',style:'color:'+color},$('#svg'));d2.animate([{transform:`translate(${CX}px,${CY}px)`,opacity:.9},{transform:`translate(${q.x}px,${q.y}px)`,opacity:0}],{duration:600,delay:i*50,easing:'ease-out'}).onfinish=()=>d2.remove()})}}
+async function bubble(fromId,text,kind){if(!$('#v-council').classList.contains('on'))return;const p=fromId==='fde'?{x:CX,y:CY-44}:BY[fromId];const s=toScreen(p.x,p.y-36);const b=document.createElement('div');b.className='bub '+(kind||'');b.innerHTML=`<div class="who" style="color:${COLOR(fromId)}">${fromId==='fde'?'you':BY[fromId].name}</div>${text.length>110?text.slice(0,107)+'…':text}`;b.style.left=s.x+'px';b.style.top=s.y+'px';$('#ov').appendChild(b);await sleep(kind==='none'?1200:2400);b.animate([{opacity:1},{opacity:0}],{duration:400,fill:'forwards'}).onfinish=()=>b.remove()}
+let cancel=false;const feed=$('#feed');
+async function stream(node,text,speed=14){const w=text.split(' ');let out='';const cur=document.createElement('span');cur.className='cursor';for(let i=0;i<w.length;i++){if(cancel)return;out+=(i?' ':'')+w[i];node.textContent=out;node.appendChild(cur);feed.scrollTop=feed.scrollHeight;await sleep(speed+Math.random()*12)}cur.remove()}
+async function addMessage(m){const who=m.from==='fde'?'You':m.from==='moderator'?'Council':BY[m.from].name;const d=document.createElement('div');d.className='msg '+(m.kind||'');d.innerHTML=`<div class="who"><b style="color:${m.from==='moderator'?'var(--muted)':COLOR(m.from)}">${who}</b>${BY[m.from]?'<span class="tiny">'+BY[m.from].stack.split(' · ')[1]+'</span>':''}</div><div class="b"><span class="txt"></span></div>`;feed.appendChild(d);feed.scrollTop=feed.scrollHeight;
+  if(BY[m.from]){msgs++;$('#cstat').textContent='0 cross-project reads · '+msgs+' messages';bubble(m.from,m.text,m.kind);pulse(m.from,m.kind==='objection'?'#d97706':BY[m.from].color,m.kind!=='none')}else if(m.from==='fde')bubble('fde',m.text,'fde');
+  await stream(d.querySelector('.txt'),m.text,m.kind==='none'?6:14)}
+function cap(t,s){$('#cap-t').textContent=t;$('#cap-s').textContent=s||''}
+/* ---------- next step ---------- */
+let current=null,awaiting=null;
+async function suggest(c){current=c;const card=$('#nextcard');card.style.display='';$('#next-hd').className='hd'+(c.v2?' v2':'');$('#next-ver').textContent=c.ver;$('#n-title').textContent=c.title;$('#n-why').textContent=c.why;$('#n-eta').textContent=c.eta;$('#n-conf').textContent=c.conf;$('#n-src').textContent=[...new Set(c.steps.map(s=>s.src))].length;$('#adjust').classList.remove('show');$('#draft').classList.remove('show');
+  const ol=$('#n-steps');ol.innerHTML='';for(const s of c.steps){const li=document.createElement('li');li.className=s.changed?'changed':'';li.innerHTML=`${s.text}<span class="src" style="color:${COLOR(s.src)}">${BY[s.src].name.split(' ')[0]}</span>${s.changed?'<span class="src chg">changed</span>':''}`;ol.appendChild(li);await sleep(200)}
+  const chip=$('#reqchip');if(chip){chip.className='chip warn';chip.innerHTML='<i></i>needs your call'}$('#rchip').className='chip warn';$('#rchip').innerHTML='<i></i>needs your call';$('#actchip').className='chip warn';$('#actchip').innerHTML='<i></i>waiting for you';$('#s-req-d').textContent='1 needs your call';$('#s-req-d').style.color='var(--amber)';
+  if(!$('#v-req').classList.contains('on')&&!$('#v-council').classList.contains('on'))toast('Next step ready · Northwind',c.title);}
+function arm(){awaiting='Northwind cannot change chart libraries. Recharts stays.';$('#adjust').classList.add('show');const i=$('#fdeinput');i.placeholder=awaiting;i.focus()}
+async function sendFde(){const i=$('#fdeinput');const text=i.value.trim()||awaiting||'';if(!text)return;i.value='';$('#adjust').classList.remove('show');$('#nextcard').style.opacity=.6;await addMessage({from:'fde',kind:'fde',text});P.forEach(p=>nodes[p.id].g.animate([{opacity:1},{opacity:.3},{opacity:1}],{duration:300,iterations:2}));awaiting=null;await playList(AFTER_FDE);$('#nextcard').style.opacity=1}
+async function approve(){if(!current)return;$('#draft-t').textContent='Hi Dana, good news: we can ship dark mode before the launch without touching the chart library. Plan: theme tokens via CSS variables, chart colours injected at render, full Safari re-test. Target: Nov 7, preview on Thursday. — Geart';$('#draft').classList.add('show');
+  act({id:'a9',text:'Approved · work scheduled',sub:'Linear NW-240 created with 5 subtasks · reply drafted for your review',state:'done'});
+  TASKS.unshift(['Northwind: dark mode (NW-240) · 3h','northwind','Nov 7','new']);renderTasks();BY.northwind.state='listening';renderProjects();
+  ['#reqchip','#rchip'].forEach(s=>{const c=$(s);if(c){c.className='chip ok';c.innerHTML='<i></i>approved · scheduled'}});$('#actchip').className='chip ok';$('#actchip').innerHTML='<i></i>done';$('#s-req-d').textContent='Nothing waiting on you';$('#s-req-d').style.color='var(--muted)';$('#bd-req').classList.remove('hot');
+  document.querySelectorAll('#nextcard .actions button').forEach(b=>{if(b.id!=='seecouncil2')b.disabled=true});toast('Approved · Northwind','NW-240 created · reply drafted · launch Nov 14 safe')}
+function skip(){if(!current)return;$('#nextcard').style.display='none';act({id:'a10',text:'Skipped',sub:'Request parked. The agent keeps the context for later.',state:'done'})}
+/* ---------- router ---------- */
+async function handle(e){switch(e.type){
+  case 'act':act(e);break;case 'actdone':actdone(e.id);break;case 'cta':$('#cta').style.display='';break;
+  case 'cstat':cstat(e.a,e.s);break;case 'cap':cap(e.t_,e.s);break;case 'hub':$('#hub').classList.toggle('on',e.on);$('#hubst').textContent=e.on?'DISCUSSING':'IDLE';break;
+  case 'message':await addMessage(e);break;case 'reeval':e.agents.forEach(a=>cstat(a,'reeval'));await sleep(1100);e.agents.forEach(a=>cstat(a,'thinking'));break;
+  case 'suggest':await suggest(e);break;case 'hint':arm();break}}
+async function playList(list){for(const e of list){if(cancel)return;await sleep(e.t);if(cancel)return;await handle(e)}}
+function reset(){location.reload()}
+$('#demobtn').onclick=receive;$('#resetbtn').onclick=reset;$('#approve').onclick=approve;$('#skip').onclick=skip;$('#adjustbtn').onclick=()=>{$('#adjust').classList.add('show');$('#fdeinput').focus()};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'){if(e.key==='Enter')sendFde();return}if(e.key==='e'||e.key==='E')receive();if(e.key==='a'||e.key==='A')approve()});
+</script>
+</body>
+</html>
