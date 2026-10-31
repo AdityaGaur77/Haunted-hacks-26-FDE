@@ -118,17 +118,17 @@ RLS is enabled with no policies, so the public key can't read the tables; the we
 
 ## Seed data
 
-`seed-data.json`: 5 clients, 3–4 memories each (`request, solution, what_broke, fix, stack,
+`seed-data.json`: 5 clients, 3 memories each (`request, solution, what_broke, fix, stack,
 outcome`). Lessons only, no code. `bun run seed` validates it strictly against the contract.
 
-| Client | Who | Role in the dark-mode demo |
+| Client | Who (persona) | Role in the 6pm ticket-drop demo |
 | --- | --- | --- |
-| client-1 | Lumen Analytics (Next.js, **ECharts**) | The requester. Charts are the product |
-| client-2 | Pinecrest Pay (Nuxt, design tokens) | Adjacent: themed with CSS variables; a third-party iframe ignored them |
-| client-3 | Harbor Health (Next.js, **SVG charts**, strict WCAG) | **Dark mode with CSS variables in ~2 hours; "our SVG charts picked up the CSS variables, no chart work needed"** |
-| client-4 | Atlas Freight (Go API, no UI) | No relevant experience: **abstains** |
-| client-5 | Ridgeline Logistics (React, **ECharts**) | **CSS variables broke the charts** (canvas ignores them); **fix: theme prop** |
+| client-1 | Hallow Tix (nervous, still traumatized by last year's crash) | The requester. Last year autoscaled servers exhausted Postgres connections at 6pm |
+| client-2 | Costume Cauldron (cocky, "just autoscale") | **CDN + serverless autoscale, nothing broke** (plentiful stock, not unique seats) |
+| client-3 | Pumpkin Patch Pass (anxious, haunted by double booking) | **Sold the same slot twice; fix: reserve with an expiring hold before charging** |
+| client-4 | Candy Courier (blunt veteran, "been there, it broke") | **Autoscaling made it worse; fix: virtual waiting room + backoff** |
+| client-5 | Ghost Tour Co. (spooky, short eerie lines) | No relevant experience: **abstains** |
 
-The planted conflict: client-3 says CSS variables covered its charts too (they're SVG), and client-5
-says its canvas charts ignored them. Both are true for their stacks. client-1 uses canvas charts
-like client-5, so the right plan is client-3's CSS variables for the UI plus client-5's chart theme prop.
+The planted conflict: client-2 says "just autoscale"; client-4 and client-3 push back (the database
+is the bottleneck, and tickets are unique). The plan combines CDN caching, a waiting room and ticket
+holds. `persona` sets each agent's tone only; facts still come from memory.
