@@ -1,0 +1,21 @@
+{
+  "name": "fde-council-bridge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "hello": "bun hello.ts",
+    "debate": "bun run-debate.ts",
+    "start": "bun server.ts",
+    "seed": "bun seed.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agent-relay/sdk": "^15.0.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "typescript": "^7.0.2"
+  }
+}

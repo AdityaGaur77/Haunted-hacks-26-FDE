@@ -1,0 +1,126 @@
+import { beforeAll, expect, spyOn, test } from "bun:test";
+import type { Actors } from "./actors";
+import { addFdeInput, normalizeEvent, startDebate } from "./debate";
+import { createFakeActors } from "./fake-actors";
+import type { Relay } from "./relay";
+import { loadSeedData, seedAll } from "./seed";
+import type { ClientId, Event } from "./types";
+
+const noRelay: Relay = { enabled: false, openChannel: async () => {}, post: async () => {}, agent: () => { throw new Error("off"); } };
+
+beforeAll(() => {
+  process.env.FAKE_DELAY_MS = "0";
+  spyOn(console, "log").mockImplementation(() => {});
+  spyOn(console, "error").mockImplementation(() => {});
+});
+
+/** Wrap the fakes so tests can see what each actor was called with. */
+function spyActors(base = createFakeActors()) {
+  const calls = { challenge: [] as Event[][], plan: [] as string[][] };
+  let seminarId = "";
+  const actors: Actors = {
+    ...base,
+    seminar: (id) => ((seminarId = id), base.seminar(id)),
+    client: (id) => {
+      const real = base.client(id);
+      return {
+        ...real,
+        challenge: (t) => (calls.challenge.push(t), real.challenge(t)),
+        writePlan: (t, c) => (calls.plan.push(c), real.writePlan(t, c)),
+      };
+    },
+  };
+  return { actors, calls, seminarId: () => seminarId };
+}
+
+test("seed data matches the contract and plants the dark-mode conflict", async () => {
+  const data = await loadSeedData(); // throws on contract violations
+  const client = (id: ClientId) => data.clients.find((c) => c.id === id)!;
+  const darkMode = (id: ClientId) => client(id).memories.find((m) => /dark mode/i.test(m.request))!;
+
+  expect(darkMode("client-3").what_broke).toMatch(/^Nothing/);
+  expect(darkMode("client-3").outcome).toMatch(/same day/);
+  expect(darkMode("client-3").solution).toMatch(/CSS variables/);
+  expect(darkMode("client-5").solution).toMatch(/CSS variables/);
+  expect(darkMode("client-5").what_broke).toMatch(/chart library ignored the CSS variables/);
+  expect(darkMode("client-5").fix).toMatch(/theme prop/);
+  expect(client("client-1").stack).toMatch(/ECharts/); // same chart library as client-5
+  expect(darkMode("client-5").stack).toMatch(/ECharts/);
+  expect(client("client-3").constraints.join(" ")).toMatch(/WCAG/);
+});
+
+test("a full fake debate runs in order and ends with the requester's plan", async () => {
+  const { actors } = spyActors();
+  const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode to the dashboard");
+  await debate.done;
+  const events = await actors.seminar(debate.seminarId).getEvents();
+
+  expect(debate.seminarId).toMatch(/^seminar-\d+$/);
+  expect(events.map((e) => e.type)).toEqual([
+    "request",
+    ...Array(5).fill(expect.stringMatching(/^(take|abstain)$/)),
+    ...Array(5).fill("challenge"),
+    "plan",
+  ]);
+  expect(events.slice(1, 6).map((e) => e.from)).toEqual(["client-1", "client-2", "client-3", "client-4", "client-5"]);
+  expect(events.slice(6, 11).map((e) => e.from)).toEqual(["client-2", "client-3", "client-4", "client-5", "client-1"]);
+  expect(events.find((e) => e.from === "client-4" && e.type !== "challenge")?.type).toBe("abstain");
+  expect(events.find((e) => e.from === "client-5" && e.type === "challenge")?.text).toMatch(/theme prop/);
+  const plan = events.at(-1)!;
+  expect(plan.from).toBe("client-1");
+  expect(plan.text).toMatch(/we also run ECharts/);
+  for (const e of events) expect(typeof e.ts).toBe("number");
+});
+
+test("FDE input added mid-debate reaches later turns and the plan", async () => {
+  const base = createFakeActors();
+  const { actors, calls, seminarId } = spyActors(base);
+  // The FDE jumps in while client-2 is answering in round 1.
+  const client = actors.client;
+  actors.client = (id) => {
+    const c = client(id);
+    if (id !== "client-2") return c;
+    return { ...c, respond: async (r, t) => (await addFdeInput(base, seminarId(), "Ship by Friday"), c.respond(r, t)) };
+  };
+  const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode");
+  await debate.done;
+
+  expect(calls.challenge.every((t) => t.some((e) => e.type === "fde" && e.text === "Ship by Friday"))).toBe(true);
+  expect(calls.plan).toEqual([["Ship by Friday"]]);
+  const events = await actors.seminar(debate.seminarId).getEvents();
+  expect(events.at(-1)!.text).toContain("Ship by Friday");
+});
+
+test("a failing agent is skipped and a failing plan still ends the debate", async () => {
+  const base = createFakeActors();
+  const actors: Actors = {
+    ...base,
+    client: (id) => {
+      const c = base.client(id);
+      if (id === "client-2") return { ...c, respond: async () => { throw new Error("LLM down"); } };
+      if (id === "client-1") return { ...c, writePlan: async () => { throw new Error("LLM down"); } };
+      return c;
+    },
+  };
+  const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode");
+  await debate.done;
+  const events = await actors.seminar(debate.seminarId).getEvents();
+  expect(events.filter((e) => e.from === "client-2" && e.type !== "challenge")).toHaveLength(0);
+  expect(events.at(-1)).toMatchObject({ type: "plan", from: "client-1" });
+});
+
+test("seeding twice leaves the same state (idempotent)", async () => {
+  const actors = createFakeActors();
+  const data = await loadSeedData();
+  await seedAll(actors, data);
+  await seedAll(actors, data);
+  const take = await actors.client("client-3").respond("Add dark mode", [{ type: "request", from: "client-1", text: "Add dark mode", ts: 1 }]);
+  expect(take).toMatchObject({ type: "take", from: "client-3", cites: ["client-3: Add dark mode to the patient portal"] });
+});
+
+test("normalizeEvent coerces messy actor output into a valid Event", () => {
+  expect(normalizeEvent("plain text", "client-2", ["take", "abstain"])).toMatchObject({ type: "take", from: "client-2", text: "plain text" });
+  expect(normalizeEvent({ type: "abstain", from: "client-9", text: "x", cites: [1], ts: 5 }, "client-3", ["take", "abstain"]))
+    .toEqual({ type: "abstain", from: "client-3", text: "x", cites: ["1"], ts: 5 });
+  expect(normalizeEvent({ type: "nonsense", text: "y" }, "client-1", ["plan"]).type).toBe("plan");
+});
