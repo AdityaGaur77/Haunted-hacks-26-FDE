@@ -34,12 +34,12 @@ const seminar = actors.SeminarActor.get(seminarId)
 await seminar.start("client-1", "Add dark mode")
 
 for (const client of [c3, c5]) {
-    const e = await client.respond("Add dark mode", await seminar.getEvents())
+    const e = await client.respond("Add dark mode", await seminar.getEvents(), seminarId)
     await seminar.addEvent(e)
 }
 await seminar.addEvent({ type: "fde", from: "fde", text: "Client 1 cannot change its chart library.", ts: Date.now() })
-await seminar.addEvent(await c3.challenge(await seminar.getEvents()))
-await seminar.addEvent(await c1.writePlan(await seminar.getEvents(), await seminar.getFdeConstraints()))
+await seminar.addEvent(await c3.challenge(await seminar.getEvents(), seminarId))
+await seminar.addEvent(await c1.writePlan(await seminar.getEvents(), await seminar.getFdeConstraints(), seminarId))
 await seminar.markDone()
 
 for (const e of await seminar.getEvents()) console.log(`[${e.type}] ${e.from}: ${e.text}${e.cites?.length ? `  (cites ${e.cites.join(", ")})` : ""}`)

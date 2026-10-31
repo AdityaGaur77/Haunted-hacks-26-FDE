@@ -3,8 +3,8 @@
 Runs on the open-source Durable Actors runtime (MIT), locally — no cloud account needed.
 
 ## Actors
-- `ClientActor` (`client-1`…`client-5`): private memory in its own SQLite. Methods: `seed`, `getProfile`, `remember`, `memoryCount`, `respond`, `challenge`, `writePlan`.
-- `SeminarActor` (`seminar-<timestamp>`): live event log. Methods: `start`, `addEvent`, `getEvents`, `getFdeConstraints`, `getState`, `markDone`. Emits `status`, `requestingClient`, `request`, `events`; broadcasts `{ type: "event", event }`. The FDE sends `{ type: "fde", text }` over the socket.
+- `ClientActor` (`client-1`…`client-5`): private memory in its own SQLite. Methods: `seed`, `getProfile`, `remember`, `memoryCount`, `respond(request, transcript, seminarId?)`, `challenge(transcript, seminarId?)`, `writePlan(transcript, fdeConstraints, seminarId?)`. Pass `seminarId` to stream live "typing" text to that seminar.
+- `SeminarActor` (`seminar-<timestamp>`): live event log. Methods: `start`, `addEvent`, `getEvents`, `getFdeConstraints`, `getState`, `markDone`. Emits `status`, `requestingClient`, `request`, `events`; broadcasts `{ type: "event", event }` for each final message and `{ type: "typing", from, text }` while an agent is generating (not saved). The FDE sends `{ type: "fde", text }` over the socket.
 
 Event shape and memory fields: see `src/types.ts` (shared contract).
 

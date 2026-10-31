@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai"
-import { generateText } from "ai"
+import { streamText } from "ai"
 import { Actor, type ActorSocket, Emittable, Interleave, Persisted } from "durable-actors"
 
 import { describeSelf, planPrompt, challengePrompt, respondPrompt } from "./prompts.js"
@@ -11,8 +11,33 @@ const MODEL = process.env.OPENAI_MODEL ?? "gpt-5-mini"
 
 type LlmReply = { abstain: boolean; text: string; cites: string[] }
 
-async function askLlm(system: string, prompt: string): Promise<LlmReply> {
-    const { text } = await generateText({ model: openai(MODEL), system, prompt })
+// Pull the (possibly incomplete) "text" field out of a streaming JSON reply.
+function partialText(raw: string): string {
+    const m = raw.match(/"text"\s*:\s*"((?:[^"\\]|\\.)*)/)
+    if (!m) return ""
+    return m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+}
+
+/**
+ * Calls the model and streams partial text to the seminar (if given) so the
+ * website shows the agent "typing". Streaming failures never break the reply.
+ */
+async function askLlm(system: string, prompt: string, from?: string, seminarId?: string): Promise<LlmReply> {
+    const result = streamText({ model: openai(MODEL), system, prompt })
+    let text = ""
+    let lastSent = 0
+    let lastShown = ""
+    for await (const chunk of result.textStream) {
+        text += chunk
+        if (!seminarId || !from) continue
+        const now = Date.now()
+        const shown = partialText(text)
+        if (shown && shown !== lastShown && now - lastSent > 250) {
+            lastSent = now
+            lastShown = shown
+            SeminarActor.get(seminarId).typing(from, shown).catch(() => {})
+        }
+    }
     try {
         const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1))
         return {
@@ -92,24 +117,24 @@ export class ClientActor extends Actor {
 
     /** Round 1: share one sanitized lesson, or abstain. */
     @Interleave
-    async respond(request: string, transcript: CouncilEvent[]): Promise<CouncilEvent> {
+    async respond(request: string, transcript: CouncilEvent[], seminarId?: string): Promise<CouncilEvent> {
         const { system, prompt } = respondPrompt(await this.self(), request, transcript)
-        const r = await askLlm(system, prompt)
+        const r = await askLlm(system, prompt, this.id, seminarId)
         return makeEvent(this.id, r.abstain ? "abstain" : "take", r)
     }
 
     /** Round 2: push back if this deployment's memory contradicts someone. */
     @Interleave
-    async challenge(transcript: CouncilEvent[]): Promise<CouncilEvent> {
+    async challenge(transcript: CouncilEvent[], seminarId?: string): Promise<CouncilEvent> {
         const { system, prompt } = challengePrompt(await this.self(), transcript)
-        return makeEvent(this.id, "challenge", await askLlm(system, prompt))
+        return makeEvent(this.id, "challenge", await askLlm(system, prompt, this.id, seminarId))
     }
 
     /** Final: the requesting client writes the plan, citing sources. */
     @Interleave
-    async writePlan(transcript: CouncilEvent[], fdeConstraints: string[]): Promise<CouncilEvent> {
+    async writePlan(transcript: CouncilEvent[], fdeConstraints: string[], seminarId?: string): Promise<CouncilEvent> {
         const { system, prompt } = planPrompt(await this.self(), transcript, fdeConstraints)
-        return makeEvent(this.id, "plan", await askLlm(system, prompt))
+        return makeEvent(this.id, "plan", await askLlm(system, prompt, this.id, seminarId))
     }
 }
 
@@ -119,7 +144,9 @@ export class ClientActor extends Actor {
 // The FDE jumps in by sending { type: "fde", text } over the socket.
 // ---------------------------------------------------------------------------
 type SeminarIncoming = { type: "fde"; text: string }
-type SeminarOutgoing = { type: "event"; event: CouncilEvent }
+type SeminarOutgoing =
+    | { type: "event"; event: CouncilEvent }
+    | { type: "typing"; from: string; text: string }
 type SeminarSocket = ActorSocket<null, SeminarOutgoing>
 
 export class SeminarActor extends Actor<null, SeminarIncoming, SeminarOutgoing> {
@@ -152,6 +179,11 @@ export class SeminarActor extends Actor<null, SeminarIncoming, SeminarOutgoing> 
 
     async getState(): Promise<{ status: SeminarStatus; requestingClient: string | null; request: string | null; events: CouncilEvent[] }> {
         return { status: this.status, requestingClient: this.requestingClient, request: this.request, events: this.events }
+    }
+
+    /** Live partial text while an agent is generating. Not saved; the final reply arrives as an event. */
+    async typing(from: string, text: string): Promise<void> {
+        this.broadcast({ type: "typing", from, text })
     }
 
     async markDone(): Promise<void> {
