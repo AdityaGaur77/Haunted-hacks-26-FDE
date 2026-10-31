@@ -59,19 +59,21 @@ async function runRounds(ctx: Context, requestEvent: Event) {
   await relay.openChannel(seminarId, `${requester}: ${request}`.slice(0, 250));
   await relay.post(requester, seminarId, relayText(requestEvent), { event: requestEvent });
 
-  const others = CLIENT_IDS.filter((id) => id !== requester);
+  const started = Date.now();
 
-  // Round 1: the requester briefs the council first, then everyone gives a take (or abstains).
-  for (const id of [requester, ...others]) {
-    const transcript = await readTranscript(ctx);
-    await turn(ctx, id, ["take", "abstain"], () => actors.client(id).respond(request, transcript, seminarId));
-  }
+  // Each round runs its 5 agent calls in parallel; every event is published as soon as its call
+  // finishes. The SeminarActor is read right before each round and the plan, so FDE input that
+  // arrived during the previous round is included.
 
-  // Round 2: everyone challenges; the requester goes last so it can react before planning.
-  for (const id of [...others, requester]) {
-    const transcript = await readTranscript(ctx);
-    await turn(ctx, id, ["challenge"], () => actors.client(id).challenge(transcript, seminarId));
-  }
+  // Round 1: everyone gives a take (or abstains), seeing the request plus any FDE input.
+  const round1 = await readTranscript(ctx);
+  await Promise.all(
+    CLIENT_IDS.map((id) => turn(ctx, id, ["take", "abstain"], () => actors.client(id).respond(request, round1, seminarId))),
+  );
+
+  // Round 2: everyone challenges, each seeing the full round-1 transcript.
+  const round2 = await readTranscript(ctx);
+  await Promise.all(CLIENT_IDS.map((id) => turn(ctx, id, ["challenge"], () => actors.client(id).challenge(round2, seminarId))));
 
   // Plan: written by the requesting client, honouring everything the FDE said.
   const transcript = await readTranscript(ctx);
@@ -86,7 +88,7 @@ async function runRounds(ctx: Context, requestEvent: Event) {
   }
   await ctx.seminar.markDone();
   if (planned) await savePlan(ctx);
-  console.log(`=== ${seminarId} done\n`);
+  console.log(`=== ${seminarId} done: request -> plan in ${((Date.now() - started) / 1000).toFixed(1)}s\n`);
 }
 
 /**

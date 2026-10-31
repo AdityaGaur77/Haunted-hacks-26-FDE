@@ -53,7 +53,11 @@ if (import.meta.main) {
   }
   const store = connectStore();
   if (store.enabled) {
-    await store.upsertClients(clientRows(data)); // upsert by id: safe to re-run
-    console.log(`Upserted ${data.clients.length} clients into Supabase (name + stack only).`);
+    try {
+      await store.upsertClients(clientRows(data)); // upsert by id: safe to re-run
+      console.log(`Upserted ${data.clients.length} clients into Supabase (name + stack only).`);
+    } catch (error) {
+      console.warn(`WARNING: actors are seeded, but Supabase failed: ${error instanceof Error ? error.message : error}`);
+    }
   }
 }

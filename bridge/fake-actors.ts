@@ -110,7 +110,8 @@ function fakeClient(id: ClientId, world: World): ClientActor {
         return event("challenge", id, text, transcript, [id]);
       }
       if (warnings.length) {
-        const text = `Fair point from ${mention(warnings)}. Our setup (${m.stack}) had nothing like that, so the risk depends on the stack, not the approach. @${requester}, check which of us your stack is closer to.`;
+        // Push back with our own memory: this is where the council disagrees.
+        const text = `I disagree with ${mention(warnings)}: CSS variables were all we needed (${m.stack}). ${sentence(m.what_broke)} No extra chart work is required.`;
         return event("challenge", id, text, transcript, [id]);
       }
       return event("challenge", id, `No objections. Our experience matches: ${sentence(m.outcome)}`, transcript, [id]);

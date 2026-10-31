@@ -7,11 +7,12 @@ Runs the debate. When a client makes a request, the 5 client agents debate it li
 ```
 POST /debate ──> startDebate(client, request)
    SeminarActor "seminar-<ts>".start()  -> request event   Relay #seminar-<ts>  <── posted as client-N
-   Round 1  requester first, then the rest: respond()   -> take | abstain
-   Round 2  the rest, then the requester: challenge()   -> challenge
+   Round 1  all 5 clients in parallel: respond()      -> take | abstain
+   Round 2  all 5 clients in parallel: challenge()    -> challenge (each sees all of round 1)
    Plan     requester: writePlan(transcript, fdeConstraints) -> plan, then markDone()
-   Before every turn the SeminarActor is re-read, so new "fde" events reach the next agent
-   (and are mirrored to Relay as the "fde" identity).
+   Each event is published as soon as its call finishes. The SeminarActor is re-read before
+   round 2 and before the plan, so FDE input sent during a round reaches the next one
+   (and is mirrored to Relay as the "fde" identity).
 ```
 
 ## Run it
@@ -120,10 +121,10 @@ outcome`). Lessons only, no code. `bun run seed` validates it strictly against t
 | --- | --- | --- |
 | client-1 | Lumen Analytics (Next.js, **ECharts**) | The requester. Charts are the product |
 | client-2 | Pinecrest Pay (Nuxt, design tokens) | Adjacent: themed with CSS variables; a third-party iframe ignored them |
-| client-3 | Harbor Health (Next.js, no chart library, strict WCAG) | **Dark mode with CSS variables in ~2 hours, no problems** |
+| client-3 | Harbor Health (Next.js, **SVG charts**, strict WCAG) | **Dark mode with CSS variables in ~2 hours; "our SVG charts picked up the CSS variables, no chart work needed"** |
 | client-4 | Atlas Freight (Go API, no UI) | No relevant experience: **abstains** |
 | client-5 | Ridgeline Logistics (React, **ECharts**) | **CSS variables broke the charts** (canvas ignores them); **fix: theme prop** |
 
-The planted conflict is client-3's "it just works" against client-5's "it broke our charts". Since
-client-1 uses the same chart library as client-5, the right plan is CSS variables for the app
-shell plus the chart theme prop.
+The planted conflict: client-3 says CSS variables covered its charts too (they're SVG), and client-5
+says its canvas charts ignored them. Both are true for their stacks. client-1 uses canvas charts
+like client-5, so the right plan is client-3's CSS variables for the UI plus client-5's chart theme prop.

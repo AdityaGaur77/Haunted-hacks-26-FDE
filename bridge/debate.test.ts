@@ -5,7 +5,7 @@ import { createFakeActors } from "./fake-actors";
 import type { Relay } from "./relay";
 import { clientRows, loadSeedData, seedAll } from "./seed";
 import type { PlanRow, Store } from "./store";
-import type { ClientId, Event } from "./types";
+import { CLIENT_IDS, type ClientId, type Event } from "./types";
 
 const noRelay: Relay = { enabled: false, openChannel: async () => {}, post: async () => {}, agent: () => { throw new Error("off"); } };
 
@@ -66,10 +66,14 @@ test("a full fake debate runs in order and ends with the requester's plan", asyn
     ...Array(5).fill("challenge"),
     "plan",
   ]);
-  expect(events.slice(1, 6).map((e) => e.from)).toEqual(["client-1", "client-2", "client-3", "client-4", "client-5"]);
-  expect(events.slice(6, 11).map((e) => e.from)).toEqual(["client-2", "client-3", "client-4", "client-5", "client-1"]);
+  // Within a round, events arrive in whatever order the parallel calls finish.
+  const all = [...CLIENT_IDS];
+  expect(events.slice(1, 6).map((e) => e.from).sort()).toEqual(all);
+  expect(events.slice(6, 11).map((e) => e.from).sort()).toEqual(all);
   expect(events.find((e) => e.from === "client-4" && e.type !== "challenge")?.type).toBe("abstain");
   expect(events.find((e) => e.from === "client-5" && e.type === "challenge")?.text).toMatch(/theme prop/);
+  // The planted disagreement: client-3 pushes back on client-5 about charts.
+  expect(events.find((e) => e.from === "client-3" && e.type === "challenge")?.text).toMatch(/I disagree with .*@client-5.*SVG-based charts/);
   const plan = events.at(-1)!;
   expect(plan.from).toBe("client-1");
   expect(plan.text).toMatch(/We also run ECharts/);
@@ -170,4 +174,17 @@ test("the Supabase client list has id, name and stack only, never memories", asy
   const rows = clientRows(await loadSeedData());
   expect(rows).toHaveLength(5);
   for (const row of rows) expect(Object.keys(row).sort()).toEqual(["id", "name", "stack"]);
+});
+
+test("each round runs its agent calls in parallel", async () => {
+  process.env.FAKE_DELAY_MS = "200"; // each fake call takes 100-300ms
+  try {
+    const t0 = Date.now();
+    const debate = await startDebate({ actors: createFakeActors(), relay: noRelay }, "client-1", "Add dark mode");
+    await debate.done;
+    // 3 parallel steps (round 1, round 2, plan) take at most ~0.9s; 11 calls in a row take at least 1.1s.
+    expect(Date.now() - t0).toBeLessThan(1000);
+  } finally {
+    process.env.FAKE_DELAY_MS = "0";
+  }
 });

@@ -75,7 +75,7 @@
     {
       "id": "client-3",
       "name": "Harbor Health",
-      "stack": "Next.js, Tailwind CSS, Radix UI primitives; no charting library (results are shown as accessible tables)",
+      "stack": "Next.js, Tailwind CSS, Radix UI primitives, Recharts (SVG charts with accessible labels)",
       "constraints": [
         "WCAG 2.1 AA is a legal requirement: 4.5:1 contrast for text, 3:1 for UI components",
         "Every UI change gets a screen-reader pass (NVDA and VoiceOver) before release",
@@ -85,10 +85,10 @@
       "memories": [
         {
           "request": "Add dark mode to the patient portal",
-          "solution": "Moved every color into CSS variables at the root, swapped them with a theme attribute, defaulted to the OS preference and remembered the user's choice",
-          "what_broke": "Nothing. It shipped in about 2 hours",
+          "solution": "Moved every color, including chart colors, into CSS variables at the root, swapped them with a theme attribute, defaulted to the OS preference and remembered the user's choice",
+          "what_broke": "Nothing. Our SVG-based charts picked up the CSS variables automatically, so no chart work was needed. It shipped in about 2 hours",
           "fix": "None needed; we re-ran the contrast checker on both themes before release",
-          "stack": "Next.js, Tailwind CSS, Radix UI",
+          "stack": "Next.js, Tailwind CSS, Radix UI, Recharts (SVG)",
           "outcome": "Shipped the same day, passed the WCAG AA audit in both themes, zero bug reports"
         },
         {
@@ -101,10 +101,10 @@
         },
         {
           "request": "Show lab result trends to patients",
-          "solution": "Showed trends as accessible tables with plain-language summaries instead of adding a chart library",
+          "solution": "Switched to SVG charts with accessible labels plus a plain-language summary under each chart",
           "what_broke": "An early canvas chart prototype was invisible to screen readers",
-          "fix": "Dropped the canvas chart for a semantic table plus a small trend image with alt text",
-          "stack": "Next.js",
+          "fix": "Replaced the canvas chart with SVG charts whose points have text labels, plus a data table fallback",
+          "stack": "Next.js, Recharts (SVG)",
           "outcome": "Audit passed; patients preferred the plain-language summaries"
         },
         {
