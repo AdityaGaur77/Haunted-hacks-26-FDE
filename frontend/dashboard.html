@@ -99,13 +99,14 @@
 
   /* council */
   .compose { padding: 16px 18px; margin-bottom: 14px; }
-  .compose .row { display: flex; gap: 10px; align-items: flex-end; margin-top: 12px; }
+  .compose .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
   .compose .grow { flex: 1; }
   .participants { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 14px; }
   .pcard { padding: 12px; transition: border-color .2s; min-width: 0; }
   .pcard .top { display: flex; align-items: center; gap: 8px; }
   .pcard b { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pcard .meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; color: var(--muted-2); font-size: 12px; gap: 6px; }
+  .pcard .meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; color: var(--muted-2); font-size: 12px; gap: 6px; min-width: 0; overflow: hidden; }
+  .pcard .top { min-width: 0; overflow: hidden; }
   .pcard .meta span { display: inline-flex; align-items: center; gap: 4px; }
   .pcard .meta svg.i { width: 13px; height: 13px; }
   .pcard .st { color: var(--muted); }
@@ -117,6 +118,7 @@
   .cols { display: grid; grid-template-columns: 1fr 380px; gap: 14px; align-items: start; }
   .runhead { padding: 16px 18px; border-bottom: 1px solid var(--border); }
   .runhead .who { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+  #rh-client { display: flex; align-items: center; gap: 8px; min-width: 0; }
   .runhead .who .badge { margin-left: auto; }
   .runhead h2 { font-size: 17px; font-weight: 600; margin: 8px 0 6px; line-height: 1.4; letter-spacing: -.01em; }
   .runhead .chan { color: var(--muted-2); font-size: 12px; }
@@ -152,10 +154,74 @@
   .plan .feedback { display: none; padding: 0 18px 18px; }
   .plan .feedback .row { display: flex; gap: 8px; align-items: flex-end; }
   .plan .done { display: none; padding: 0 18px 18px; color: var(--muted); font-size: 13px; }
+  .msg.is-typing .txt { color: var(--muted); }
+  .dots { display: inline-flex; gap: 3px; align-items: center; height: 18px; padding: 0 8px; border-radius: 9px; background: var(--card-2); margin-left: 2px; }
+  .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite; }
+  .dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5 } 30% { transform: translateY(-3px); opacity: 1 } }
+  .typing-label { font-size: 12px; color: var(--muted-2); font-weight: 400; }
   .typing::after { content: "▍"; color: var(--muted-2); animation: blink 1s steps(2) infinite; }
   @keyframes blink { 50% { opacity: 0 } }
   .view { display: none; } .view.on { display: block; }
   .feed-empty { color: var(--muted-2); padding: 48px 18px; text-align: center; font-size: 13px; }
+  /* stepper */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .step { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--muted-2); font-size: 13px; }
+  .step .num { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border-2); display: grid; place-items: center; font-size: 12px; font-weight: 600; flex: none; }
+  .step b { color: var(--muted); font-weight: 500; display: block; }
+  .step small { display: block; font-size: 12px; }
+  .step.on { border-color: rgba(180, 163, 247, .5); }
+  .step.on .num { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+  .step.on b { color: var(--fg); }
+  .step.done .num { background: var(--green-soft); color: var(--green); border-color: transparent; }
+  .step.done b { color: var(--muted); }
+  .kbd { font-size: 11px; color: var(--muted-2); margin-top: 6px; }
+  .menu-btn { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; display: grid; place-items: center; }
+  .menu-btn:hover { background: var(--card-2); color: var(--fg); }
+  .scrim { display: none; }
+
+  /* responsive */
+  @media (max-width: 1280px) {
+    .step small { display: none; }
+    .cols { grid-template-columns: 1fr 330px; }
+    .participants { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 1080px) {
+    .cols { grid-template-columns: 1fr; }
+    .side { position: static; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    aside { position: fixed; z-index: 30; left: 0; top: 0; width: 260px; transform: translateX(-100%); transition: transform .2s; }
+    .app.nav-open aside { transform: none; }
+    .app.nav-open .scrim { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; }
+    .topbar { padding: 0 16px; }
+    .page { padding: 18px 16px; }
+    .head { flex-wrap: wrap; }
+    .head .btn { margin-left: 0; }
+    .compose .row .kbd { display: none; }
+    .compose select.field { flex: 1; min-width: 0; }
+    .participants { grid-template-columns: repeat(2, 1fr); }
+    .recent { flex-wrap: wrap; }
+    .recent .btn { margin-left: 0; }
+    .col-upd { display: none; }
+    td .req { max-width: 240px; }
+    .steps { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .step { padding: 8px 10px; gap: 8px; }
+    .step small { display: none; }
+  }
+  @media (max-width: 520px) {
+    .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat .n { font-size: 22px; }
+    .participants { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pcard { padding: 10px; }
+    .pcard .meta span:last-child { display: none; }
+    .step b { font-size: 12px; }
+    .head h1 { font-size: 20px; }
+    th, td { padding: 10px 12px; }
+    .col-client-name { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -172,7 +238,8 @@
   </aside>
 
   <div class="main">
-    <div class="topbar"><span data-icon="panel"></span><span class="sep"></span><span class="crumb" id="crumb"><span data-icon="dashboard"></span>Overview</span></div>
+    <div class="scrim" id="scrim"></div>
+    <div class="topbar"><button class="menu-btn" id="menu" aria-label="Toggle sidebar"><span data-icon="panel"></span></button><span class="sep"></span><span class="crumb" id="crumb"><span data-icon="dashboard"></span>Overview</span></div>
 
     <!-- OVERVIEW -->
     <section class="view page on" id="v-overview">
@@ -193,7 +260,7 @@
       </div>
       <div class="card">
         <div class="card-h"><h3>Recent runs</h3><p>Every request the council has handled.</p></div>
-        <table><thead><tr><th>Client</th><th>Request</th><th>State</th><th>Updated</th><th></th></tr></thead><tbody id="runs"></tbody></table>
+        <table><thead><tr><th>Client</th><th>Request</th><th>State</th><th class="col-upd">Updated</th><th></th></tr></thead><tbody id="runs"></tbody></table>
         <div class="empty" id="runs-empty">No runs yet.</div>
       </div>
     </section>
@@ -203,11 +270,17 @@
       <div class="head">
         <div><h1>Council</h1><p>The requesting client's agent asks the others. Each answers only from its own memory.</p></div>
       </div>
+      <div class="steps" id="steps">
+        <div class="step on" data-step="1"><span class="num">1</span><div><b>Send a request</b><small>Pick a client and describe the ask</small></div></div>
+        <div class="step" data-step="2"><span class="num">2</span><div><b>Watch the council</b><small>Add a constraint any time</small></div></div>
+        <div class="step" data-step="3"><span class="num">3</span><div><b>Approve the plan</b><small>Or request changes</small></div></div>
+      </div>
       <div class="card compose" id="compose">
         <div class="card-h" style="padding:0"><h3>New request</h3><p>Pick the client and paste what they asked for.</p></div>
+        <textarea class="field" id="reqtext" rows="2" placeholder="Describe the client's request" style="margin-top:12px"></textarea>
         <div class="row">
           <select class="field" id="who"></select>
-          <div class="grow"><textarea class="field" id="reqtext" rows="1" placeholder="Describe the client's request"></textarea></div>
+          <span class="kbd" style="margin:0 auto 0 4px">⌘ + Enter to send</span>
           <button class="btn btn-primary" id="start"><span data-icon="send"></span>Ask the council</button>
         </div>
       </div>
@@ -254,8 +327,16 @@
 
 <script>
 const BRIDGE = new URLSearchParams(location.search).get("bridge") || "http://localhost:4000"
-const DEFAULT_REQUEST = "Tonight at 6pm we release 5,000 tickets and expect 50,000 people at once. Don't let the site crash or sell the same ticket twice."
+const DEFAULT_REQUEST = "Tonight at 6pm we launch a limited Halloween drop: 5,000 boxes and 50,000 shoppers at once. Don't let the site crash or sell the same box twice."
 const TINTS = ["#a78bfa", "#60a5fa", "#4ade80", "#fbbf24", "#f472b6"]
+// Display names for the demo clients (fictional deployments; names are demo data).
+const DISPLAY = {
+  "client-1": { name: "Snickers", stack: "Limited-edition drops · checkout" },
+  "client-2": { name: "Kit Kat", stack: "Online store · CDN" },
+  "client-3": { name: "Reese's", stack: "Factory-tour bookings" },
+  "client-4": { name: "M&M's", stack: "Same-day delivery" },
+  "client-5": { name: "Skittles", stack: "Mobile app" },
+}
 let CLIENTS = {
   "client-1": { name: "Client 1", stack: "" }, "client-2": { name: "Client 2", stack: "" }, "client-3": { name: "Client 3", stack: "" },
   "client-4": { name: "Client 4", stack: "" }, "client-5": { name: "Client 5", stack: "" },
@@ -281,7 +362,7 @@ const icon = n => `<svg class="i" viewBox="0 0 24 24">${ICONS[n]}</svg>`
 const $ = s => document.querySelector(s)
 const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c])
 const initials = n => n.split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase()
-const tint = id => TINTS[(Number(id.split("-")[1]) - 1) % TINTS.length]
+const tint = id => TINTS[(Math.max(1, Number(String(id || "").split("-")[1]) || 1) - 1) % TINTS.length]
 const avatar = (id, cls = "") => `<span class="av ${cls}" style="background:${tint(id)}22;color:${tint(id)}">${initials(CLIENTS[id]?.name || id)}</span>`
 function ago(ts) { const s = Math.max(1, Math.round((Date.now() - ts) / 1000)); return s < 60 ? s + "s ago" : s < 3600 ? Math.round(s / 60) + "m ago" : Math.round(s / 3600) + "h ago" }
 function autosize(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px" }
@@ -296,15 +377,25 @@ async function api(path, body) {
   return r.json()
 }
 
+/* ---------- steps ---------- */
+function setStep(n) {
+  document.querySelectorAll(".step").forEach(el => {
+    const k = Number(el.dataset.step)
+    el.classList.toggle("on", k === n)
+    el.classList.toggle("done", k < n || n === 4)
+  })
+}
+
 /* ---------- views ---------- */
 function show(view) {
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + view))
   document.querySelectorAll(".nav").forEach(n => n.classList.toggle("on", n.dataset.view === view))
+  document.querySelector(".app").classList.remove("nav-open")
   $("#crumb").innerHTML = view === "overview" ? icon("dashboard") + "Overview" : icon("messages") + "Council"
   if (view === "overview") renderOverview()
   else requestAnimationFrame(() => document.querySelectorAll("textarea.field").forEach(autosize))
 }
-function newRequest() { show("council"); $("#compose").style.display = "block"; const t = $("#reqtext"); if (!t.value) t.value = DEFAULT_REQUEST; autosize(t); t.focus() }
+function newRequest() { show("council"); if (!seminarId || !awaiting) setStep(1); $("#compose").style.display = "block"; const t = $("#reqtext"); if (!t.value) t.value = DEFAULT_REQUEST; autosize(t); t.focus() }
 
 /* ---------- clients ---------- */
 function renderClients() {
@@ -325,13 +416,13 @@ function status(id, st) {
   $("#ps-" + id).textContent = LABEL[st] || st
   const sd = $("#sd-" + id); if (sd) sd.className = "sdot " + (st === "listening" || st === "abstained" ? "" : st)
 }
-function live(id, text) { const el = $("#pl-" + id); if (!el) return; el.textContent = text; el.classList.toggle("on", !!text); el.classList.toggle("typing", !!text) }
+function live(id, text) { const el = $("#pl-" + id); if (!el) return; el.textContent = displayText(text); el.classList.toggle("on", !!text); el.classList.toggle("typing", !!text) }
 
 /* ---------- overview ---------- */
 const STATE = { running: ["running", "Running"], needs: ["needs", "Needs approval"], approved: ["approved", "Approved"] }
 function badge(state) { const [c, l] = STATE[state] || ["", state]; return `<span class="badge ${c}">${l}</span>` }
 function renderOverview() {
-  const sorted = [...runs].sort((a, b) => b.updated - a.updated)
+  const sorted = runs.filter(r => r.client && r.request).sort((a, b) => b.updated - a.updated)
   $("#st-runs").textContent = runs.length
   const running = runs.filter(r => r.state === "running").length
   $("#st-runs-s").textContent = `${running} running · ${runs.length - running} complete`
@@ -341,14 +432,38 @@ function renderOverview() {
   $("#recent-text").textContent = top ? `${CLIENTS[top.client]?.name || top.client} · ${top.request}` : "No runs yet. Start a new request."
   $("#recent-badge").innerHTML = top ? badge(top.state) : ""
   $("#runs").innerHTML = sorted.slice(0, 8).map(r => `
-    <tr><td><div style="display:flex;align-items:center;gap:10px">${avatar(r.client)}<span>${esc(CLIENTS[r.client]?.name || r.client)}</span></div></td>
+    <tr><td><div style="display:flex;align-items:center;gap:10px">${avatar(r.client)}<span class="col-client-name">${esc(CLIENTS[r.client]?.name || r.client)}</span></div></td>
     <td><div class="req">${esc(r.request)}</div><div class="sub">${r.sources ? r.sources + " client lessons cited" : "In progress"}</div></td>
-    <td>${badge(r.state)}</td><td class="sub">${ago(r.updated)}</td>
+    <td>${badge(r.state)}</td><td class="sub col-upd">${ago(r.updated)}</td>
     <td style="text-align:right">${r.seminarId === seminarId ? `<span class="link" data-open="1">View ${icon("arrow")}</span>` : ""}</td></tr>`).join("")
   $("#runs-empty").style.display = runs.length ? "none" : "block"
   document.querySelectorAll("[data-open]").forEach(el => (el.onclick = () => show("council")))
 }
 function upsertRun(r) { const i = runs.findIndex(x => x.seminarId === r.seminarId); if (i >= 0) runs[i] = { ...runs[i], ...r }; else runs.push(r); renderOverview() }
+
+/* ---------- names in agent text ---------- */
+const OLD_NAMES = { "Hallow Tix": "client-1", "Costume Cauldron": "client-2", "Pumpkin Patch Pass": "client-3", "Candy Courier": "client-4", "Ghost Tour Co.": "client-5", "Ghost Tour Co": "client-5", "Ghost Tour": "client-5" }
+function displayText(t) {
+  let out = String(t ?? "")
+  for (const [old, id] of Object.entries(OLD_NAMES)) out = out.split(old).join(CLIENTS[id]?.name || id)
+  return out.replace(/client-(\d)/gi, (m, n) => CLIENTS["client-" + n]?.name || m)
+}
+
+/* ---------- typing indicator (like a chat app) ---------- */
+const typingRows = {}
+function showTyping(id, text) {
+  let row = typingRows[id]
+  if (!row) {
+    row = document.createElement("div")
+    row.className = "msg is-typing"
+    row.innerHTML = `${avatar(id)}<div style="min-width:0"><div class="who">${esc(CLIENTS[id]?.name || id)}<span class="dots"><i></i><i></i><i></i></span><span class="typing-label">typing</span></div><div class="txt"></div></div>`
+    $("#feed").appendChild(row)
+    typingRows[id] = row
+  }
+  row.querySelector(".txt").textContent = displayText(text)
+}
+function clearTyping(id) { const row = typingRows[id]; if (row) { row.remove(); delete typingRows[id] } }
+function clearAllTyping() { Object.keys(typingRows).forEach(clearTyping) }
 
 /* ---------- council ---------- */
 function kindOf(e) {
@@ -359,7 +474,7 @@ function kindOf(e) {
   return "lesson"
 }
 const KIND = { lesson: "Lesson", objection: "Objection", agrees: "Agrees", none: "Nothing relevant", fde: "Constraint", plan: "Plan" }
-function addRound(t) { const d = document.createElement("div"); d.className = "round"; d.textContent = t; $("#feed").appendChild(d) }
+function addRound(t) { const d = document.createElement("div"); d.className = "round"; d.textContent = t; const ft = $("#feed .msg.is-typing"); if (ft) $("#feed").insertBefore(d, ft); else $("#feed").appendChild(d) }
 function addMsg(e) {
   const kind = kindOf(e)
   if ((e.type === "take" || e.type === "abstain") && round < 1) { round = 1; addRound("Round 1 · each client shares one lesson") }
@@ -370,8 +485,9 @@ function addMsg(e) {
   const av = isFde ? `<span class="av" style="background:var(--accent-soft);color:var(--accent)">FD</span>` : avatar(e.from)
   const d = document.createElement("div")
   d.className = "msg " + kind
-  d.innerHTML = `${av}<div style="min-width:0"><div class="who">${esc(name)}<span class="kind k-${kind}">${KIND[kind]}</span></div><div class="txt">${esc(e.text)}</div></div>`
-  $("#feed").appendChild(d)
+  d.innerHTML = `${av}<div style="min-width:0"><div class="who">${esc(name)}<span class="kind k-${kind}">${KIND[kind]}</span></div><div class="txt">${esc(displayText(e.text))}</div></div>`
+  const firstTyping = $("#feed .msg.is-typing")
+  if (firstTyping) $("#feed").insertBefore(d, firstTyping); else $("#feed").appendChild(d)
 }
 function parseSteps(text) {
   let parts = text.split(/\s*(?:^|\s)\d+[.)]\s+/).map(s => s.trim()).filter(Boolean)
@@ -380,7 +496,8 @@ function parseSteps(text) {
   return parts.slice(0, 6).map(p => {
     const ids = [...new Set(p.match(/client-\d/g) || [])]
     const clean = p.replace(/\s*\((?:client-\d|fde)(?:[,;\s]+(?:client-\d|fde))*\)\s*/g, " ").replace(/^(I'm going to|I will|I'll)\s+/i, "").replace(/[;,]\s*$/, "").trim()
-    return { text: clean.charAt(0).toUpperCase() + clean.slice(1), ids }
+    const shown = displayText(clean)
+    return { text: shown.charAt(0).toUpperCase() + shown.slice(1), ids }
   })
 }
 function setRunState(state) { $("#rh-state").className = "badge " + STATE[state][0]; $("#rh-state").textContent = STATE[state][1]; upsertRun({ seminarId, state, updated: Date.now() }) }
@@ -394,6 +511,8 @@ function showPlan(e) {
   setFde(false, "The plan is waiting for your approval.")
   setRunState("needs")
   upsertRun({ seminarId, sources: (e.cites || []).length })
+  setStep(3)
+  if (window.innerWidth < 1080) $("#plan").scrollIntoView({ behavior: "smooth", block: "start" })
 }
 function setFde(on, hint) {
   $("#fde").disabled = $("#send").disabled = !on
@@ -405,9 +524,9 @@ function onEvent(e) {
   if (seen.has(key)) return; seen.add(key)
   if (e.type === "request") return
   if (e.type === "fde" && /^Approved the plan/.test(e.text)) return
-  if (CLIENTS[e.from]) { live(e.from, ""); status(e.from, e.type === "abstain" ? "abstained" : kindOf(e) === "objection" ? "objecting" : "listening") }
+  if (CLIENTS[e.from]) { clearTyping(e.from); live(e.from, ""); status(e.from, e.type === "abstain" ? "abstained" : kindOf(e) === "objection" ? "objecting" : "listening") }
   addMsg(e)
-  if (e.type === "plan") showPlan(e)
+  if (e.type === "plan") { clearAllTyping(); showPlan(e) }
 }
 function connect(url) {
   ws = new WebSocket(url)
@@ -415,13 +534,14 @@ function connect(url) {
     const msg = JSON.parse(m.data)
     if (msg.type === "state") (msg.state.events || []).forEach(onEvent)
     else if (msg.type === "event") onEvent(msg.event)
-    else if (msg.type === "typing" && CLIENTS[msg.from]) { status(msg.from, "speaking"); live(msg.from, msg.text) }
+    else if (msg.type === "typing" && CLIENTS[msg.from]) { status(msg.from, "speaking"); showTyping(msg.from, msg.text) }
   }
 }
 async function start() {
   const text = $("#reqtext").value.trim(); if (!text) return
   requester = $("#who").value
   seen = new Set(); round = 0; awaiting = false
+  Object.keys(typingRows).forEach(k => delete typingRows[k])
   if (ws) ws.close()
   $("#feed").innerHTML = ""; $("#plan").style.display = "none"
   Object.keys(CLIENTS).forEach(id => { live(id, ""); status(id, id === requester ? "asking" : "thinking"); $("#pc-" + id).classList.toggle("req", id === requester) })
@@ -441,6 +561,7 @@ async function start() {
     const g = await api("/seminar/" + seminarId + "/socket")
     connect(g.websocketUrl)
     setFde(true, "The council is debating. Constraints reach every agent before the next round.")
+    setStep(2)
   } catch (err) {
     $("#feed").innerHTML = `<div class="feed-empty">Could not reach the bridge at ${esc(BRIDGE)}. Is it running?</div>`
     $("#compose").style.display = "block"
@@ -458,6 +579,7 @@ async function requestChanges() {
   $("#plan-state").className = "badge running"; $("#plan-state").textContent = "Rewriting"
   $("#plan-actions").style.display = "none"; $("#feedback").style.display = "none"
   setRunState("running")
+  setStep(2)
   try { await api("/seminar/" + seminarId + "/reject", { text }) } catch (err) { alert("Could not send: " + err.message) }
 }
 async function approve() {
@@ -470,6 +592,7 @@ async function approve() {
   $("#plan-done").textContent = `Saved, and remembered by ${CLIENTS[requester].name}'s agent for next time.`
   setFde(false, "Approved. Start a new request whenever you're ready.")
   setRunState("approved")
+  setStep(4)
   $("#livedot").classList.remove("on")
   $("#compose").style.display = "block"
   Object.keys(CLIENTS).forEach(id => { status(id, "listening"); $("#pc-" + id).classList.remove("req") })
@@ -481,6 +604,7 @@ async function loadClients() {
     const rows = await api("/clients")
     if (Array.isArray(rows) && rows.length) rows.forEach(r => { if (CLIENTS[r.id]) CLIENTS[r.id] = { name: r.name, stack: r.stack } })
   } catch {}
+  Object.assign(CLIENTS, DISPLAY)
   renderClients()
 }
 async function loadHistory() {
@@ -507,6 +631,8 @@ $("#changes").onclick = () => { $("#feedback").style.display = "block"; $("#fb")
 $("#fb-send").onclick = requestChanges
 $("#side-new").onclick = $("#ov-new").onclick = newRequest
 $("#recent-open").onclick = () => show("council")
+$("#menu").onclick = () => document.querySelector(".app").classList.toggle("nav-open")
+$("#scrim").onclick = () => document.querySelector(".app").classList.remove("nav-open")
 $("#reqtext").value = DEFAULT_REQUEST
 loadClients(); loadHistory()
 setInterval(renderOverview, 30000)
