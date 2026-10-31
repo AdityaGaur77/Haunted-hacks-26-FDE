@@ -87,7 +87,7 @@ cd bridge && USE_REAL_ACTORS=true bun run debate   # then: USE_REAL_ACTORS=true 
 - Identities: `client-1`..`client-5` (type `agent`) and `fde` (type `human`).
 - One channel per debate, named after the seminar id. Every Event is posted as its `from`
   identity with the Event JSON in the message `metadata.event`.
-- Config: `RELAY_API_KEY` (workspace key `rk_live_…`), optional `RELAY_BASE_URL`,
+- Config: `RELAY_API_KEY` (workspace key: `ar_ws_…` from `npx -y agent-relay@next init --hosted`, run in a project folder, or an older `rk_live_…`), optional `RELAY_BASE_URL` (`ar_ws_` keys automatically use `https://armadillo.agentrelay.com`),
   `RELAY_WORKSPACE` (name used to auto-create a workspace when no key is set). `USE_RELAY=false`
   turns Relay off. If Relay is unreachable the bridge logs it and debates still run.
 - Relay registration is create-only, so tokens are saved in `.relay-state.json` (gitignored)

@@ -1,8 +1,10 @@
 // Agent Relay connection: one identity per council member ("client-1".."client-5" + "fde").
 //
 // Env:
-//   RELAY_API_KEY    workspace key (rk_live_...). RELAY_WORKSPACE_KEY is accepted too.
-//   RELAY_BASE_URL   optional, defaults to the hosted Relay (https://cast.agentrelay.com)
+//   RELAY_API_KEY    workspace key (ar_ws_... from `agent-relay init --hosted`, or rk_live_...).
+//                    RELAY_WORKSPACE_KEY is accepted too.
+//   RELAY_BASE_URL   optional. ar_ws_ keys default to https://armadillo.agentrelay.com, others to
+//                    the SDK default (https://cast.agentrelay.com)
 //   RELAY_WORKSPACE  workspace name used when no key is set (a new workspace is created once
 //                    and its key saved to .relay-state.json). A value starting with "rk_" is used as the key.
 //   USE_RELAY=false  run without Relay (debates still work; nothing is posted)
@@ -55,12 +57,15 @@ export async function connectRelay(): Promise<Relay> {
 }
 
 async function connect(): Promise<Relay> {
-  const baseUrl = process.env.RELAY_BASE_URL || undefined;
   const workspaceSetting = process.env.RELAY_WORKSPACE?.trim();
   const envKey =
     process.env.RELAY_API_KEY?.trim() ||
     process.env.RELAY_WORKSPACE_KEY?.trim() ||
-    (workspaceSetting?.startsWith("rk_") ? workspaceSetting : undefined);
+    (/^(rk_|ar_ws_)/.test(workspaceSetting ?? "") ? workspaceSetting : undefined);
+  // Keys from `agent-relay init --hosted` (ar_ws_...) live on armadillo.agentrelay.com; the SDK's
+  // default (cast.agentrelay.com) rejects them with "Invalid token format".
+  const baseUrl =
+    process.env.RELAY_BASE_URL?.trim() || (envKey?.startsWith("ar_") ? "https://armadillo.agentrelay.com" : undefined);
 
   let state = loadState();
   const stateBaseUrl = baseUrl ?? "default";
