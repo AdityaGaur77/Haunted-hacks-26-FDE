@@ -3,11 +3,14 @@
 // every event is also posted to the debate's Relay channel as the agent who said it.
 import type { Actors, SeminarActor } from "./actors";
 import type { Relay } from "./relay";
+import type { Store } from "./store";
 import { CLIENT_IDS, type AgentName, type ClientId, type Event, type EventType } from "./types";
 
 export interface Deps {
   actors: Actors;
   relay: Relay;
+  /** Supabase: where the final plan is saved (optional). */
+  store?: Store;
 }
 
 export interface Debate {
@@ -82,7 +85,24 @@ async function runRounds(ctx: Context, requestEvent: Event) {
     await publish(ctx, { type: "plan", from: requester, text, ts: Date.now() });
   }
   await ctx.seminar.markDone();
+  if (planned) await savePlan(ctx);
   console.log(`=== ${seminarId} done\n`);
+}
+
+/**
+ * Saves the final plan to Supabase: only the sanitized plan, never memories. Fake plans are
+ * skipped because they quote seed memories word for word. A save failure never fails the debate.
+ */
+async function savePlan(ctx: Context) {
+  const { store, actors, seminarId, requester, request } = ctx;
+  if (!store?.enabled || actors.kind !== "real") return;
+  const plan = ctx.transcript.findLast((e) => e.type === "plan" && e.from === requester);
+  if (!plan) return;
+  try {
+    await store.savePlan({ seminar_id: seminarId, client_id: requester, request, plan: plan.text, cites: plan.cites ?? [] });
+  } catch (error) {
+    console.warn(`[${seminarId}] could not save the plan to Supabase: ${errorMessage(error)}`);
+  }
 }
 
 /** Reads the SeminarActor's log so agents see FDE input; new FDE events are printed and mirrored to Relay. */

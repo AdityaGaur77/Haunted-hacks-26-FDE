@@ -2,8 +2,11 @@
 //   bun run seed                         # fake actors (in-memory; only checks the data)
 //   USE_REAL_ACTORS=true bun run seed    # teammate A's Terse actors
 // Safe to run more than once: seed() replaces a client's profile and memories, never appends.
+// With SUPABASE_URL + SUPABASE_SERVICE_KEY set, it also upserts the public client list
+// (id, name, stack) into Supabase. Memories are never sent there.
 import { z } from "zod";
 import { loadActors, type Actors } from "./actors";
+import { connectStore, type ClientRow } from "./store";
 import { CLIENT_IDS } from "./types";
 
 const text = z.string().trim().min(1);
@@ -37,6 +40,9 @@ export async function seedAll(actors: Actors, data: SeedData) {
   }
 }
 
+/** The public client list for Supabase: id, name and stack only. No memories, no constraints. */
+export const clientRows = (data: SeedData): ClientRow[] => data.clients.map(({ id, name, stack }) => ({ id, name, stack }));
+
 if (import.meta.main) {
   const data = await loadSeedData();
   const actors = await loadActors();
@@ -44,5 +50,10 @@ if (import.meta.main) {
   console.log(`Done: ${data.clients.length} clients seeded into ${actors.kind} actors.`);
   if (actors.kind === "fake") {
     console.log("(Fake actors live in memory, so this only validated the data. The bridge's fakes load seed-data.json on start.)");
+  }
+  const store = connectStore();
+  if (store.enabled) {
+    await store.upsertClients(clientRows(data)); // upsert by id: safe to re-run
+    console.log(`Upserted ${data.clients.length} clients into Supabase (name + stack only).`);
   }
 }

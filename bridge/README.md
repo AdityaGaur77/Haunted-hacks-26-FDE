@@ -44,7 +44,9 @@ CORS is open, no auth.
 | `GET /seminar/:id/events` | | `Event[]`, the full log (fallback / replay). The debate is over once a `plan` event is in it |
 | `GET /seminar/:id/socket` | | `{ websocketUrl, … }` from `SeminarActor.prepareWebsocket({ actorId, metadata: null })`. Fake actors return a placeholder with `"fake": true`, so poll `/events` instead |
 | `POST /seminar/:id/fde` | `{ "text": "Must ship by Friday" }` | the `fde` Event. Agents see it from their next turn; the plan gets it as an FDE constraint |
-| `GET /health` | | `{ ok, actors: "fake" \| "real", relay: boolean }` |
+| `GET /clients` | | `[{ id, name, stack, status }]` for the client cards. From Supabase; falls back to `seed-data.json` when Supabase isn't configured |
+| `GET /plans` | | Saved plans, newest first: `[{ id, seminar_id, client_id, request, plan, cites, created_at }]` (503 without Supabase) |
+| `GET /health` | | `{ ok, actors: "fake" \| "real", relay: boolean, supabase: boolean }` |
 
 ```ts
 // Event (shared contract, see types.ts / actors/src/types.ts)
@@ -93,6 +95,21 @@ cd bridge && USE_REAL_ACTORS=true bun run debate   # then: USE_REAL_ACTORS=true 
 - Relay registration is create-only, so tokens are saved in `.relay-state.json` (gitignored)
   and reused. If a name exists without a saved token (e.g. a fresh clone), the bridge deletes and
   re-registers it, so run only one bridge per workspace.
+
+## Supabase
+
+Only shared, non-private records go here: the client list and the final plans. Client memories
+(what broke, fixes, details) never leave the ClientActors.
+
+1. Create a project at supabase.com, open **SQL Editor**, paste `supabase.sql` and **Run** (safe to re-run).
+2. From **Project Settings → API**, put the project URL and the `service_role` key in `bridge/.env` as
+   `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`. It's a server-only key: never commit it or use it in `/web`.
+3. `bun run seed` upserts the 5 clients (`id`, `name`, `stack`; `status` defaults to `active`).
+4. After each debate, the bridge inserts the plan into `plans` right after `markDone()`. Only plans from the
+   real actors are saved, because fake plans quote seed memories word for word.
+
+RLS is enabled with no policies, so the public key can't read the tables; the website goes through
+`GET /clients` and `GET /plans`.
 
 ## Seed data
 

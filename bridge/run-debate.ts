@@ -6,6 +6,7 @@
 import { loadActors } from "./actors";
 import { addFdeInput, startDebate } from "./debate";
 import { connectRelay } from "./relay";
+import { connectStore } from "./store";
 import { isClientId } from "./types";
 
 const [client = "client-1", ...words] = process.argv.slice(2);
@@ -17,7 +18,7 @@ if (!isClientId(client)) {
 
 const actors = await loadActors();
 const relay = await connectRelay();
-const debate = await startDebate({ actors, relay }, client, request);
+const debate = await startDebate({ actors, relay, store: connectStore() }, client, request);
 
 if (process.stdin.isTTY) console.log("(type a line + Enter to jump in as the FDE)\n");
 (async () => {

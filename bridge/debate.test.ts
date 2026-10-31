@@ -3,7 +3,8 @@ import type { Actors } from "./actors";
 import { addFdeInput, normalizeEvent, startDebate } from "./debate";
 import { createFakeActors } from "./fake-actors";
 import type { Relay } from "./relay";
-import { loadSeedData, seedAll } from "./seed";
+import { clientRows, loadSeedData, seedAll } from "./seed";
+import type { PlanRow, Store } from "./store";
 import type { ClientId, Event } from "./types";
 
 const noRelay: Relay = { enabled: false, openChannel: async () => {}, post: async () => {}, agent: () => { throw new Error("off"); } };
@@ -134,4 +135,39 @@ test("normalizeEvent coerces messy actor output into a valid Event", () => {
   expect(normalizeEvent({ type: "abstain", from: "client-9", text: "x", cites: [1], ts: 5 }, "client-3", ["take", "abstain"]))
     .toEqual({ type: "abstain", from: "client-3", text: "x", cites: ["1"], ts: 5 });
   expect(normalizeEvent({ type: "nonsense", text: "y" }, "client-1", ["plan"]).type).toBe("plan");
+});
+
+/** A Store that records writes instead of talking to Supabase. */
+function recordingStore() {
+  const plans: PlanRow[] = [];
+  const store: Store = {
+    enabled: true,
+    upsertClients: async () => {},
+    savePlan: async (row) => void plans.push(row),
+    listClients: async () => [],
+    listPlans: async () => [],
+  };
+  return { store, plans };
+}
+
+test("the final plan is saved to Supabase once, with only the plan fields", async () => {
+  const { store, plans } = recordingStore();
+  const actors: Actors = { ...createFakeActors(), kind: "real" }; // pretend these are the real actors
+  const debate = await startDebate({ actors, relay: noRelay, store }, "client-1", "Add dark mode");
+  await debate.done;
+  const plan = (await actors.seminar(debate.seminarId).getEvents()).at(-1)!;
+  expect(plans).toEqual([{ seminar_id: debate.seminarId, client_id: "client-1", request: "Add dark mode", plan: plan.text, cites: plan.cites ?? [] }]);
+});
+
+test("fake-actor plans are not saved (they quote seed memories)", async () => {
+  const { store, plans } = recordingStore();
+  const debate = await startDebate({ actors: createFakeActors(), relay: noRelay, store }, "client-1", "Add dark mode");
+  await debate.done;
+  expect(plans).toHaveLength(0);
+});
+
+test("the Supabase client list has id, name and stack only, never memories", async () => {
+  const rows = clientRows(await loadSeedData());
+  expect(rows).toHaveLength(5);
+  for (const row of rows) expect(Object.keys(row).sort()).toEqual(["id", "name", "stack"]);
 });

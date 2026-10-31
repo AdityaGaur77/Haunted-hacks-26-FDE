@@ -8,14 +8,20 @@
 //                                                       are sent as metadata instead. Fake actors return a placeholder
 //                                                       with fake: true)
 //   POST /seminar/:id/fde      { text }              -> Event           the FDE jumps in mid-debate
-//   GET  /health                                     -> { ok, actors, relay }
+//   GET  /clients                                    -> [{ id, name, stack, status }]  from Supabase (falls back
+//                                                       to seed-data.json when Supabase isn't configured)
+//   GET  /plans                                      -> saved plans, newest first (Supabase; 503 if not configured)
+//   GET  /health                                     -> { ok, actors, relay, supabase }
 import { loadActors } from "./actors";
 import { addFdeInput, startDebate } from "./debate";
 import { connectRelay } from "./relay";
+import { clientRows, loadSeedData } from "./seed";
+import { connectStore } from "./store";
 import { isClientId } from "./types";
 
 const actors = await loadActors();
 const relay = await connectRelay();
+const store = connectStore();
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +38,17 @@ const server = Bun.serve({
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
 
     if (pathname === "/health" && req.method === "GET") {
-      return json({ ok: true, actors: actors.kind, relay: relay.enabled });
+      return json({ ok: true, actors: actors.kind, relay: relay.enabled, supabase: store.enabled });
+    }
+
+    if (pathname === "/clients" && req.method === "GET") {
+      if (!store.enabled) return json(clientRows(await loadSeedData()).map((c) => ({ ...c, status: "active" })));
+      return json(await store.listClients());
+    }
+
+    if (pathname === "/plans" && req.method === "GET") {
+      if (!store.enabled) return json({ error: "Supabase is not configured (SUPABASE_URL, SUPABASE_SERVICE_KEY)" }, 503);
+      return json(await store.listPlans());
     }
 
     if (pathname === "/debate" && req.method === "POST") {
@@ -40,7 +56,7 @@ const server = Bun.serve({
       const request = typeof body?.request === "string" ? body.request.trim() : "";
       if (!isClientId(body?.client)) return json({ error: 'client must be one of "client-1".."client-5"' }, 400);
       if (!request) return json({ error: "request must be a non-empty string" }, 400);
-      const { seminarId } = await startDebate({ actors, relay }, body.client, request);
+      const { seminarId } = await startDebate({ actors, relay, store }, body.client, request);
       return json({ seminarId });
     }
 
@@ -69,7 +85,7 @@ const server = Bun.serve({
   },
 });
 
-console.log(`[http] FDE Council bridge on http://localhost:${server.port} (${actors.kind} actors, Relay ${relay.enabled ? "on" : "off"})`);
+console.log(`[http] FDE Council bridge on http://localhost:${server.port} (${actors.kind} actors, Relay ${relay.enabled ? "on" : "off"}, Supabase ${store.enabled ? "on" : "off"})`);
 
 async function readJson(req: Request): Promise<Record<string, any> | undefined> {
   try {
