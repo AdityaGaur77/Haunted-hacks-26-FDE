@@ -179,6 +179,38 @@
   .menu-btn { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; display: grid; place-items: center; }
   .menu-btn:hover { background: var(--card-2); color: var(--fg); }
   .scrim { display: none; }
+  .topbar .tb-right { margin-left: auto; display: flex; gap: 8px; }
+  .drawer { position: fixed; top: 0; right: 0; height: 100vh; width: 100vw; background: var(--sidebar); border-left: 1px solid var(--border); z-index: 40; transform: translateX(100%); transition: transform .25s; display: flex; flex-direction: column; }
+  .drawer.on { transform: none; }
+  .drawer .dh { height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+  .drawer .dh b { font-weight: 600; }
+  .drawer .dh small { color: var(--muted-2); }
+  .drawer .dh .btn { margin-left: auto; }
+  .drawer iframe { flex: 1; border: 0; width: 100%; background: #000; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px); z-index: 50; display: none; align-items: center; justify-content: center; padding: 16px; }
+  .modal-bg.on { display: flex; }
+  .modal { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--card); border: 1px solid var(--border-2); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.5); animation: pop .2s ease; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98) } to { opacity: 1; transform: none } }
+  .modal .mh { padding: 22px 24px 6px; }
+  .modal .mh .eyebrow { font-size: 12px; color: var(--accent); font-weight: 600; letter-spacing: .02em; }
+  .modal .mh h2 { margin: 6px 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+  .modal .mh p { margin: 0; color: var(--muted); }
+  .modal .msteps { padding: 12px 24px 4px; display: flex; flex-direction: column; gap: 4px; }
+  .modal .ms { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+  .modal .ms:first-child { border-top: 0; }
+  .modal .ms .ic { width: 32px; height: 32px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+  .modal .ms b { display: block; font-weight: 600; }
+  .modal .ms span { color: var(--muted); font-size: 13px; }
+  .modal .mnote { margin: 8px 24px 0; padding: 10px 12px; border-radius: 8px; background: var(--card-2); color: var(--muted); font-size: 12px; display: flex; gap: 8px; align-items: flex-start; }
+  .modal .mf { display: flex; align-items: center; gap: 10px; padding: 16px 24px 20px; }
+  .modal .mf label { color: var(--muted-2); font-size: 12px; display: flex; align-items: center; gap: 6px; margin-right: auto; cursor: pointer; }
+  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 14px; }
+  .how > div { padding: 16px 18px; border-left: 1px solid var(--border); }
+  .how > div:first-child { border-left: 0; }
+  .how .n { width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+  .how b { display: block; font-weight: 600; margin-bottom: 2px; }
+  .how span { color: var(--muted); font-size: 13px; }
+  @media (max-width: 860px) { .how { grid-template-columns: 1fr; } .how > div { border-left: 0; border-top: 1px solid var(--border); } .how > div:first-child { border-top: 0; } .tb-3d-label { display: none; } }
 
   /* responsive */
   @media (max-width: 1280px) {
@@ -239,12 +271,33 @@
 
   <div class="main">
     <div class="scrim" id="scrim"></div>
-    <div class="topbar"><button class="menu-btn" id="menu" aria-label="Toggle sidebar"><span data-icon="panel"></span></button><span class="sep"></span><span class="crumb" id="crumb"><span data-icon="dashboard"></span>Overview</span></div>
+    <div class="topbar"><button class="menu-btn" id="menu" aria-label="Toggle sidebar"><span data-icon="panel"></span></button><span class="sep"></span><span class="crumb" id="crumb"><span data-icon="dashboard"></span>Overview</span><div class="tb-right"><button class="btn btn-outline" id="openhelp" title="How FDE Council works"><span data-icon="help"></span><span class="tb-3d-label">How it works</span></button><button class="btn btn-outline" id="open3d" title="Watch the council in 3D"><span data-icon="cube"></span><span class="tb-3d-label">3D view</span></button></div></div>
+    <div class="drawer" id="drawer"><div class="dh"><span data-icon="cube"></span><div><b>3D council demo</b><br><small>Click the scene, then: Space plays the demo · C free camera (drag to look around) · 1–6 camera shots · R reset</small></div><button class="btn btn-outline" id="close3d">Close</button></div><div id="frame3d" style="flex:1;display:flex"></div></div>
+    <div class="modal-bg" id="welcome" role="dialog" aria-modal="true" aria-labelledby="w-title">
+      <div class="modal">
+        <div class="mh">
+          <div class="eyebrow">Welcome to FDE Council</div>
+          <h2 id="w-title">Your clients' lessons, without sharing their data</h2>
+          <p>You're a forward-deployed engineer with five clients. Each client has its own AI agent that remembers only that client's history. When one client asks for something, the other agents tell you what worked and what broke at their deployments.</p>
+        </div>
+        <div class="msteps">
+          <div class="ms"><span class="ic"><span data-icon="send"></span></span><div><b>1. Send a client's request</b><span>On the Council page, pick the client and paste what they asked for.</span></div></div>
+          <div class="ms"><span class="ic"><span data-icon="messages"></span></span><div><b>2. Watch the council debate</b><span>Agents answer live and push back when their experience disagrees. Add a constraint at any time, like a budget limit, and they adapt.</span></div></div>
+          <div class="ms"><span class="ic"><span data-icon="check"></span></span><div><b>3. Approve the plan</b><span>Every step shows which client it came from. Approve it, or ask for changes. Approved plans appear on the Overview.</span></div></div>
+        </div>
+        <div class="mnote"><span data-icon="lock"></span><span>Agents share lessons only. No client's code or data ever leaves its own agent.</span></div>
+        <div class="mf">
+          <label><input type="checkbox" id="w-hide"> Don't show this again</label>
+          <button class="btn btn-outline" id="w-close">Explore first</button>
+          <button class="btn btn-primary" id="w-start"><span data-icon="send"></span>Send a request</button>
+        </div>
+      </div>
+    </div>
 
     <!-- OVERVIEW -->
     <section class="view page on" id="v-overview">
       <div class="head">
-        <div><h1>Council overview</h1><p>Client requests debated by each client's private agent, from request to approved plan.</p></div>
+        <div><h1>Council overview</h1><p>A council of private AI agents, one per client, that turns every client request into a plan built from lessons across all your deployments.</p></div>
         <button class="btn btn-primary" id="ov-new"><span data-icon="plus"></span>New request</button>
       </div>
       <div class="stats">
@@ -357,6 +410,8 @@ const ICONS = {
   check: '<path d="M20 6 9 17l-5-5"/>',
   pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>',
   lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  cube: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
 }
 const icon = n => `<svg class="i" viewBox="0 0 24 24">${ICONS[n]}</svg>`
 const $ = s => document.querySelector(s)
@@ -465,6 +520,20 @@ function showTyping(id, text) {
 function clearTyping(id) { const row = typingRows[id]; if (row) { row.remove(); delete typingRows[id] } }
 function clearAllTyping() { Object.keys(typingRows).forEach(clearTyping) }
 
+/* ---------- 3D view (optional, mirrors the live debate) ---------- */
+let frame3d = null
+function push3d() {} // 3D view runs its own demo; not connected to the live backend
+function open3d() {
+  $("#drawer").classList.add("on")
+  if (frame3d) { frame3d.focus(); return }
+  frame3d = document.createElement("iframe")
+  frame3d.src = "house.html"
+  frame3d.setAttribute("allow", "fullscreen; autoplay")
+  frame3d.onload = () => frame3d.focus()
+  $("#frame3d").appendChild(frame3d)
+}
+const KIND3D = { lesson: "lesson", objection: "objection", agrees: "revision", none: "none" }
+
 /* ---------- council ---------- */
 function kindOf(e) {
   if (e.type === "abstain") return "none"
@@ -524,9 +593,11 @@ function onEvent(e) {
   if (seen.has(key)) return; seen.add(key)
   if (e.type === "request") return
   if (e.type === "fde" && /^Approved the plan/.test(e.text)) return
+  if (CLIENTS[e.from] && e.type !== "plan") { push3d({ type: "message", from: e.from, kind: KIND3D[kindOf(e)] || "lesson", cites: e.from, text: displayText(e.text) }); push3d({ type: "status", agent: e.from, state: "idle" }) }
+  if (e.type === "fde") push3d({ type: "fde", text: e.text })
   if (CLIENTS[e.from]) { clearTyping(e.from); live(e.from, ""); status(e.from, e.type === "abstain" ? "abstained" : kindOf(e) === "objection" ? "objecting" : "listening") }
   addMsg(e)
-  if (e.type === "plan") { clearAllTyping(); showPlan(e) }
+  if (e.type === "plan") { clearAllTyping(); showPlan(e); push3d({ type: "plan", for: e.from, title: "Plan for " + (CLIENTS[e.from]?.name || e.from), steps: parseSteps(e.text).map(x => ({ text: x.text, source: x.ids[0] || e.from })) }) }
 }
 function connect(url) {
   ws = new WebSocket(url)
@@ -534,7 +605,7 @@ function connect(url) {
     const msg = JSON.parse(m.data)
     if (msg.type === "state") (msg.state.events || []).forEach(onEvent)
     else if (msg.type === "event") onEvent(msg.event)
-    else if (msg.type === "typing" && CLIENTS[msg.from]) { status(msg.from, "speaking"); showTyping(msg.from, msg.text) }
+    else if (msg.type === "typing" && CLIENTS[msg.from]) { if (statuses[msg.from] !== "speaking") push3d({ type: "status", agent: msg.from, state: "speaking" }); status(msg.from, "speaking"); showTyping(msg.from, msg.text) }
   }
 }
 async function start() {
@@ -555,6 +626,7 @@ async function start() {
     const r = await api("/debate", { client: requester, request: text })
     seminarId = r.seminarId
     upsertRun({ seminarId, client: requester, request: text, state: "running", updated: Date.now() })
+    push3d({ type: "request", from: requester, text })
     setRunState("running")
     $("#rh-chan").textContent = "Agent Relay · #" + seminarId
     $("#livedot").classList.add("on")
@@ -593,6 +665,7 @@ async function approve() {
   setFde(false, "Approved. Start a new request whenever you're ready.")
   setRunState("approved")
   setStep(4)
+  push3d({ type: "deliver" })
   $("#livedot").classList.remove("on")
   $("#compose").style.display = "block"
   Object.keys(CLIENTS).forEach(id => { status(id, "listening"); $("#pc-" + id).classList.remove("req") })
@@ -631,6 +704,20 @@ $("#changes").onclick = () => { $("#feedback").style.display = "block"; $("#fb")
 $("#fb-send").onclick = requestChanges
 $("#side-new").onclick = $("#ov-new").onclick = newRequest
 $("#recent-open").onclick = () => show("council")
+function closeWelcome() {
+  $("#welcome").classList.remove("on")
+  if ($("#w-hide").checked) { try { localStorage.setItem("fdeWelcomeSeen", "1") } catch {} }
+}
+$("#openhelp").onclick = () => $("#welcome").classList.add("on")
+$("#w-close").onclick = closeWelcome
+$("#w-start").onclick = () => { closeWelcome(); newRequest() }
+$("#welcome").onclick = e => { if (e.target.id === "welcome") closeWelcome() }
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeWelcome(); $("#drawer").classList.remove("on") } })
+let seenWelcome = false
+try { seenWelcome = localStorage.getItem("fdeWelcomeSeen") === "1" } catch {}
+if (!seenWelcome) $("#welcome").classList.add("on")
+$("#open3d").onclick = open3d
+$("#close3d").onclick = () => $("#drawer").classList.remove("on")
 $("#menu").onclick = () => document.querySelector(".app").classList.toggle("nav-open")
 $("#scrim").onclick = () => document.querySelector(".app").classList.remove("nav-open")
 $("#reqtext").value = DEFAULT_REQUEST

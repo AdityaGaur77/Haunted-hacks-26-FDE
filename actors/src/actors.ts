@@ -15,11 +15,27 @@ const IS_REASONING_MODEL = /^(gpt-5|o\d)/.test(MODEL)
 // so the live debate is readable on video. 0 = as fast as possible.
 const MIN_TURN_MS = Number(process.env.MIN_TURN_MS ?? 0)
 
+// Extra delay between agents in the same round so answers land one at a time (ms).
+const STAGGER_MS = Number(process.env.STAGGER_MS ?? 1600)
+const CLIENT_IDS = ["client-1", "client-2", "client-3", "client-4", "client-5"]
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+function hash(text: string): number {
+    let h = 2166136261
+    for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619)
+    return h >>> 0
+}
+
+/** This agent's speaking slot for this seminar: a different order every debate. */
+function slot(from: string, seminarId: string): number {
+    const order = [...CLIENT_IDS].sort((a, b) => hash(seminarId + a) - hash(seminarId + b))
+    return Math.max(0, order.indexOf(from))
+}
 
 /** Type the final text out word by word over the remaining turn time. */
 async function paceTyping(from: string, seminarId: string, text: string, startedAt: number): Promise<void> {
-    const remaining = MIN_TURN_MS - (Date.now() - startedAt)
+    const remaining = MIN_TURN_MS + slot(from, seminarId) * STAGGER_MS - (Date.now() - startedAt)
     if (remaining <= 0 || !text) return
     const words = text.split(" ")
     // ~2 updates per second: enough to look like typing without flooding the seminar's mailbox.
