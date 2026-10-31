@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE Council</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --ink: #14161c; --muted: #6b7180; --line: #e6e8ee;
+    --accent: #ea6a1a; --accent-soft: #fff2e8; --green: #15a35a; --green-soft: #e8f7ef;
+    --red: #d64545; --red-soft: #fdecec; --blue: #2563eb; --blue-soft: #eaf1ff; --pink: #c2337a; --pink-soft: #fcebf4;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.45; }
+  header { display: flex; align-items: center; gap: 14px; padding: 14px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
+  .logo { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  header h1 { font-size: 16px; margin: 0; }
+  header .tag { color: var(--muted); font-size: 13px; }
+  .pills { margin-left: auto; display: flex; gap: 8px; }
+  .pill { font-size: 12px; padding: 4px 10px; border-radius: 99px; background: #f0f1f4; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; background: #c3c7d1; }
+  .pill.ok i { background: var(--green); } .pill.ok { color: var(--ink); }
+  main { display: grid; grid-template-columns: 280px 1fr 360px; gap: 18px; padding: 18px 24px; max-width: 1500px; margin: 0 auto; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+  .sec { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  /* clients */
+  .clients { display: flex; flex-direction: column; gap: 10px; }
+  .client { padding: 12px 14px; transition: border-color .2s, box-shadow .2s; }
+  .client .top { display: flex; align-items: center; gap: 8px; }
+  .client .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .client b { font-size: 14px; }
+  .client .stack { color: var(--muted); font-size: 12px; margin: 2px 0 8px; }
+  .client .meta { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .st { padding: 2px 8px; border-radius: 99px; background: #f0f1f4; color: var(--muted); font-weight: 500; }
+  .st.thinking { background: var(--blue-soft); color: var(--blue); }
+  .st.speaking { background: var(--accent-soft); color: var(--accent); }
+  .st.objecting { background: var(--red-soft); color: var(--red); }
+  .st.abstained { background: #f0f1f4; color: #9aa0ad; }
+  .st.asking { background: var(--accent-soft); color: var(--accent); }
+  .lock { color: var(--muted); margin-left: auto; }
+  .client.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .client.req .top::after { content: "requesting"; margin-left: auto; font-size: 11px; color: var(--accent); font-weight: 600; }
+  .client .live { font-size: 12px; color: var(--ink); margin-top: 8px; max-height: 0; overflow: hidden; transition: max-height .3s; }
+  .client .live.on { max-height: 120px; }
+  /* center */
+  .center { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .ask { padding: 14px; }
+  .ask .row { display: flex; gap: 10px; align-items: flex-start; }
+  select, textarea, input { font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; color: var(--ink); }
+  textarea { flex: 1; resize: none; height: 62px; }
+  button { font: inherit; border: 0; border-radius: 8px; padding: 9px 14px; cursor: pointer; font-weight: 600; }
+  .primary { background: var(--ink); color: #fff; }
+  .primary:disabled { opacity: .4; cursor: default; }
+  .ghost { background: #f0f1f4; color: var(--ink); }
+  .request { padding: 16px 18px; display: none; }
+  .request .from { color: var(--muted); font-size: 12px; }
+  .request h2 { font-size: 18px; margin: 4px 0 6px; line-height: 1.35; }
+  .request .relay { font-size: 12px; color: var(--muted); }
+  .feed { padding: 6px 0; min-height: 200px; }
+  .empty { color: var(--muted); padding: 40px 18px; text-align: center; }
+  .msg { display: flex; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--line); animation: in .25s ease; }
+  .msg:first-child { border-top: 0; }
+  @keyframes in { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+  .av { width: 30px; height: 30px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; }
+  .msg .who { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .kind { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; }
+  .k-lesson { background: var(--blue-soft); color: var(--blue); }
+  .k-objection { background: var(--red-soft); color: var(--red); }
+  .k-agrees { background: var(--green-soft); color: var(--green); }
+  .k-none { background: #f0f1f4; color: #9aa0ad; }
+  .k-fde { background: var(--pink-soft); color: var(--pink); }
+  .k-plan { background: var(--accent-soft); color: var(--accent); }
+  .msg .txt { margin-top: 2px; }
+  .msg.none .txt { color: var(--muted); }
+  .round { font-size: 11px; color: var(--muted); padding: 10px 18px 4px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; border-top: 1px solid var(--line); }
+  /* right */
+  .right { display: flex; flex-direction: column; gap: 14px; }
+  .panel { padding: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { font-size: 12px; padding: 5px 10px; border-radius: 99px; background: var(--pink-soft); color: var(--pink); font-weight: 500; cursor: pointer; border: 0; }
+  .chip:disabled { opacity: .4; cursor: default; }
+  .fde-row { display: flex; gap: 8px; }
+  .fde-row input { flex: 1; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .plan { display: none; overflow: hidden; }
+  .plan .hd { padding: 12px 14px; background: var(--accent-soft); display: flex; align-items: center; }
+  .plan .hd b { font-size: 14px; }
+  .plan .hd span { margin-left: auto; font-size: 12px; color: var(--accent); font-weight: 600; }
+  .plan.approved .hd { background: var(--green-soft); } .plan.approved .hd span { color: var(--green); }
+  .plan ol { margin: 0; padding: 12px 14px 4px 34px; }
+  .plan li { margin-bottom: 8px; }
+  .src { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; margin-left: 6px; color: #fff; vertical-align: 1px; }
+  .plan .actions { display: flex; gap: 8px; padding: 6px 14px 14px; }
+  .approve { background: var(--green); color: #fff; flex: 1; }
+  .plan .done { padding: 0 14px 14px; color: var(--green); font-size: 13px; display: none; }
+  .history .item { padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .history .item:first-of-type { border-top: 0; }
+  .history .item small { color: var(--muted); display: block; }
+  .history .none { color: var(--muted); font-size: 13px; }
+  .typing::after { content: "▍"; color: var(--muted); animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0 } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">FC</div>
+  <div><h1>FDE Council</h1><div class="tag">Every client keeps its own private agent. Only lessons are shared, never code or data.</div></div>
+  <div class="pills">
+    <span class="pill" id="p-actors"><i></i>Durable Actors</span>
+    <span class="pill" id="p-relay"><i></i>Agent Relay</span>
+    <span class="pill" id="p-db"><i></i>Supabase</span>
+  </div>
+</header>
+
+<main>
+  <section>
+    <p class="sec">Your clients</p>
+    <div class="clients" id="clients"></div>
+  </section>
+
+  <section class="center">
+    <div class="card ask">
+      <p class="sec">New client request</p>
+      <div class="row">
+        <select id="who"></select>
+        <textarea id="reqtext">Tonight at 6pm we release 5,000 haunted-house tickets and expect 50,000 people at once. Don't let the site crash or sell the same ticket twice.</textarea>
+        <button class="primary" id="start">Ask the council</button>
+      </div>
+    </div>
+    <div class="card request" id="request">
+      <div class="from" id="r-from"></div>
+      <h2 id="r-text"></h2>
+      <div class="relay" id="r-relay"></div>
+    </div>
+    <div class="card feed" id="feed"><div class="empty">Send a request and the council debates it live.</div></div>
+  </section>
+
+  <section class="right">
+    <div class="card panel">
+      <p class="sec">Jump in as the FDE</p>
+      <div class="fde-row"><input id="fde" placeholder="Add a constraint the council must respect" disabled><button class="ghost" id="send" disabled>Send</button></div>
+      <div class="chips" id="chips"></div>
+      <div class="hint" id="fdehint">Available while the council is debating.</div>
+    </div>
+    <div class="card plan" id="plan">
+      <div class="hd"><b id="plan-title">Plan</b><span id="plan-status">Needs your approval</span></div>
+      <ol id="plan-steps"></ol>
+      <div class="actions" id="plan-actions">
+        <button class="approve" id="approve">Approve</button>
+        <button class="ghost" id="changes">Request changes</button>
+      </div>
+      <div class="done" id="plan-done">Saved to Supabase and remembered by the client's agent.</div>
+    </div>
+    <div class="card panel history">
+      <p class="sec">Approved plans</p>
+      <div id="history"><div class="none">No approved plans yet.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const BRIDGE = new URLSearchParams(location.search).get("bridge") || "http://localhost:4000"
+const CLIENTS = {
+  "client-1": { name: "Hallow Tix", stack: "Haunted-house tickets · Postgres · Stripe", color: "#ea6a1a" },
+  "client-2": { name: "Costume Cauldron", stack: "Costume store · CDN · serverless", color: "#7c3aed" },
+  "client-3": { name: "Pumpkin Patch Pass", stack: "Time-slot bookings · Rails · Postgres", color: "#15a35a" },
+  "client-4": { name: "Candy Courier", stack: "Candy delivery · Go · Redis", color: "#2563eb" },
+  "client-5": { name: "Ghost Tour Co.", stack: "Ghost tours · mobile app", color: "#6b7180" },
+}
+const CHIPS = [
+  ["$300 budget", "We only have a $300 cloud budget for tonight."],
+  ["Stay on Stripe", "Checkout must stay on Stripe, no new vendors tonight."],
+  ["No waiting room", "The CEO says no waiting room, people hate queues."],
+]
+const KIND = { lesson: "Lesson", objection: "Objection", agrees: "Agrees", none: "No relevant experience", fde: "FDE", plan: "Plan" }
+const $ = s => document.querySelector(s)
+const esc = t => String(t).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c])
+let seminarId = null, ws = null, requester = "client-1", awaiting = false, debating = false, seen = new Set(), round = 0
+
+function initials(n) { return n.split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase() }
+async function api(path, body) {
+  const r = await fetch(BRIDGE + path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+  if (!r.ok) throw new Error(path + " → " + r.status)
+  return r.json()
+}
+
+function renderClients() {
+  $("#clients").innerHTML = Object.entries(CLIENTS).map(([id, c]) => `
+    <div class="card client" id="c-${id}">
+      <div class="top"><span class="dot" style="background:${c.color}"></span><b>${c.name}</b></div>
+      <div class="stack">${c.stack}</div>
+      <div class="meta"><span class="st" id="s-${id}">listening</span><span class="lock" title="This agent's memory never leaves its actor">🔒 private memory</span></div>
+      <div class="live" id="l-${id}"></div>
+    </div>`).join("")
+  $("#who").innerHTML = Object.entries(CLIENTS).map(([id, c]) => `<option value="${id}">${c.name}</option>`).join("")
+}
+function status(id, st) {
+  const el = $("#s-" + id); if (!el) return
+  el.className = "st " + (st === "listening" ? "" : st); el.textContent = st
+  $("#c-" + id).classList.toggle("active", st === "speaking" || st === "objecting")
+}
+function live(id, text) { const el = $("#l-" + id); if (!el) return; el.textContent = text; el.classList.toggle("on", !!text); el.classList.toggle("typing", !!text) }
+
+function kindOf(e) {
+  if (e.type === "abstain") return "none"
+  if (e.type === "fde") return "fde"
+  if (e.type === "plan") return "plan"
+  if (e.type === "challenge") return /disagree|won't|not enough|broke|risk/i.test(e.text) ? "objection" : "agrees"
+  return "lesson"
+}
+function addRound(label) { const d = document.createElement("div"); d.className = "round"; d.textContent = label; $("#feed").appendChild(d) }
+function addMsg(e) {
+  const kind = kindOf(e)
+  if (e.type === "take" || e.type === "abstain") { if (round < 1) { round = 1; addRound("Round 1 · each client shares a lesson") } }
+  if (e.type === "challenge" && round < 2) { round = 2; addRound("Round 2 · clients challenge each other") }
+  if (e.type === "plan") addRound(`Plan · written by ${CLIENTS[e.from]?.name || e.from}`)
+  const c = CLIENTS[e.from]
+  const name = e.from === "fde" ? "You (FDE)" : c?.name || e.from
+  const color = e.from === "fde" ? "#c2337a" : c?.color || "#6b7180"
+  const d = document.createElement("div")
+  d.className = "msg " + kind
+  d.innerHTML = `<div class="av" style="background:${color}">${e.from === "fde" ? "FDE" : initials(name)}</div>
+    <div><div class="who">${esc(name)}<span class="kind k-${kind}">${KIND[kind]}</span></div><div class="txt">${esc(e.text)}</div></div>`
+  $("#feed").appendChild(d)
+  d.scrollIntoView({ behavior: "smooth", block: "nearest" })
+}
+
+function parseSteps(text) {
+  let parts = text.split(/\s*(?:^|\s)\d+[.)]\s+/).map(s => s.trim()).filter(Boolean)
+  if (parts.length < 2) parts = text.split(/;\s+|(?<=\.)\s+/).map(s => s.trim()).filter(Boolean)
+  if (parts.length > 1 && !/client-\d/.test(parts[0]) && parts[0].length < 60) parts.shift()
+  return parts.slice(0, 6).map(p => {
+    const ids = [...new Set((p.match(/client-\d/g) || []))]
+    const clean = p.replace(/\s*\((?:client-\d|fde)(?:[,;\s]+(?:client-\d|fde))*\)\s*/g, " ").replace(/^(I'm going to|I will|I'll)\s+/i, "").replace(/[;,]\s*$/, "").trim()
+    return { text: clean.charAt(0).toUpperCase() + clean.slice(1), ids }
+  })
+}
+function showPlan(e) {
+  const steps = parseSteps(e.text)
+  $("#plan").style.display = "block"; $("#plan").classList.remove("approved")
+  $("#plan-title").textContent = "Plan for " + (CLIENTS[e.from]?.name || e.from)
+  $("#plan-status").textContent = "Needs your approval"
+  $("#plan-steps").innerHTML = steps.map(s => `<li>${esc(s.text)}${s.ids.map(id => `<span class="src" style="background:${CLIENTS[id]?.color || "#999"}">${CLIENTS[id]?.name || id}</span>`).join("")}</li>`).join("")
+  $("#plan-actions").style.display = "flex"; $("#plan-done").style.display = "none"
+  awaiting = true; debating = false; setFde(true, "Plan is waiting for you: approve it, or type feedback and click Request changes.")
+}
+function setFde(on, hint) {
+  $("#fde").disabled = $("#send").disabled = !on
+  document.querySelectorAll(".chip").forEach(b => (b.disabled = !on))
+  $("#fdehint").textContent = hint
+}
+
+function onEvent(e) {
+  const key = e.type + e.from + e.ts + e.text.slice(0, 20)
+  if (seen.has(key)) return; seen.add(key)
+  if (e.type === "request") return
+  if (e.type === "fde" && /^Approved the plan/.test(e.text)) return
+  if (CLIENTS[e.from]) { live(e.from, ""); status(e.from, e.type === "abstain" ? "abstained" : kindOf(e) === "objection" ? "objecting" : "listening") }
+  addMsg(e)
+  if (e.type === "plan") showPlan(e)
+}
+function connect(url) {
+  ws = new WebSocket(url)
+  ws.onmessage = m => {
+    const msg = JSON.parse(m.data)
+    if (msg.type === "state") (msg.state.events || []).forEach(onEvent)
+    else if (msg.type === "event") onEvent(msg.event)
+    else if (msg.type === "typing" && CLIENTS[msg.from]) { status(msg.from, "speaking"); live(msg.from, msg.text) }
+  }
+}
+
+async function start() {
+  const text = $("#reqtext").value.trim(); if (!text) return
+  requester = $("#who").value
+  seen = new Set(); round = 0; awaiting = false; debating = true
+  if (ws) ws.close()
+  $("#feed").innerHTML = ""; $("#plan").style.display = "none"
+  document.querySelectorAll(".client").forEach(c => c.classList.remove("req"))
+  $("#c-" + requester).classList.add("req")
+  Object.keys(CLIENTS).forEach(id => { live(id, ""); status(id, id === requester ? "asking" : "thinking") })
+  $("#request").style.display = "block"
+  $("#r-from").textContent = "From " + CLIENTS[requester].name
+  $("#r-text").textContent = text
+  $("#start").disabled = true
+  try {
+    const r = await api("/debate", { client: requester, request: text })
+    seminarId = r.seminarId
+    $("#r-relay").textContent = `Council channel #${seminarId} on Agent Relay`
+    const g = await api("/seminar/" + seminarId + "/socket")
+    connect(g.websocketUrl)
+    setFde(true, "The council is debating. Add a constraint and every agent adapts.")
+  } catch (err) { $("#feed").innerHTML = `<div class="empty">Could not reach the bridge at ${BRIDGE}. Is it running?</div>` }
+  $("#start").disabled = false
+}
+async function sendFde(textArg) {
+  const text = (textArg || $("#fde").value).trim(); if (!text || !seminarId) return
+  $("#fde").value = ""
+  try {
+    if (awaiting) {
+      awaiting = false; debating = true
+      $("#plan-status").textContent = "Rewriting with your feedback…"; $("#plan-actions").style.display = "none"
+      setFde(false, "The plan is being rewritten with your feedback.")
+      await api("/seminar/" + seminarId + "/reject", { text })
+    } else await api("/seminar/" + seminarId + "/fde", { text })
+  } catch (err) { alert("Could not send: " + err.message) }
+}
+async function approve() {
+  if (!awaiting) return
+  awaiting = false
+  try { await api("/seminar/" + seminarId + "/approve", {}) } catch (err) { alert("Approve failed: " + err.message); return }
+  $("#plan").classList.add("approved"); $("#plan-status").textContent = "Approved"
+  $("#plan-actions").style.display = "none"; $("#plan-done").style.display = "block"
+  $("#plan-done").textContent = `Saved to Supabase and remembered by ${CLIENTS[requester].name}'s agent for next time.`
+  setFde(false, "Approved. Send a new request to start another council.")
+  Object.keys(CLIENTS).forEach(id => status(id, "listening"))
+  setTimeout(loadHistory, 1500)
+}
+async function loadHistory() {
+  try {
+    const rows = await api("/plans")
+    if (!Array.isArray(rows) || !rows.length) return
+    $("#history").innerHTML = rows.slice(0, 5).map(r => `<div class="item"><b>${esc(CLIENTS[r.client_id]?.name || r.client_id)}</b> · ${esc(r.request.slice(0, 70))}${r.request.length > 70 ? "…" : ""}<small>${new Date(r.created_at).toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" })} · ${(r.cites || []).length} sources</small></div>`).join("")
+  } catch {}
+}
+async function health() {
+  try {
+    const h = await api("/health")
+    $("#p-actors").classList.toggle("ok", h.actors === "real")
+    $("#p-relay").classList.toggle("ok", !!h.relay)
+    $("#p-db").classList.toggle("ok", !!h.supabase)
+  } catch {}
+}
+
+renderClients()
+$("#chips").innerHTML = CHIPS.map(([l, t]) => `<button class="chip" data-t="${esc(t)}" disabled>${l}</button>`).join("")
+document.querySelectorAll(".chip").forEach(b => (b.onclick = () => sendFde(b.dataset.t)))
+$("#start").onclick = start
+$("#send").onclick = () => sendFde()
+$("#fde").onkeydown = e => { if (e.key === "Enter") sendFde() }
+$("#approve").onclick = approve
+$("#changes").onclick = () => { if ($("#fde").value.trim()) sendFde(); else { $("#fde").focus(); $("#fdehint").textContent = "Type what should change, then press Enter." } }
+health(); loadHistory()
+</script>
+</body>
+</html>

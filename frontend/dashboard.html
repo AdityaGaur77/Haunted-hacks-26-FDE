@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE Council</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090b; --sidebar: #0c0c0f; --card: #111114; --card-2: #16161a; --border: #26262b; --border-2: #303036;
+    --fg: #fafafa; --muted: #a1a1aa; --muted-2: #71717a;
+    --accent: #b4a3f7; --accent-fg: #1b1530; --accent-soft: rgba(167, 139, 250, .12);
+    --green: #4ade80; --green-soft: rgba(74, 222, 128, .1);
+    --amber: #fbbf24; --amber-soft: rgba(251, 191, 36, .1);
+    --red: #f87171; --red-soft: rgba(248, 113, 113, .1);
+    --blue: #60a5fa; --blue-soft: rgba(96, 165, 250, .1);
+    --radius: 10px; --h: 36px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 Geist, Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+  svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+
+  /* sidebar */
+  aside { background: var(--sidebar); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 14px; font-weight: 600; font-size: 15px; }
+  .brand .mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+  .navlabel { font-size: 12px; color: var(--muted-2); padding: 14px 8px 6px; }
+  .nav { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; color: var(--muted); cursor: pointer; font-weight: 500; }
+  .nav:hover { background: var(--card-2); color: var(--fg); }
+  .nav.on { background: var(--card-2); color: var(--fg); }
+  .nav .count { margin-left: auto; font-size: 11px; color: var(--muted-2); }
+  .nav .livedot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: none; box-shadow: 0 0 0 3px var(--green-soft); }
+  .nav .livedot.on { display: block; }
+  .client-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; color: var(--muted); }
+  .client-row .av { width: 22px; height: 22px; font-size: 10px; border-radius: 6px; }
+  .client-row .name { color: var(--fg); font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .client-row .sdot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-2); flex: none; }
+  .sdot.thinking { background: var(--blue); } .sdot.speaking { background: var(--accent); } .sdot.objecting { background: var(--red); } .sdot.asking { background: var(--amber); }
+  .me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 8px 2px; border-top: 1px solid var(--border); font-size: 13px; }
+  .me small { display: block; color: var(--muted-2); font-size: 12px; }
+
+  /* top */
+  .main { min-width: 0; }
+  .topbar { height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 28px; border-bottom: 1px solid var(--border); color: var(--muted); }
+  .topbar .crumb { display: flex; align-items: center; gap: 8px; color: var(--fg); font-weight: 500; }
+  .topbar .sep { width: 1px; height: 18px; background: var(--border); }
+  .page { padding: 28px; max-width: 1360px; }
+  .head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 22px; }
+  .head h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+  .head p { margin: 4px 0 0; color: var(--muted); }
+  .head .btn { margin-left: auto; }
+
+  /* primitives */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+  .card-h { padding: 16px 18px 0; }
+  .card-h h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .card-h p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .btn { height: var(--h); padding: 0 14px; border-radius: 8px; border: 1px solid transparent; font: inherit; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; white-space: nowrap; flex: none; }
+  .btn-primary { background: var(--accent); color: var(--accent-fg); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-outline { background: transparent; color: var(--fg); border-color: var(--border-2); }
+  .btn-outline:hover { background: var(--card-2); }
+  .btn:disabled { opacity: .45; cursor: default; filter: none; }
+  .field { width: 100%; min-height: var(--h); padding: 7px 11px; border-radius: 8px; border: 1px solid var(--border-2); background: var(--bg); color: var(--fg); font: inherit; line-height: 1.5; outline: none; }
+  .field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .field:disabled { opacity: .5; }
+  textarea.field { resize: none; overflow: hidden; display: block; }
+  select.field { width: auto; min-width: 180px; height: var(--h); padding: 0 32px 0 11px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background: var(--card-2); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+  .badge.running { color: var(--blue); background: var(--blue-soft); border-color: transparent; }
+  .badge.needs { color: var(--amber); background: var(--amber-soft); border-color: transparent; }
+  .badge.approved { color: var(--green); background: var(--green-soft); border-color: transparent; }
+  .av { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; font-size: 11px; font-weight: 600; flex: none; }
+
+  /* overview */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+  .stat { padding: 16px 18px; }
+  .stat .l { color: var(--muted); font-size: 13px; }
+  .stat .n { font-size: 28px; font-weight: 600; margin: 6px 0 2px; letter-spacing: -.02em; }
+  .stat .s { color: var(--muted-2); font-size: 12px; }
+  .recent { padding: 16px 18px; display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+  .recent .t { min-width: 0; }
+  .recent .t b { display: block; font-weight: 600; }
+  .recent .t span { color: var(--muted); font-size: 13px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 760px; }
+  .recent .btn { margin-left: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 500; color: var(--muted); padding: 12px 18px; border-bottom: 1px solid var(--border); }
+  td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  td .req { max-width: 520px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td .sub { color: var(--muted-2); font-size: 12px; }
+  .link { color: var(--fg); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500; }
+  .link:hover { color: var(--accent); }
+  .empty { color: var(--muted-2); padding: 28px 18px; text-align: center; font-size: 13px; }
+
+  /* council */
+  .compose { padding: 16px 18px; margin-bottom: 14px; }
+  .compose .row { display: flex; gap: 10px; align-items: flex-end; margin-top: 12px; }
+  .compose .grow { flex: 1; }
+  .participants { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 14px; }
+  .pcard { padding: 12px; transition: border-color .2s; min-width: 0; }
+  .pcard .top { display: flex; align-items: center; gap: 8px; }
+  .pcard b { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pcard .meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; color: var(--muted-2); font-size: 12px; gap: 6px; }
+  .pcard .meta span { display: inline-flex; align-items: center; gap: 4px; }
+  .pcard .meta svg.i { width: 13px; height: 13px; }
+  .pcard .st { color: var(--muted); }
+  .pcard.speaking { border-color: rgba(180, 163, 247, .55); }
+  .pcard.objecting { border-color: rgba(248, 113, 113, .55); }
+  .pcard.req { border-color: rgba(251, 191, 36, .45); }
+  .pcard .live { font-size: 12px; color: var(--muted); margin-top: 8px; display: none; line-height: 1.4; max-height: 50px; overflow: hidden; }
+  .pcard .live.on { display: block; }
+  .cols { display: grid; grid-template-columns: 1fr 380px; gap: 14px; align-items: start; }
+  .runhead { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+  .runhead .who { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+  .runhead .who .badge { margin-left: auto; }
+  .runhead h2 { font-size: 17px; font-weight: 600; margin: 8px 0 6px; line-height: 1.4; letter-spacing: -.01em; }
+  .runhead .chan { color: var(--muted-2); font-size: 12px; }
+  .round { font-size: 12px; color: var(--muted-2); padding: 14px 18px 4px; font-weight: 500; }
+  .msg { display: flex; gap: 12px; padding: 10px 18px; animation: in .2s ease; }
+  @keyframes in { from { opacity: 0; transform: translateY(3px) } to { opacity: 1; transform: none } }
+  .msg .who { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+  .msg .txt { color: #d4d4d8; margin-top: 2px; }
+  .msg.none .txt { color: var(--muted-2); }
+  .kind { font-size: 11px; font-weight: 500; padding: 1px 7px; border-radius: 5px; background: var(--card-2); color: var(--muted); }
+  .k-objection { color: var(--red); background: var(--red-soft); }
+  .k-agrees { color: var(--green); background: var(--green-soft); }
+  .k-fde { color: var(--accent); background: var(--accent-soft); }
+  .k-plan { color: var(--amber); background: var(--amber-soft); }
+  .side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 16px; }
+  .panel { padding: 16px 18px; }
+  .panel .row { display: flex; gap: 8px; align-items: flex-end; margin-top: 12px; }
+  .panel .grow { flex: 1; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { height: 28px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--border-2); background: transparent; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+  .chip:hover:not(:disabled) { color: var(--fg); background: var(--card-2); }
+  .chip:disabled { opacity: .4; cursor: default; }
+  .hint { color: var(--muted-2); font-size: 12px; margin-top: 10px; }
+  .plan { display: none; }
+  .plan .hd { display: flex; align-items: center; padding: 16px 18px 0; }
+  .plan .hd h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .plan .hd .badge { margin-left: auto; }
+  .plan ol { margin: 12px 0 0; padding: 0 18px 0 38px; }
+  .plan li { margin-bottom: 10px; color: #d4d4d8; }
+  .plan li .srcs { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .plan .actions { display: flex; gap: 8px; padding: 6px 18px 18px; }
+  .plan .actions .btn { flex: 1; }
+  .plan .feedback { display: none; padding: 0 18px 18px; }
+  .plan .feedback .row { display: flex; gap: 8px; align-items: flex-end; }
+  .plan .done { display: none; padding: 0 18px 18px; color: var(--muted); font-size: 13px; }
+  .typing::after { content: "▍"; color: var(--muted-2); animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0 } }
+  .view { display: none; } .view.on { display: block; }
+  .feed-empty { color: var(--muted-2); padding: 48px 18px; text-align: center; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><span class="mark" data-icon="users"></span>FDE Council</div>
+    <button class="btn btn-primary" id="side-new" style="width:100%;justify-content:flex-start"><span data-icon="plus"></span>New request</button>
+    <div class="navlabel">Work</div>
+    <div class="nav on" data-view="overview"><span data-icon="dashboard"></span>Overview</div>
+    <div class="nav" data-view="council"><span data-icon="messages"></span>Council<span class="livedot" id="livedot"></span></div>
+    <div class="navlabel">Clients</div>
+    <div id="side-clients"></div>
+    <div class="me"><span class="av" style="background:var(--card-2);color:var(--muted)">FD</span><div>You<small>Forward-deployed engineer</small></div></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar"><span data-icon="panel"></span><span class="sep"></span><span class="crumb" id="crumb"><span data-icon="dashboard"></span>Overview</span></div>
+
+    <!-- OVERVIEW -->
+    <section class="view page on" id="v-overview">
+      <div class="head">
+        <div><h1>Council overview</h1><p>Client requests debated by each client's private agent, from request to approved plan.</p></div>
+        <button class="btn btn-primary" id="ov-new"><span data-icon="plus"></span>New request</button>
+      </div>
+      <div class="stats">
+        <div class="card stat"><div class="l">Clients</div><div class="n" id="st-clients">5</div><div class="s">Each with its own private memory</div></div>
+        <div class="card stat"><div class="l">Runs</div><div class="n" id="st-runs">0</div><div class="s" id="st-runs-s">0 running</div></div>
+        <div class="card stat"><div class="l">Needs approval</div><div class="n" id="st-needs">0</div><div class="s">Waiting on you</div></div>
+        <div class="card stat"><div class="l">Approved plans</div><div class="n" id="st-approved">0</div><div class="s">Saved and remembered</div></div>
+      </div>
+      <div class="card recent" id="recent">
+        <div class="t"><b>Most recent run</b><span id="recent-text">No runs yet. Start a new request.</span></div>
+        <span id="recent-badge"></span>
+        <button class="btn btn-outline" id="recent-open">Open council<span data-icon="arrow"></span></button>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>Recent runs</h3><p>Every request the council has handled.</p></div>
+        <table><thead><tr><th>Client</th><th>Request</th><th>State</th><th>Updated</th><th></th></tr></thead><tbody id="runs"></tbody></table>
+        <div class="empty" id="runs-empty">No runs yet.</div>
+      </div>
+    </section>
+
+    <!-- COUNCIL -->
+    <section class="view page" id="v-council">
+      <div class="head">
+        <div><h1>Council</h1><p>The requesting client's agent asks the others. Each answers only from its own memory.</p></div>
+      </div>
+      <div class="card compose" id="compose">
+        <div class="card-h" style="padding:0"><h3>New request</h3><p>Pick the client and paste what they asked for.</p></div>
+        <div class="row">
+          <select class="field" id="who"></select>
+          <div class="grow"><textarea class="field" id="reqtext" rows="1" placeholder="Describe the client's request"></textarea></div>
+          <button class="btn btn-primary" id="start"><span data-icon="send"></span>Ask the council</button>
+        </div>
+      </div>
+      <div class="participants" id="participants"></div>
+      <div class="cols">
+        <div class="card" id="runcard">
+          <div class="runhead" id="runhead" style="display:none">
+            <div class="who"><span id="rh-client"></span><span class="badge" id="rh-state"></span></div>
+            <h2 id="rh-text"></h2>
+            <div class="chan mono" id="rh-chan"></div>
+          </div>
+          <div id="feed"><div class="feed-empty">Send a request and the council debates it here, live.</div></div>
+        </div>
+        <div class="side">
+          <div class="card panel">
+            <div class="card-h" style="padding:0"><h3>Add a constraint</h3><p>Every agent adapts mid-debate.</p></div>
+            <div class="row">
+              <div class="grow"><textarea class="field" id="fde" rows="1" placeholder="e.g. Checkout must stay on Stripe" disabled></textarea></div>
+              <button class="btn btn-outline" id="send" disabled>Send</button>
+            </div>
+            <div class="chips" id="chips"></div>
+            <div class="hint" id="fdehint">Available while the council is debating.</div>
+          </div>
+          <div class="card plan" id="plan">
+            <div class="hd"><h3>Proposed plan</h3><span class="badge needs" id="plan-state">Needs approval</span></div>
+            <ol id="plan-steps"></ol>
+            <div class="actions" id="plan-actions">
+              <button class="btn btn-primary" id="approve"><span data-icon="check"></span>Approve</button>
+              <button class="btn btn-outline" id="changes"><span data-icon="pencil"></span>Request changes</button>
+            </div>
+            <div class="feedback" id="feedback">
+              <div class="row">
+                <div style="flex:1"><textarea class="field" id="fb" rows="1" placeholder="What should change?"></textarea></div>
+                <button class="btn btn-outline" id="fb-send">Send</button>
+              </div>
+            </div>
+            <div class="done" id="plan-done"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const BRIDGE = new URLSearchParams(location.search).get("bridge") || "http://localhost:4000"
+const DEFAULT_REQUEST = "Tonight at 6pm we release 5,000 tickets and expect 50,000 people at once. Don't let the site crash or sell the same ticket twice."
+const TINTS = ["#a78bfa", "#60a5fa", "#4ade80", "#fbbf24", "#f472b6"]
+let CLIENTS = {
+  "client-1": { name: "Client 1", stack: "" }, "client-2": { name: "Client 2", stack: "" }, "client-3": { name: "Client 3", stack: "" },
+  "client-4": { name: "Client 4", stack: "" }, "client-5": { name: "Client 5", stack: "" },
+}
+const CHIPS = [
+  ["$300 budget", "We only have a $300 cloud budget for tonight."],
+  ["Stay on Stripe", "Checkout must stay on Stripe, no new vendors."],
+  ["No waiting room", "No waiting room. The CEO says people hate queues."],
+]
+const ICONS = {
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  dashboard: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+  messages: '<path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/>',
+  panel: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>',
+  arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+}
+const icon = n => `<svg class="i" viewBox="0 0 24 24">${ICONS[n]}</svg>`
+const $ = s => document.querySelector(s)
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c])
+const initials = n => n.split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase()
+const tint = id => TINTS[(Number(id.split("-")[1]) - 1) % TINTS.length]
+const avatar = (id, cls = "") => `<span class="av ${cls}" style="background:${tint(id)}22;color:${tint(id)}">${initials(CLIENTS[id]?.name || id)}</span>`
+function ago(ts) { const s = Math.max(1, Math.round((Date.now() - ts) / 1000)); return s < 60 ? s + "s ago" : s < 3600 ? Math.round(s / 60) + "m ago" : Math.round(s / 3600) + "h ago" }
+function autosize(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px" }
+
+let seminarId = null, ws = null, requester = "client-1", awaiting = false, seen = new Set(), round = 0
+let runs = [] // {seminarId, client, request, state, updated}
+let statuses = {}
+
+async function api(path, body) {
+  const r = await fetch(BRIDGE + path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+  if (!r.ok) throw new Error(path + " → " + r.status)
+  return r.json()
+}
+
+/* ---------- views ---------- */
+function show(view) {
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + view))
+  document.querySelectorAll(".nav").forEach(n => n.classList.toggle("on", n.dataset.view === view))
+  $("#crumb").innerHTML = view === "overview" ? icon("dashboard") + "Overview" : icon("messages") + "Council"
+  if (view === "overview") renderOverview()
+  else requestAnimationFrame(() => document.querySelectorAll("textarea.field").forEach(autosize))
+}
+function newRequest() { show("council"); $("#compose").style.display = "block"; const t = $("#reqtext"); if (!t.value) t.value = DEFAULT_REQUEST; autosize(t); t.focus() }
+
+/* ---------- clients ---------- */
+function renderClients() {
+  $("#side-clients").innerHTML = Object.keys(CLIENTS).map(id => `<div class="client-row">${avatar(id)}<span class="name">${esc(CLIENTS[id].name)}</span><span class="sdot ${statuses[id] || ""}" id="sd-${id}"></span></div>`).join("")
+  $("#participants").innerHTML = Object.keys(CLIENTS).map(id => `
+    <div class="card pcard" id="pc-${id}">
+      <div class="top">${avatar(id)}<b>${esc(CLIENTS[id].name)}</b></div>
+      <div class="meta"><span class="st" id="ps-${id}">Listening</span><span title="This agent's memory never leaves its actor">${icon("lock")}Private</span></div>
+      <div class="live" id="pl-${id}"></div>
+    </div>`).join("")
+  $("#who").innerHTML = Object.keys(CLIENTS).map(id => `<option value="${id}">${esc(CLIENTS[id].name)}</option>`).join("")
+}
+const LABEL = { listening: "Listening", thinking: "Thinking", speaking: "Speaking", objecting: "Objecting", abstained: "Nothing to add", asking: "Asking" }
+function status(id, st) {
+  statuses[id] = st
+  const p = $("#pc-" + id); if (!p) return
+  p.classList.toggle("speaking", st === "speaking"); p.classList.toggle("objecting", st === "objecting")
+  $("#ps-" + id).textContent = LABEL[st] || st
+  const sd = $("#sd-" + id); if (sd) sd.className = "sdot " + (st === "listening" || st === "abstained" ? "" : st)
+}
+function live(id, text) { const el = $("#pl-" + id); if (!el) return; el.textContent = text; el.classList.toggle("on", !!text); el.classList.toggle("typing", !!text) }
+
+/* ---------- overview ---------- */
+const STATE = { running: ["running", "Running"], needs: ["needs", "Needs approval"], approved: ["approved", "Approved"] }
+function badge(state) { const [c, l] = STATE[state] || ["", state]; return `<span class="badge ${c}">${l}</span>` }
+function renderOverview() {
+  const sorted = [...runs].sort((a, b) => b.updated - a.updated)
+  $("#st-runs").textContent = runs.length
+  const running = runs.filter(r => r.state === "running").length
+  $("#st-runs-s").textContent = `${running} running · ${runs.length - running} complete`
+  $("#st-needs").textContent = runs.filter(r => r.state === "needs").length
+  $("#st-approved").textContent = runs.filter(r => r.state === "approved").length
+  const top = sorted[0]
+  $("#recent-text").textContent = top ? `${CLIENTS[top.client]?.name || top.client} · ${top.request}` : "No runs yet. Start a new request."
+  $("#recent-badge").innerHTML = top ? badge(top.state) : ""
+  $("#runs").innerHTML = sorted.slice(0, 8).map(r => `
+    <tr><td><div style="display:flex;align-items:center;gap:10px">${avatar(r.client)}<span>${esc(CLIENTS[r.client]?.name || r.client)}</span></div></td>
+    <td><div class="req">${esc(r.request)}</div><div class="sub">${r.sources ? r.sources + " client lessons cited" : "In progress"}</div></td>
+    <td>${badge(r.state)}</td><td class="sub">${ago(r.updated)}</td>
+    <td style="text-align:right">${r.seminarId === seminarId ? `<span class="link" data-open="1">View ${icon("arrow")}</span>` : ""}</td></tr>`).join("")
+  $("#runs-empty").style.display = runs.length ? "none" : "block"
+  document.querySelectorAll("[data-open]").forEach(el => (el.onclick = () => show("council")))
+}
+function upsertRun(r) { const i = runs.findIndex(x => x.seminarId === r.seminarId); if (i >= 0) runs[i] = { ...runs[i], ...r }; else runs.push(r); renderOverview() }
+
+/* ---------- council ---------- */
+function kindOf(e) {
+  if (e.type === "abstain") return "none"
+  if (e.type === "fde") return "fde"
+  if (e.type === "plan") return "plan"
+  if (e.type === "challenge") return /disagree|won't|not enough|broke|risk/i.test(e.text) ? "objection" : "agrees"
+  return "lesson"
+}
+const KIND = { lesson: "Lesson", objection: "Objection", agrees: "Agrees", none: "Nothing relevant", fde: "Constraint", plan: "Plan" }
+function addRound(t) { const d = document.createElement("div"); d.className = "round"; d.textContent = t; $("#feed").appendChild(d) }
+function addMsg(e) {
+  const kind = kindOf(e)
+  if ((e.type === "take" || e.type === "abstain") && round < 1) { round = 1; addRound("Round 1 · each client shares one lesson") }
+  if (e.type === "challenge" && round < 2) { round = 2; addRound("Round 2 · clients challenge each other") }
+  if (e.type === "plan") addRound("Plan · written by " + (CLIENTS[e.from]?.name || e.from))
+  const isFde = e.from === "fde"
+  const name = isFde ? "You" : CLIENTS[e.from]?.name || e.from
+  const av = isFde ? `<span class="av" style="background:var(--accent-soft);color:var(--accent)">FD</span>` : avatar(e.from)
+  const d = document.createElement("div")
+  d.className = "msg " + kind
+  d.innerHTML = `${av}<div style="min-width:0"><div class="who">${esc(name)}<span class="kind k-${kind}">${KIND[kind]}</span></div><div class="txt">${esc(e.text)}</div></div>`
+  $("#feed").appendChild(d)
+}
+function parseSteps(text) {
+  let parts = text.split(/\s*(?:^|\s)\d+[.)]\s+/).map(s => s.trim()).filter(Boolean)
+  if (parts.length < 2) parts = text.split(/;\s+|(?<=\.)\s+/).map(s => s.trim()).filter(Boolean)
+  if (parts.length > 1 && !/client-\d/.test(parts[0]) && parts[0].length < 60) parts.shift()
+  return parts.slice(0, 6).map(p => {
+    const ids = [...new Set(p.match(/client-\d/g) || [])]
+    const clean = p.replace(/\s*\((?:client-\d|fde)(?:[,;\s]+(?:client-\d|fde))*\)\s*/g, " ").replace(/^(I'm going to|I will|I'll)\s+/i, "").replace(/[;,]\s*$/, "").trim()
+    return { text: clean.charAt(0).toUpperCase() + clean.slice(1), ids }
+  })
+}
+function setRunState(state) { $("#rh-state").className = "badge " + STATE[state][0]; $("#rh-state").textContent = STATE[state][1]; upsertRun({ seminarId, state, updated: Date.now() }) }
+function showPlan(e) {
+  const steps = parseSteps(e.text)
+  $("#plan").style.display = "block"
+  $("#plan-state").className = "badge needs"; $("#plan-state").textContent = "Needs approval"
+  $("#plan-steps").innerHTML = steps.map(s => `<li>${esc(s.text)}${s.ids.length ? `<div class="srcs">${s.ids.map(id => `<span class="badge">From ${esc(CLIENTS[id]?.name || id)}</span>`).join("")}</div>` : ""}</li>`).join("")
+  $("#plan-actions").style.display = "flex"; $("#feedback").style.display = "none"; $("#plan-done").style.display = "none"
+  awaiting = true
+  setFde(false, "The plan is waiting for your approval.")
+  setRunState("needs")
+  upsertRun({ seminarId, sources: (e.cites || []).length })
+}
+function setFde(on, hint) {
+  $("#fde").disabled = $("#send").disabled = !on
+  document.querySelectorAll(".chip").forEach(b => (b.disabled = !on))
+  $("#fdehint").textContent = hint
+}
+function onEvent(e) {
+  const key = e.type + e.from + e.ts + String(e.text).slice(0, 24)
+  if (seen.has(key)) return; seen.add(key)
+  if (e.type === "request") return
+  if (e.type === "fde" && /^Approved the plan/.test(e.text)) return
+  if (CLIENTS[e.from]) { live(e.from, ""); status(e.from, e.type === "abstain" ? "abstained" : kindOf(e) === "objection" ? "objecting" : "listening") }
+  addMsg(e)
+  if (e.type === "plan") showPlan(e)
+}
+function connect(url) {
+  ws = new WebSocket(url)
+  ws.onmessage = m => {
+    const msg = JSON.parse(m.data)
+    if (msg.type === "state") (msg.state.events || []).forEach(onEvent)
+    else if (msg.type === "event") onEvent(msg.event)
+    else if (msg.type === "typing" && CLIENTS[msg.from]) { status(msg.from, "speaking"); live(msg.from, msg.text) }
+  }
+}
+async function start() {
+  const text = $("#reqtext").value.trim(); if (!text) return
+  requester = $("#who").value
+  seen = new Set(); round = 0; awaiting = false
+  if (ws) ws.close()
+  $("#feed").innerHTML = ""; $("#plan").style.display = "none"
+  Object.keys(CLIENTS).forEach(id => { live(id, ""); status(id, id === requester ? "asking" : "thinking"); $("#pc-" + id).classList.toggle("req", id === requester) })
+  $("#runhead").style.display = "block"
+  $("#rh-client").innerHTML = `${avatar(requester)}<span>${esc(CLIENTS[requester].name)} asks the council</span>`
+  $("#rh-text").textContent = text
+  $("#rh-chan").textContent = ""
+  $("#reqtext").value = ""; autosize($("#reqtext")); $("#compose").style.display = "none"
+  $("#start").disabled = true
+  try {
+    const r = await api("/debate", { client: requester, request: text })
+    seminarId = r.seminarId
+    upsertRun({ seminarId, client: requester, request: text, state: "running", updated: Date.now() })
+    setRunState("running")
+    $("#rh-chan").textContent = "Agent Relay · #" + seminarId
+    $("#livedot").classList.add("on")
+    const g = await api("/seminar/" + seminarId + "/socket")
+    connect(g.websocketUrl)
+    setFde(true, "The council is debating. Constraints reach every agent before the next round.")
+  } catch (err) {
+    $("#feed").innerHTML = `<div class="feed-empty">Could not reach the bridge at ${esc(BRIDGE)}. Is it running?</div>`
+    $("#compose").style.display = "block"
+  }
+  $("#start").disabled = false
+}
+async function sendFde(textArg) {
+  const box = $("#fde"); const text = (textArg || box.value).trim(); if (!text || !seminarId || awaiting) return
+  box.value = ""; autosize(box)
+  try { await api("/seminar/" + seminarId + "/fde", { text }) } catch (err) { alert("Could not send: " + err.message) }
+}
+async function requestChanges() {
+  const box = $("#fb"); const text = box.value.trim(); if (!text || !awaiting) return
+  box.value = ""; autosize(box); awaiting = false
+  $("#plan-state").className = "badge running"; $("#plan-state").textContent = "Rewriting"
+  $("#plan-actions").style.display = "none"; $("#feedback").style.display = "none"
+  setRunState("running")
+  try { await api("/seminar/" + seminarId + "/reject", { text }) } catch (err) { alert("Could not send: " + err.message) }
+}
+async function approve() {
+  if (!awaiting) return
+  awaiting = false
+  try { await api("/seminar/" + seminarId + "/approve", {}) } catch (err) { alert("Approve failed: " + err.message); awaiting = true; return }
+  $("#plan-state").className = "badge approved"; $("#plan-state").textContent = "Approved"
+  $("#plan-actions").style.display = "none"; $("#feedback").style.display = "none"
+  $("#plan-done").style.display = "block"
+  $("#plan-done").textContent = `Saved, and remembered by ${CLIENTS[requester].name}'s agent for next time.`
+  setFde(false, "Approved. Start a new request whenever you're ready.")
+  setRunState("approved")
+  $("#livedot").classList.remove("on")
+  $("#compose").style.display = "block"
+  Object.keys(CLIENTS).forEach(id => { status(id, "listening"); $("#pc-" + id).classList.remove("req") })
+}
+
+/* ---------- data ---------- */
+async function loadClients() {
+  try {
+    const rows = await api("/clients")
+    if (Array.isArray(rows) && rows.length) rows.forEach(r => { if (CLIENTS[r.id]) CLIENTS[r.id] = { name: r.name, stack: r.stack } })
+  } catch {}
+  renderClients()
+}
+async function loadHistory() {
+  try {
+    const rows = await api("/plans")
+    if (Array.isArray(rows)) rows.forEach(r => { if (!runs.some(x => x.seminarId === r.seminar_id)) runs.push({ seminarId: r.seminar_id, client: r.client_id, request: r.request, state: "approved", updated: new Date(r.created_at).getTime(), sources: (r.cites || []).length }) })
+  } catch {}
+  renderOverview()
+}
+
+/* ---------- wire up ---------- */
+document.querySelectorAll("[data-icon]").forEach(el => (el.outerHTML = icon(el.dataset.icon)))
+document.querySelectorAll(".nav").forEach(n => (n.onclick = () => show(n.dataset.view)))
+$("#chips").innerHTML = CHIPS.map(([l, t]) => `<button class="chip" data-t="${esc(t)}" disabled>${esc(l)}</button>`).join("")
+document.querySelectorAll(".chip").forEach(b => (b.onclick = () => sendFde(b.dataset.t)))
+document.querySelectorAll("textarea.field").forEach(t => t.addEventListener("input", () => autosize(t)))
+$("#reqtext").onkeydown = e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) start() }
+$("#fde").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendFde() } }
+$("#fb").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); requestChanges() } }
+$("#start").onclick = start
+$("#send").onclick = () => sendFde()
+$("#approve").onclick = approve
+$("#changes").onclick = () => { $("#feedback").style.display = "block"; $("#fb").focus() }
+$("#fb-send").onclick = requestChanges
+$("#side-new").onclick = $("#ov-new").onclick = newRequest
+$("#recent-open").onclick = () => show("council")
+$("#reqtext").value = DEFAULT_REQUEST
+loadClients(); loadHistory()
+setInterval(renderOverview, 30000)
+</script>
+</body>
+</html>
