@@ -9,7 +9,9 @@ POST /debate ──> startDebate(client, request)
    SeminarActor "seminar-<ts>".start()  -> request event   Relay #seminar-<ts>  <── posted as client-N
    Round 1  all 5 clients in parallel: respond()      -> take | abstain
    Round 2  all 5 clients in parallel: challenge()    -> challenge (each sees all of round 1)
-   Plan     requester: writePlan(transcript, fdeConstraints) -> plan, then markDone()
+   Plan     requester: writePlan(transcript, fdeConstraints) -> plan, then requestApproval()
+   Approval FDE approves -> markDone(), plan saved to Supabase, requester.remember(plan)
+            FDE rejects with feedback -> feedback becomes an "fde" event, plan rewritten (max 3 rewrites)
    Each event is published as soon as its call finishes. The SeminarActor is re-read before
    round 2 and before the plan, so FDE input sent during a round reaches the next one
    (and is mirrored to Relay as the "fde" identity).
@@ -26,7 +28,7 @@ cp .env.example .env      # set RELAY_API_KEY (or leave empty to auto-create a w
 | Command | What it does |
 | --- | --- |
 | `bun run hello` | Milestone 1: `client-1` and `fde` exchange DMs over Relay (inbox read) |
-| `bun run debate [client-N] ["request"]` | Milestone 2: full debate printed in the terminal + posted to Relay. Type a line + Enter to jump in as the FDE |
+| `bun run debate [client-N] ["request"]` | Full debate printed in the terminal + posted to Relay. Type a line + Enter to jump in as the FDE; when the plan awaits approval, type `approve` or `reject: <feedback>` |
 | `bun run start` | Milestone 3: HTTP API on `PORT` (default 4000) |
 | `bun run seed` | Load `seed-data.json` into every ClientActor (safe to re-run) |
 | `bun test` / `bun run typecheck` | Tests (fake actors, no network) / type check |
@@ -45,6 +47,8 @@ CORS is open, no auth.
 | `GET /seminar/:id/events` | | `Event[]`, the full log (fallback / replay). The debate is over once a `plan` event is in it |
 | `GET /seminar/:id/socket` | | `{ websocketUrl, … }` from `SeminarActor.prepareWebsocket({ actorId, metadata: null })`. Fake actors return a placeholder with `"fake": true`, so poll `/events` instead |
 | `POST /seminar/:id/fde` | `{ "text": "Must ship by Friday" }` | the `fde` Event. Agents see it from their next turn; the plan gets it as an FDE constraint |
+| `POST /seminar/:id/approve` | | `{ state: "approved" }`. 409 if no plan is awaiting approval |
+| `POST /seminar/:id/reject` | `{ "text": "Keep exports light" }` | `{ state: "rejected", feedback }`. The plan is rewritten with the feedback |
 | `GET /clients` | | `[{ id, name, stack, status }]` for the client cards. From Supabase; falls back to `seed-data.json` when Supabase isn't configured |
 | `GET /plans` | | Saved plans, newest first: `[{ id, seminar_id, client_id, request, plan, cites, created_at }]` (503 without Supabase) |
 | `GET /health` | | `{ ok, actors: "fake" \| "real", relay: boolean, supabase: boolean }` |

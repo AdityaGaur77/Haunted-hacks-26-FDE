@@ -18,6 +18,14 @@ export interface ClientActor {
   challenge(transcript: Event[], seminarId?: string): Promise<Event>;
   /** Called on the requesting client: returns an Event of type "plan". */
   writePlan(transcript: Event[], fdeConstraints: string[], seminarId?: string): Promise<Event>;
+  /** Adds one memory (used after the FDE approves a plan, so the client learns from it). */
+  remember(memory: Memory): Promise<void>;
+}
+
+/** FDE approval of the plan. */
+export interface Approval {
+  state: "none" | "pending" | "approved" | "rejected";
+  feedback?: string;
 }
 
 /** SeminarActor, id "seminar-<timestamp>". The debate's event log (source of truth). */
@@ -27,6 +35,12 @@ export interface SeminarActor {
   addEvent(event: Event): Promise<void>;
   getEvents(): Promise<Event[]>;
   markDone(): Promise<void>;
+  /** Puts the latest plan up for FDE approval (state "pending"). */
+  requestApproval(): Promise<void>;
+  getApproval(): Promise<Approval>;
+  approve(): Promise<void>;
+  /** Rejects with feedback; the feedback is also appended as an "fde" event. */
+  reject(feedback: string): Promise<void>;
 }
 
 /** What prepareWebsocket() returns: the frontend opens `websocketUrl`. */
@@ -75,9 +89,9 @@ async function loadRealActors(): Promise<Actors> {
   return {
     kind: "real",
     client: (id) =>
-      methods<ClientActor>(actors.ClientActor.get(id), `ClientActor(${id})`, ["seed", "respond", "challenge", "writePlan"]),
+      methods<ClientActor>(actors.ClientActor.get(id), `ClientActor(${id})`, ["seed", "respond", "challenge", "writePlan", "remember"]),
     seminar: (id) =>
-      methods<SeminarActor>(actors.SeminarActor.get(id), `SeminarActor(${id})`, ["start", "addEvent", "getEvents", "markDone"]),
+      methods<SeminarActor>(actors.SeminarActor.get(id), `SeminarActor(${id})`, ["start", "addEvent", "getEvents", "markDone", "requestApproval", "getApproval", "approve", "reject"]),
     prepareSeminarSocket: (seminarId, metadata) =>
       actors.SeminarActor.prepareWebsocket({ actorId: seminarId, metadata }),
   };

@@ -3,6 +3,8 @@
 //   bun run debate client-3 "Add SSO for our staff"
 // While it runs, type a line and press Enter to jump in as the FDE (or pipe lines in:
 //   echo "Must ship behind a flag by Friday" | bun run debate).
+// When the plan is awaiting approval: "approve" approves, "reject: <feedback>" rejects
+// (the plan is rewritten with the feedback). Anything else is an FDE jump-in.
 import { loadActors } from "./actors";
 import { addFdeInput, startDebate } from "./debate";
 import { connectRelay } from "./relay";
@@ -22,8 +24,15 @@ const debate = await startDebate({ actors, relay, store: connectStore() }, clien
 
 if (process.stdin.isTTY) console.log("(type a line + Enter to jump in as the FDE)\n");
 (async () => {
-  for await (const line of console) {
-    if (line.trim()) await addFdeInput(actors, debate.seminarId, line.trim());
+  const seminar = actors.seminar(debate.seminarId);
+  for await (const raw of console) {
+    const line = raw.trim();
+    if (!line) continue;
+    const pending = (await seminar.getApproval()).state === "pending";
+    const rejection = line.match(/^reject:\s*(.+)$/i);
+    if (pending && /^approve$/i.test(line)) await seminar.approve();
+    else if (pending && rejection) await seminar.reject(rejection[1]!.trim());
+    else await addFdeInput(actors, debate.seminarId, line);
   }
 })().catch((error) => console.error(`stdin: ${error}`));
 

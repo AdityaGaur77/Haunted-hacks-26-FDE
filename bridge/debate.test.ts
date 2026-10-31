@@ -11,6 +11,7 @@ const noRelay: Relay = { enabled: false, openChannel: async () => {}, post: asyn
 
 beforeAll(() => {
   process.env.FAKE_DELAY_MS = "0";
+  process.env.APPROVAL_POLL_MS = "5";
   spyOn(console, "log").mockImplementation(() => {});
   spyOn(console, "error").mockImplementation(() => {});
 });
@@ -35,6 +36,30 @@ function spyActors(base = createFakeActors()) {
   return { actors, calls, seminarId: () => seminarId };
 }
 
+/** Plays the FDE: answers each approval request with the next decision ("approve" or rejection feedback). */
+function fdeDecides(actors: Actors, seminarId: string, decisions: string[]) {
+  let running = true;
+  const loop = (async () => {
+    const seminar = actors.seminar(seminarId);
+    while (running) {
+      if ((await seminar.getApproval()).state === "pending") {
+        const decision = decisions.shift() ?? "approve";
+        if (decision === "approve") await seminar.approve();
+        else await seminar.reject(decision);
+      }
+      await Bun.sleep(2);
+    }
+  })();
+  return () => ((running = false), loop);
+}
+
+/** Waits for a debate to finish, with the FDE making `decisions` (default: approve). */
+async function finish(actors: Actors, debate: { seminarId: string; done: Promise<void> }, decisions = ["approve"]) {
+  const stop = fdeDecides(actors, debate.seminarId, [...decisions]);
+  await debate.done;
+  await stop();
+}
+
 test("seed data matches the contract and plants the dark-mode conflict", async () => {
   const data = await loadSeedData(); // throws on contract violations
   const client = (id: ClientId) => data.clients.find((c) => c.id === id)!;
@@ -54,7 +79,7 @@ test("seed data matches the contract and plants the dark-mode conflict", async (
 test("a full fake debate runs in order and ends with the requester's plan", async () => {
   const { actors, calls } = spyActors();
   const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode to the dashboard");
-  await debate.done;
+  await finish(actors, debate);
   const events = await actors.seminar(debate.seminarId).getEvents();
   // Every agent call carries the seminar id, so real actors can stream "typing" to the socket.
   expect(calls.seminarIds).toEqual(Array(11).fill(debate.seminarId));
@@ -96,7 +121,7 @@ test("FDE input added mid-debate reaches later turns and the plan", async () => 
     return { ...c, respond: async (r, t, s) => (await addFdeInput(base, seminarId(), "Ship by Friday"), c.respond(r, t, s)) };
   };
   const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode");
-  await debate.done;
+  await finish(actors, debate);
 
   expect(calls.challenge.every((t) => t.some((e) => e.type === "fde" && e.text === "Ship by Friday"))).toBe(true);
   expect(calls.plan).toEqual([["Ship by Friday"]]);
@@ -116,7 +141,7 @@ test("a failing agent is skipped and a failing plan still ends the debate", asyn
     },
   };
   const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode");
-  await debate.done;
+  await finish(actors, debate);
   const events = await actors.seminar(debate.seminarId).getEvents();
   expect(events.filter((e) => e.from === "client-2" && e.type !== "challenge")).toHaveLength(0);
   expect(events.at(-1)).toMatchObject({ type: "plan", from: "client-1" });
@@ -158,15 +183,16 @@ test("the final plan is saved to Supabase once, with only the plan fields", asyn
   const { store, plans } = recordingStore();
   const actors: Actors = { ...createFakeActors(), kind: "real" }; // pretend these are the real actors
   const debate = await startDebate({ actors, relay: noRelay, store }, "client-1", "Add dark mode");
-  await debate.done;
+  await finish(actors, debate);
   const plan = (await actors.seminar(debate.seminarId).getEvents()).at(-1)!;
   expect(plans).toEqual([{ seminar_id: debate.seminarId, client_id: "client-1", request: "Add dark mode", plan: plan.text, cites: plan.cites ?? [] }]);
 });
 
 test("fake-actor plans are not saved (they quote seed memories)", async () => {
   const { store, plans } = recordingStore();
-  const debate = await startDebate({ actors: createFakeActors(), relay: noRelay, store }, "client-1", "Add dark mode");
-  await debate.done;
+  const actors = createFakeActors();
+  const debate = await startDebate({ actors, relay: noRelay, store }, "client-1", "Add dark mode");
+  await finish(actors, debate);
   expect(plans).toHaveLength(0);
 });
 
@@ -180,11 +206,60 @@ test("each round runs its agent calls in parallel", async () => {
   process.env.FAKE_DELAY_MS = "200"; // each fake call takes 100-300ms
   try {
     const t0 = Date.now();
-    const debate = await startDebate({ actors: createFakeActors(), relay: noRelay }, "client-1", "Add dark mode");
-    await debate.done;
+    const actors = createFakeActors();
+    const debate = await startDebate({ actors, relay: noRelay }, "client-1", "Add dark mode");
+    await finish(actors, debate);
     // 3 parallel steps (round 1, round 2, plan) take at most ~0.9s; 11 calls in a row take at least 1.1s.
     expect(Date.now() - t0).toBeLessThan(1000);
   } finally {
     process.env.FAKE_DELAY_MS = "0";
   }
+});
+
+test("approved: markDone, then the plan is saved and remembered (never before approval)", async () => {
+  const { store, plans } = recordingStore();
+  const base = createFakeActors();
+  const remembered: unknown[] = [];
+  const actors: Actors = {
+    ...base,
+    kind: "real",
+    client: (id) => ({ ...base.client(id), remember: async (m) => void remembered.push(m) }),
+  };
+  const debate = await startDebate({ actors, relay: noRelay, store }, "client-1", "Add dark mode");
+  // While the plan waits for approval, nothing is saved or remembered.
+  while ((await actors.seminar(debate.seminarId).getApproval()).state !== "pending") await Bun.sleep(2);
+  expect(plans).toHaveLength(0);
+  expect(remembered).toHaveLength(0);
+
+  await actors.seminar(debate.seminarId).approve();
+  await debate.done;
+  const plan = (await actors.seminar(debate.seminarId).getEvents()).at(-1)!;
+  expect(plans.map((p) => p.plan)).toEqual([plan.text]);
+  expect(remembered).toEqual([{ request: "Add dark mode", solution: plan.text, what_broke: "", fix: "", stack: "", outcome: "Approved by FDE" }]);
+});
+
+test("rejected then approved: the plan is rewritten with the FDE's feedback", async () => {
+  const { store, plans } = recordingStore();
+  const { actors, calls } = spyActors();
+  const debate = await startDebate({ actors: { ...actors, kind: "real" }, relay: noRelay, store }, "client-1", "Add dark mode");
+  await finish(actors, debate, ["Keep PNG exports on a light background", "approve"]);
+
+  const events = await actors.seminar(debate.seminarId).getEvents();
+  const planEvents = events.filter((e) => e.type === "plan");
+  expect(planEvents).toHaveLength(2);
+  expect(calls.plan).toEqual([[], ["Keep PNG exports on a light background"]]);
+  expect(planEvents[0]!.text).not.toContain("Keep PNG exports on a light background");
+  expect(planEvents[1]!.text).toContain("Keep PNG exports on a light background");
+  expect(events.some((e) => e.type === "fde" && e.text === "Keep PNG exports on a light background")).toBe(true);
+  expect(plans.map((p) => p.plan)).toEqual([planEvents[1]!.text]); // only the approved rewrite is saved
+});
+
+test("after 3 rewrites are all rejected, the debate ends without saving", async () => {
+  const { store, plans } = recordingStore();
+  const actors: Actors = { ...createFakeActors(), kind: "real" };
+  const debate = await startDebate({ actors, relay: noRelay, store }, "client-1", "Add dark mode");
+  await finish(actors, debate, ["no 1", "no 2", "no 3", "no 4"]);
+  const events = await actors.seminar(debate.seminarId).getEvents();
+  expect(events.filter((e) => e.type === "plan")).toHaveLength(4); // the first plan + 3 rewrites
+  expect(plans).toHaveLength(0);
 });

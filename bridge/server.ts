@@ -8,6 +8,8 @@
 //                                                       are sent as metadata instead. Fake actors return a placeholder
 //                                                       with fake: true)
 //   POST /seminar/:id/fde      { text }              -> Event           the FDE jumps in mid-debate
+//   POST /seminar/:id/approve                        -> { state }       approve the plan awaiting approval
+//   POST /seminar/:id/reject   { text }              -> { state }       reject it with feedback (plan is rewritten)
 //   GET  /clients                                    -> [{ id, name, stack, status }]  from Supabase (falls back
 //                                                       to seed-data.json when Supabase isn't configured)
 //   GET  /plans                                      -> saved plans, newest first (Supabase; 503 if not configured)
@@ -29,7 +31,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: CORS });
-const SEMINAR_PATH = /^\/seminar\/(seminar-\d+)\/(events|socket|fde)$/;
+const SEMINAR_PATH = /^\/seminar\/(seminar-\d+)\/(events|socket|fde|approve|reject)$/;
 
 const server = Bun.serve({
   port: Number(process.env.PORT || 4000),
@@ -76,6 +78,19 @@ const server = Bun.serve({
       const text = typeof body?.text === "string" ? body.text.trim() : "";
       if (!text) return json({ error: "text must be a non-empty string" }, 400);
       return json(await addFdeInput(actors, seminarId, text));
+    }
+    if ((action === "approve" || action === "reject") && req.method === "POST") {
+      const seminar = actors.seminar(seminarId);
+      if ((await seminar.getApproval()).state !== "pending") return json({ error: "no plan is awaiting approval" }, 409);
+      if (action === "approve") {
+        await seminar.approve();
+      } else {
+        const body = await readJson(req);
+        const text = typeof body?.text === "string" ? body.text.trim() : "";
+        if (!text) return json({ error: "text (the feedback) must be a non-empty string" }, 400);
+        await seminar.reject(text);
+      }
+      return json(await seminar.getApproval());
     }
     return json({ error: "method not allowed" }, 405);
   },

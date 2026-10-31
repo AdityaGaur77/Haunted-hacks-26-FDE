@@ -1,7 +1,7 @@
 // One FDE Council debate: the 5 client agents debate a request over Agent Relay and the
 // requesting client writes the plan. The SeminarActor holds the event log (source of truth);
 // every event is also posted to the debate's Relay channel as the agent who said it.
-import type { Actors, SeminarActor } from "./actors";
+import type { Actors, Approval, SeminarActor } from "./actors";
 import type { Relay } from "./relay";
 import type { Store } from "./store";
 import { CLIENT_IDS, type AgentName, type ClientId, type Event, type EventType } from "./types";
@@ -75,24 +75,83 @@ async function runRounds(ctx: Context, requestEvent: Event) {
   const round2 = await readTranscript(ctx);
   await Promise.all(CLIENT_IDS.map((id) => turn(ctx, id, ["challenge"], () => actors.client(id).challenge(round2, seminarId))));
 
-  // Plan: written by the requesting client, honouring everything the FDE said.
-  const transcript = await readTranscript(ctx);
-  const fdeConstraints = transcript.filter((e) => e.type === "fde").map((e) => e.text);
-  const planned = await turn(ctx, requester, ["plan"], () =>
-    actors.client(requester).writePlan(transcript, fdeConstraints, seminarId),
-  );
-  if (!planned) {
-    // Keep the UI from waiting forever: the frontend treats the "plan" event as the end of the debate.
-    const text = "The plan could not be generated (see bridge logs). The debate above still stands.";
-    await publish(ctx, { type: "plan", from: requester, text, ts: Date.now() });
+  // Plan, then FDE approval. A rejection's feedback lands in the transcript as an "fde" event,
+  // so each rewrite (up to MAX_REWRITES) gets it as an FDE constraint.
+  for (let rewrite = 0; rewrite <= MAX_REWRITES; rewrite++) {
+    const transcript = await readTranscript(ctx);
+    const fdeConstraints = transcript.filter((e) => e.type === "fde").map((e) => e.text);
+    const planned = await turn(ctx, requester, ["plan"], () =>
+      actors.client(requester).writePlan(transcript, fdeConstraints, seminarId),
+    );
+    if (!planned) {
+      // Keep the UI from waiting forever: the frontend treats the "plan" event as the end of the debate.
+      const text = "The plan could not be generated (see bridge logs). The debate above still stands.";
+      await publish(ctx, { type: "plan", from: requester, text, ts: Date.now() });
+      await ctx.seminar.markDone();
+      return;
+    }
+    if (rewrite === 0) console.log(`[${seminarId}] request -> plan in ${((Date.now() - started) / 1000).toFixed(1)}s`);
+
+    await ctx.seminar.requestApproval();
+    console.log(`[${seminarId}] awaiting FDE approval: type "approve" or "reject: <feedback>" (or POST /seminar/${seminarId}/approve | /reject)`);
+    const decision = await waitForDecision(ctx);
+    if (decision.state === "approved") {
+      await ctx.seminar.markDone();
+      await onApproved(ctx);
+      console.log(`=== ${seminarId} approved by the FDE\n`);
+      return;
+    }
+    if (decision.state !== "rejected") {
+      console.warn(`[${seminarId}] no FDE decision within ${approvalTimeoutMs() / 60_000} min; ending without saving the plan`);
+      break;
+    }
+    console.log(`[${seminarId}] plan rejected${decision.feedback ? `: "${decision.feedback}"` : ""}`);
+    if (rewrite === MAX_REWRITES) console.warn(`[${seminarId}] plan rejected ${MAX_REWRITES + 1} times; giving up`);
   }
   await ctx.seminar.markDone();
-  if (planned) await savePlan(ctx);
-  console.log(`=== ${seminarId} done: request -> plan in ${((Date.now() - started) / 1000).toFixed(1)}s\n`);
+  console.log(`=== ${seminarId} ended without an approved plan\n`);
+}
+
+const MAX_REWRITES = 3;
+const approvalTimeoutMs = () => Number(process.env.APPROVAL_TIMEOUT_MS ?? 10 * 60_000);
+const approvalPollMs = () => Number(process.env.APPROVAL_POLL_MS ?? 1000);
+
+/** Polls the SeminarActor until the FDE approves or rejects, or the timeout passes. */
+async function waitForDecision(ctx: Context): Promise<Approval> {
+  const deadline = Date.now() + approvalTimeoutMs();
+  while (Date.now() < deadline) {
+    await Bun.sleep(approvalPollMs());
+    try {
+      const approval = await ctx.seminar.getApproval();
+      if (approval.state === "approved" || approval.state === "rejected") return approval;
+    } catch (error) {
+      console.warn(`[${ctx.seminarId}] could not read the approval state: ${errorMessage(error)}`);
+    }
+  }
+  return { state: "pending" };
+}
+
+/** Only after approval: save the plan to Supabase and let the requester's memory learn from it. */
+async function onApproved(ctx: Context) {
+  await savePlan(ctx);
+  const plan = ctx.transcript.findLast((e) => e.type === "plan" && e.from === ctx.requester);
+  if (!plan) return;
+  try {
+    await ctx.actors.client(ctx.requester).remember({
+      request: ctx.request,
+      solution: plan.text,
+      what_broke: "",
+      fix: "",
+      stack: "",
+      outcome: "Approved by FDE",
+    });
+  } catch (error) {
+    console.warn(`[${ctx.seminarId}] could not save the approved plan to ${ctx.requester}'s memory: ${errorMessage(error)}`);
+  }
 }
 
 /**
- * Saves the final plan to Supabase: only the sanitized plan, never memories. Fake plans are
+ * Saves the approved plan to Supabase: only the sanitized plan, never memories. Fake plans are
  * skipped because they quote seed memories word for word. A save failure never fails the debate.
  */
 async function savePlan(ctx: Context) {

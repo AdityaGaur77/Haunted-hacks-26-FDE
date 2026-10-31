@@ -7,7 +7,7 @@
 //   round 1  -> "take" from that memory, or "abstain" if it has none
 //   round 2  -> "challenge": clients whose approach broke warn the others; the requester reacts
 //   plan     -> what worked + what broke (and how it was fixed) + all constraints
-import type { Actors, ClientActor, SeminarActor } from "./actors";
+import type { Actors, Approval, ClientActor, SeminarActor } from "./actors";
 import seedData from "./seed-data.json";
 import type { AgentName, ClientId, ClientProfile, Event, EventType, Memory } from "./types";
 
@@ -18,10 +18,11 @@ export function createFakeActors(): Actors {
   // Start pre-seeded so debates work without running seed.ts first.
   for (const { id, memories, ...profile } of seedData.clients) world.set(id as ClientId, { profile, memories });
   const seminars = new Map<string, Event[]>();
+  const approvals = new Map<string, Approval>();
   return {
     kind: "fake",
     client: (id) => fakeClient(id, world),
-    seminar: (id) => fakeSeminar(id, seminars),
+    seminar: (id) => fakeSeminar(id, seminars, approvals),
     async prepareSeminarSocket(seminarId) {
       // Fakes have no live socket: poll GET /seminar/:id/events instead.
       return { websocketUrl: `ws://fake-actors.invalid/seminar/${seminarId}`, fake: true };
@@ -29,12 +30,13 @@ export function createFakeActors(): Actors {
   };
 }
 
-function fakeSeminar(id: string, seminars: Map<string, Event[]>): SeminarActor {
+function fakeSeminar(id: string, seminars: Map<string, Event[]>, approvals: Map<string, Approval>): SeminarActor {
   const events = () => seminars.get(id) ?? seminars.set(id, []).get(id)!;
   return {
     async start(requestingClient, request) {
       const event: Event = { type: "request", from: requestingClient, text: request, ts: Date.now() };
       seminars.set(id, [event]);
+      approvals.set(id, { state: "none" });
       return structuredClone(event);
     },
     async addEvent(event) {
@@ -44,6 +46,19 @@ function fakeSeminar(id: string, seminars: Map<string, Event[]>): SeminarActor {
       return structuredClone(events());
     },
     async markDone() {},
+    async requestApproval() {
+      approvals.set(id, { state: "pending" });
+    },
+    async getApproval() {
+      return structuredClone(approvals.get(id) ?? { state: "none" });
+    },
+    async approve() {
+      approvals.set(id, { state: "approved" });
+    },
+    async reject(feedback) {
+      approvals.set(id, { state: "rejected", feedback });
+      events().push({ type: "fde", from: "fde", text: feedback, ts: Date.now() }); // same as the real actor
+    },
   };
 }
 
@@ -53,6 +68,10 @@ function fakeClient(id: ClientId, world: World): ClientActor {
     async seed(profile, memories) {
       world.set(id, { profile: structuredClone(profile), memories: structuredClone(memories) }); // replace, never append
       return memories.length;
+    },
+
+    async remember(memory) {
+      me().memories.push(structuredClone(memory));
     },
 
     async respond(request, transcript) {
