@@ -27,4 +27,8 @@ export type ClientProfile = {
     constraints: string[]
 }
 
-export type SeminarStatus = "idle" | "running" | "done"
+export type SeminarStatus = "idle" | "running" | "awaiting_approval" | "done"
+
+export type ApprovalState = "none" | "pending" | "approved" | "rejected"
+
+export type Approval = { state: ApprovalState; feedback?: string }
