@@ -118,7 +118,8 @@ function fakeClient(id: ClientId, world: World): ClientActor {
       if (id === requester) {
         const ours = warnings
           .map((w) => ({ ...w, shared: sharedTech(w.memory!.stack, profile.stack) }))
-          .find((w) => w.shared.length);
+          .filter((w) => w.shared.length)
+          .sort((a, b) => b.shared.length - a.shared.length)[0]; // the warning closest to our stack
         if (ours) {
           const text = `@${ours.from}, that's our risk too: we also run ${ours.shared.join(", ")}. Whatever we copy has to include your fix.`;
           return event("challenge", id, text, transcript, [ours.from]);
@@ -141,7 +142,7 @@ function fakeClient(id: ClientId, world: World): ClientActor {
       }
       if (warnings.length) {
         // Push back with our own memory: this is where the council disagrees.
-        const text = `I disagree with ${mention(warnings)}: CSS variables were all we needed (${m.stack}). ${sentence(m.what_broke)} No extra chart work is required.`;
+        const text = `I disagree with ${mention(warnings)}: what we did just worked (${m.stack}). ${sentence(m.what_broke)} ${sentence(m.outcome)}`;
         return event("challenge", id, text, transcript, [id]);
       }
       return event("challenge", id, `No objections. Our experience matches: ${sentence(m.outcome)}`, transcript, [id]);
@@ -238,7 +239,7 @@ const SYNONYMS: Record<string, string[]> = {
 };
 
 function keywords(text: string): string[] {
-  const words = (text.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter((w) => w.length > 2 && !STOPWORDS.has(w));
+  const words = (text.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter((w) => w.length > 2 && !STOPWORDS.has(w) && !/^\d+$/.test(w));
   return [...new Set(words.flatMap((w) => [w, ...(SYNONYMS[w] ?? [])]))];
 }
 

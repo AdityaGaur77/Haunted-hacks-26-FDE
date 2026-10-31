@@ -1,5 +1,5 @@
 // Milestone 2: run one debate in the terminal (messages also go to Relay).
-//   bun run debate                                  # client-1: "Add dark mode to the dashboard"
+//   bun run debate                                  # client-1 (Hallow Tix): the 6pm ticket drop
 //   bun run debate client-3 "Add SSO for our staff"
 // While it runs, type a line and press Enter to jump in as the FDE (or pipe lines in:
 //   echo "Must ship behind a flag by Friday" | bun run debate).
@@ -11,8 +11,10 @@ import { connectRelay } from "./relay";
 import { connectStore } from "./store";
 import { isClientId } from "./types";
 
+const DEMO_REQUEST =
+  "Tonight at 6pm we release 5,000 haunted-house tickets and expect 50,000 people at once. Don't let the site crash or sell the same ticket twice.";
 const [client = "client-1", ...words] = process.argv.slice(2);
-const request = words.join(" ").trim() || "Add dark mode to the dashboard";
+const request = words.join(" ").trim() || DEMO_REQUEST;
 if (!isClientId(client)) {
   console.error(`Unknown client "${client}". Use client-1 .. client-5.`);
   process.exit(1);

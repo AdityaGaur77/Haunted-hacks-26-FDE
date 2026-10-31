@@ -2,190 +2,182 @@
   "clients": [
     {
       "id": "client-1",
-      "name": "Lumen Analytics",
-      "stack": "Next.js 14, TypeScript, Tailwind CSS, ECharts via echarts-for-react (every dashboard is canvas charts), Postgres",
+      "name": "Hallow Tix",
+      "stack": "Next.js, Node.js API, Postgres, Redis, Stripe checkout",
+      "persona": "nervous, still traumatized by last year's 6pm crash",
       "constraints": [
-        "Charts are the product: any chart regression is a P1 incident",
-        "Customers export charts to PNG for board decks, and exports must stay print-friendly on a light background",
-        "Every UI change ships behind a feature flag with a staged rollout"
+        "Every ticket is a numbered entry for one timed slot: it can be sold exactly once",
+        "The release starts exactly at 6pm and is announced on social media, so traffic arrives all at once",
+        "Checkout goes through Stripe; a charge without a ticket means a refund and an angry customer"
       ],
       "memories": [
         {
-          "request": "Let customers export any dashboard chart as a PNG for board decks",
-          "solution": "Used the chart library's built-in image export at 2x pixel ratio instead of screenshotting the page",
-          "what_broke": "Exports had transparent backgrounds that turned black when pasted into some slide tools",
-          "fix": "Set an explicit white background on the export only, leaving the on-screen chart unchanged",
-          "stack": "Next.js, ECharts (echarts-for-react)",
-          "outcome": "Shipped in a week; export is now the second most-used feature"
+          "request": "Last year's 6pm ticket release",
+          "solution": "Scaled the web servers way up right before the release",
+          "what_broke": "The site crashed within 90 seconds. Every new server opened its own database connections and Postgres hit its connection limit, so every page failed",
+          "fix": "Restarted with fewer servers and ran the sale again the next day",
+          "stack": "Next.js, Node.js, Postgres",
+          "outcome": "Lost a night of sales and a lot of trust. Lesson: more servers did not help; the database was the bottleneck"
         },
         {
-          "request": "Speed up dashboards that render 40+ charts",
-          "solution": "Mounted charts lazily as they scroll into view and sampled very large series before drawing",
-          "what_broke": "Charts that mounted inside hidden tabs rendered at zero width",
-          "fix": "Resized each chart when its tab becomes visible",
-          "stack": "Next.js, ECharts (echarts-for-react)",
-          "outcome": "Dashboard load time dropped from 9s to 2.5s"
+          "request": "Send reminder emails before a release",
+          "solution": "Scheduled emails 24 hours and 1 hour before the release, sent in batches",
+          "what_broke": "The first batch hit the email provider's rate limit",
+          "fix": "Spread sends over 20 minutes",
+          "stack": "Node.js, email provider",
+          "outcome": "Open rates doubled"
         },
         {
-          "request": "Add SAML single sign-on for enterprise customers",
-          "solution": "Integrated SAML through our auth provider and mapped identity-provider groups to workspace roles",
-          "what_broke": "Users whose emails differed only by letter case got duplicate accounts",
-          "fix": "Normalized emails to lowercase before every account lookup",
-          "stack": "Next.js, NextAuth, Postgres",
-          "outcome": "Unblocked two enterprise deals"
+          "request": "Add Apple Pay at checkout",
+          "solution": "Enabled it through Stripe's payment element",
+          "what_broke": "Nothing. It worked on the first try",
+          "fix": "None needed",
+          "stack": "Stripe",
+          "outcome": "Mobile checkout got 20% faster"
         }
       ]
     },
     {
       "id": "client-2",
-      "name": "Pinecrest Pay",
-      "stack": "Nuxt 3 (Vue), SCSS with design tokens, Node.js API, payment processor's hosted card-entry iframe",
+      "name": "Costume Cauldron",
+      "stack": "Next.js storefront, serverless functions, DynamoDB, CDN",
+      "persona": "cocky and breezy, loves saying 'just autoscale'",
       "constraints": [
-        "PCI scope: no new third-party scripts on payment pages",
-        "Every partner credit union has its own brand theme",
-        "Releases go through a two-week compliance review"
+        "Costumes have stock counts in the thousands, not unique seats",
+        "Product pages must load in under a second"
       ],
       "memories": [
         {
-          "request": "Per-partner color themes so each credit union sees its own brand",
-          "solution": "Generated one set of CSS variables per partner from our design tokens and swapped the set at login",
-          "what_broke": "The payment processor's hosted card-entry iframe ignored our CSS variables and stayed default blue",
-          "fix": "Passed the partner's colors through the processor's iframe styling options when the iframe mounts",
-          "stack": "Nuxt 3, SCSS, design tokens",
-          "outcome": "14 partners branded with zero custom code per partner. Lesson: CSS variables stop at iframe and third-party boundaries"
+          "request": "Survive a Halloween flash sale with 20,000 shoppers at once",
+          "solution": "Cached every product page at the CDN and let the serverless functions autoscale on their own",
+          "what_broke": "Nothing. The CDN served most pages and serverless scaled by itself; the site never went down",
+          "fix": "None needed",
+          "stack": "Next.js, serverless, DynamoDB, CDN",
+          "outcome": "Biggest sales day ever. Note: our items are plentiful stock, not one-of-a-kind seats"
         },
         {
-          "request": "Speed up monthly statement PDF generation",
-          "solution": "Moved PDF rendering to a background queue and cached each partner's statement template",
-          "what_broke": "Brand fonts were missing in the containerized renderer, so statements fell back to a default serif font",
-          "fix": "Bundled the brand fonts into the renderer image",
-          "stack": "Node.js, headless Chrome, Redis queue",
-          "outcome": "Statement generation went from 6 hours to 40 minutes"
+          "request": "Add a costume size-guide quiz",
+          "solution": "Built a five-question quiz that recommends a size",
+          "what_broke": "Returns did not drop until we added real measurements",
+          "fix": "Asked for height and chest size",
+          "stack": "Next.js",
+          "outcome": "Returns fell by a third"
         },
         {
-          "request": "Add two-factor authentication to member logins",
-          "solution": "Authenticator-app codes with recovery codes, SMS only as a fallback",
-          "what_broke": "Members who changed phones got locked out and flooded support",
-          "fix": "Added self-serve recovery through a verified email with a 24-hour cooldown",
-          "stack": "Nuxt 3, Node.js, Postgres",
-          "outcome": "Account takeover reports dropped to zero; support volume was back to normal within two weeks"
+          "request": "Recover abandoned carts",
+          "solution": "Sent one reminder email two hours after a cart was left",
+          "what_broke": "Reminders went out for items already sold out",
+          "fix": "Checked stock before sending",
+          "stack": "Serverless, email provider",
+          "outcome": "Recovered 8% of abandoned carts"
         }
       ]
     },
     {
       "id": "client-3",
-      "name": "Harbor Health",
-      "stack": "Next.js, Tailwind CSS, Radix UI primitives, Recharts (SVG charts with accessible labels)",
+      "name": "Pumpkin Patch Pass",
+      "stack": "Rails, Postgres, Sidekiq, Stripe",
+      "persona": "anxious and cautionary, haunted by the double-booking disaster",
       "constraints": [
-        "WCAG 2.1 AA is a legal requirement: 4.5:1 contrast for text, 3:1 for UI components",
-        "Every UI change gets a screen-reader pass (NVDA and VoiceOver) before release",
-        "Respect OS settings: prefers-color-scheme and prefers-reduced-motion",
-        "No patient data in client-side logs or analytics"
+        "Each timed-entry slot has a fixed capacity",
+        "Families must get a confirmation within a minute of paying"
       ],
       "memories": [
         {
-          "request": "Add dark mode to the patient portal",
-          "solution": "Moved every color, including chart colors, into CSS variables at the root, swapped them with a theme attribute, defaulted to the OS preference and remembered the user's choice",
-          "what_broke": "Nothing. Our SVG-based charts picked up the CSS variables automatically, so no chart work was needed. It shipped in about 2 hours",
-          "fix": "None needed; we re-ran the contrast checker on both themes before release",
-          "stack": "Next.js, Tailwind CSS, Radix UI, Recharts (SVG)",
-          "outcome": "Shipped the same day, passed the WCAG AA audit in both themes, zero bug reports"
+          "request": "Sell timed-entry tickets for opening weekend without double booking",
+          "solution": "Checked if a slot was free, then charged the card, then saved the booking",
+          "what_broke": "Tickets were sold twice. Two buyers passed the availability check at the same moment and both got the last spots, so 300 families showed up for 150 places",
+          "fix": "Reserve the ticket in the database first, as a hold that expires after 10 minutes, then charge; a unique rule per ticket makes selling the same ticket twice impossible",
+          "stack": "Rails, Postgres",
+          "outcome": "No double bookings since. We refunded and apologized to 150 families"
         },
         {
-          "request": "Make appointment booking usable with a screen reader",
-          "solution": "Rebuilt the date picker on accessible primitives with proper roles and live announcements",
-          "what_broke": "Focus jumped back to the top of the page after every step",
-          "fix": "Moved focus to each step's heading when the step changes",
-          "stack": "Next.js, Radix UI",
-          "outcome": "Passed the external accessibility audit; booking completion rose 18% among screen-reader users"
+          "request": "Text families their entry QR code",
+          "solution": "Sent the code by SMS right after payment",
+          "what_broke": "Some carriers flagged the messages as spam",
+          "fix": "Registered a verified sender number",
+          "stack": "Rails, SMS provider",
+          "outcome": "Delivery rate above 98%"
         },
         {
-          "request": "Show lab result trends to patients",
-          "solution": "Switched to SVG charts with accessible labels plus a plain-language summary under each chart",
-          "what_broke": "An early canvas chart prototype was invisible to screen readers",
-          "fix": "Replaced the canvas chart with SVG charts whose points have text labels, plus a data table fallback",
-          "stack": "Next.js, Recharts (SVG)",
-          "outcome": "Audit passed; patients preferred the plain-language summaries"
-        },
-        {
-          "request": "Add an inactivity timeout for shared hospital kiosks",
-          "solution": "Warned two minutes before logout with an accessible dialog and an extend button",
-          "what_broke": "Screen-reader users could not reach the extend button before the session ended",
-          "fix": "The warning dialog now takes focus, and the warning window grew to five minutes",
-          "stack": "Next.js, Radix UI",
-          "outcome": "Met the hospital security policy with no accessibility complaints"
+          "request": "Let families reschedule their visit",
+          "solution": "Allowed one free change up to 24 hours before",
+          "what_broke": "Nothing. It went smoothly",
+          "fix": "None needed",
+          "stack": "Rails",
+          "outcome": "Support emails dropped by half"
         }
       ]
     },
     {
       "id": "client-4",
-      "name": "Atlas Freight",
-      "stack": "Go microservices, gRPC, Postgres, Kafka; public REST API and webhooks only, no customer-facing web UI",
+      "name": "Candy Courier",
+      "stack": "Go services, Postgres, Redis, Kubernetes",
+      "persona": "battle-scarred veteran, blunt, 'been there, it broke'",
       "constraints": [
-        "99.95% uptime SLA",
-        "Public API changes must be backwards compatible and versioned",
-        "SOC 2: every change needs a reviewed pull request and an audit trail"
+        "Delivery slots are limited per neighborhood",
+        "Drivers' app must keep working during peak"
       ],
       "memories": [
         {
-          "request": "Add rate limiting to the public API",
-          "solution": "Token bucket per API key at the gateway, with the remaining quota returned in response headers",
-          "what_broke": "One customer's retry storm hit the limit, and their retries multiplied the load",
-          "fix": "Returned Retry-After headers and documented exponential backoff in the API guide",
-          "stack": "Go, Envoy, Redis",
-          "outcome": "No more API brownouts during peak shipping season"
+          "request": "Survive the Halloween-night rush of 50,000 people booking delivery slots at once",
+          "solution": "Let Kubernetes autoscale the API servers as traffic grew",
+          "what_broke": "Autoscaling made it worse. The new servers all hit the same database, it locked up and crashed, and then every server retried at once and knocked it over again",
+          "fix": "Put a virtual waiting room in front: let people in only as fast as the database can handle and show each person their place in line; added rate limits and backoff on retries",
+          "stack": "Go, Kubernetes, Postgres, Redis",
+          "outcome": "The next year's rush stayed up at three times the traffic"
         },
         {
-          "request": "Deliver shipment status updates through webhooks",
-          "solution": "Outbox table plus a delivery worker with signed payloads and retries",
-          "what_broke": "Out-of-order deliveries made customers display stale statuses",
-          "fix": "Added sequence numbers and told customers to ignore older events",
-          "stack": "Go, Postgres, Kafka",
-          "outcome": "Webhooks now carry 80% of status traffic and polling dropped sharply"
+          "request": "Track drivers live on a map",
+          "solution": "Drivers' phones sent their location every 10 seconds",
+          "what_broke": "Phone batteries drained fast",
+          "fix": "Sent location only while a delivery was active",
+          "stack": "Go, mobile app",
+          "outcome": "Battery complaints stopped"
         },
         {
-          "request": "Upgrade the rates database to a new Postgres version without downtime",
-          "solution": "Logical replication to the new cluster, then a 30-second read-only cutover",
-          "what_broke": "Sequences were not replicated, so the first inserts after cutover collided",
-          "fix": "Bumped every sequence past its current maximum id before the cutover",
-          "stack": "Postgres 12 to 16",
-          "outcome": "Cutover finished in 30 seconds during business hours"
+          "request": "Notify customers when candy is five minutes away",
+          "solution": "Push notification based on the driver's position",
+          "what_broke": "Notifications fired too early in dense neighborhoods",
+          "fix": "Used road distance instead of straight-line distance",
+          "stack": "Go",
+          "outcome": "Arrival estimates are now accurate to a minute"
         }
       ]
     },
     {
       "id": "client-5",
-      "name": "Ridgeline Logistics",
-      "stack": "React 18, Vite, TypeScript, ECharts via echarts-for-react, Mapbox GL",
+      "name": "Ghost Tour Co.",
+      "stack": "React Native app, Firebase, offline audio",
+      "persona": "spooky and theatrical, speaks in short eerie lines",
       "constraints": [
-        "Dispatchers work night shifts on wall-mounted screens, so glare matters",
-        "The dashboard must stay live during a shift: no full page reloads",
-        "Ops leadership signs off on any visual change to the live map"
+        "Tours run in cellars and graveyards with no signal",
+        "Stories are in four languages"
       ],
       "memories": [
         {
-          "request": "Add dark mode to the fleet dashboard for night-shift dispatchers",
-          "solution": "Moved our colors into CSS variables and flipped them with a theme toggle, the usual pattern",
-          "what_broke": "The chart library ignored the CSS variables. ECharts paints on canvas from JavaScript options, so axis labels, legends and gridlines stayed dark-on-dark and unreadable, and tooltips stayed bright white. Dispatchers reported broken charts on the first night shift",
-          "fix": "Registered light and dark chart themes built from the same design tokens and passed the active one through the chart component's theme prop, re-rendering charts when the theme toggles",
-          "stack": "React, Vite, ECharts (echarts-for-react)",
-          "outcome": "Rolled back for two days, then reshipped with the theme prop; no chart issues since. Lesson: CSS variables reach DOM and SVG, not canvas charts"
+          "request": "Play audio stories offline in cellars with no signal",
+          "solution": "Downloaded each tour's audio when the guest opened the app",
+          "what_broke": "Downloads failed on slow hotel wifi",
+          "fix": "Downloaded in small pieces and resumed after drops",
+          "stack": "React Native, offline audio",
+          "outcome": "Tours play everywhere, even underground"
         },
         {
-          "request": "Show 2,000 live trucks on the map without freezing",
-          "solution": "Replaced per-truck DOM markers with a clustered GPU layer and throttled position updates to once per second",
-          "what_broke": "Clicking a cluster near the screen edge zoomed to the wrong place",
-          "fix": "Used the map library's cluster expansion zoom instead of a fixed zoom step",
-          "stack": "React, Mapbox GL",
-          "outcome": "The map holds 60fps with more than 2,000 vehicles"
+          "request": "Trigger a story when guests reach a graveyard spot",
+          "solution": "Used GPS zones around each stop",
+          "what_broke": "GPS drifted near tall old buildings",
+          "fix": "Added a tap-to-start button as a backup",
+          "stack": "React Native, GPS",
+          "outcome": "Every story plays on cue"
         },
         {
-          "request": "Export a shift report as CSV",
-          "solution": "Streamed the CSV from the API instead of building it in the browser",
-          "what_broke": "Spreadsheet apps mangled timestamps and dropped leading zeros from truck IDs",
-          "fix": "Wrote ISO timestamps and quoted the ID columns",
-          "stack": "Node.js, Postgres",
-          "outcome": "Dispatch leads use it every morning"
+          "request": "Offer tour scripts in four languages",
+          "solution": "Stored every script per language in the app",
+          "what_broke": "Nothing. Guests picked their language at start",
+          "fix": "None needed",
+          "stack": "React Native, Firebase",
+          "outcome": "Half of guests now choose a non-English tour"
         }
       ]
     }

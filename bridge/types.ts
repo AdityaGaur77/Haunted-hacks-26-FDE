@@ -29,6 +29,8 @@ export interface ClientProfile {
   name: string;
   stack: string;
   constraints: string[];
+  /** Speaking style, tone only (facts still come from memory). */
+  persona?: string;
 }
 
 export function isClientId(value: unknown): value is ClientId {

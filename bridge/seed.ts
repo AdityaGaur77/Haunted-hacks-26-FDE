@@ -17,6 +17,7 @@ const ClientSchema = z.strictObject({
   name: text,
   stack: text,
   constraints: z.array(text).min(1),
+  persona: text.optional(), // tone only (actors/src/prompts.ts); facts come from memories
   memories: z.array(MemorySchema).min(3).max(5),
 });
 export const SeedSchema = z.strictObject({

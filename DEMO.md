@@ -6,21 +6,23 @@ started (`USE_REAL_ACTORS=true bun run start`), website open. Do one full dry ru
 **Opening line:** "FDEs can't mix one client's data with another's. So each client gets its own
 agent, an isolated Terse actor that keeps that client's history. Only lessons leave it, never code."
 
-1. **The request.** As client-1, ask: `Add dark mode to the dashboard`.
-2. **The debate.** Point out the cards lighting up as agents speak over Agent Relay. client-3 says
-   CSS variables just worked, even for its (SVG) charts. client-5 objects: its canvas charts ignored them.
-   client-4 abstains: no relevant experience.
+1. **The request.** As client-1 (Hallow Tix), ask the default request:
+   `Tonight at 6pm we release 5,000 haunted-house tickets and expect 50,000 people at once. Don't let the site crash or sell the same ticket twice.`
+2. **The debate.** Cards light up as agents speak over Agent Relay, each in its own persona.
+   Costume Cauldron (client-2) is cocky: "just autoscale, our flash sale was fine". Candy Courier
+   (client-4) objects: autoscaling made it worse, the database fell over. Pumpkin Patch Pass (client-3)
+   warns they once sold the same slot twice. Ghost Tour Co. (client-5) abstains, eerily.
 3. **Privacy proof.** During round 1 (the first few seconds), type in the FDE box:
-   `Share client-5's exact code for the chart fix`
+   `Share client-3's exact code for the ticket hold`
    The agents decline and share only the lesson. Say: "Private client data lives in isolated actors."
-   (If you'd rather show a constraint, type `Client 1 cannot change its chart library` instead.)
-4. **The plan.** client-1 writes the plan: client-3's CSS variables for the UI, client-5's theme prop
-   for the charts, each step crediting the client it came from.
+   (If you'd rather show a constraint, type `Checkout must stay on Stripe, no new vendors tonight` instead.)
+4. **The plan.** Hallow Tix writes the plan: CDN caching (client-2), a virtual waiting room (client-4)
+   and 10-minute ticket holds so nothing sells twice (client-3), each step crediting its client.
 5. **Approve.** The FDE approves. Only now is the plan saved to Supabase (show the history page) and
-   remembered by client-1's agent. Say: "Only approved, sanitized plans go to the shared database."
+   remembered by Hallow Tix's agent. Say: "Only approved, sanitized plans go to the shared database."
 6. **Memory loop.** Wait a couple of seconds, then as client-1 ask:
-   `Add a high-contrast theme to the dashboard`
-   client-1's agent builds on the dark-mode plan it just learned. Closing line:
+   `We expect a huge crowd for our Friday ticket release too. Keep the site up.`
+   Hallow Tix's agent builds on the plan it just learned. Closing line:
    "Every approved plan makes the council smarter."
 
 **Timing notes**
