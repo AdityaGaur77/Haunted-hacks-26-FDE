@@ -84,7 +84,13 @@ function fakeClient(id: ClientId, world: World): ClientActor {
       const { profile, memories } = me();
       const match = relevantMemory(memories, request);
       if (requesterOf(transcript) === id) {
-        const history = match ? ` Closest thing we've done: ${lowerFirst(sentence(match.memory.request))}` : " We haven't done this before.";
+        const m = match?.memory;
+        // An approved plan stored by remember() is the council's memory at work: say so.
+        const history = !m
+          ? " We haven't done this before."
+          : m.outcome === "Approved by FDE"
+            ? ` We've planned something close before, approved by the FDE ("${m.request}"): ${firstLine(m.solution)} Building on that.`
+            : ` Closest thing we've done: ${lowerFirst(sentence(m.request))}`;
         const text = `This is our request. Our stack: ${profile.stack}. Constraints: ${profile.constraints.join("; ")}.${history}`;
         return event("take", id, text, transcript, match && [id]);
       }
@@ -180,9 +186,21 @@ function fakeClient(id: ClientId, world: World): ClientActor {
 
 function event(type: EventType, from: ClientId, text: string, transcript: Event[], cites?: string[]): Event {
   const fde = transcript.filter((e) => e.type === "fde").at(-1);
+  if (fde && asksForPrivateDetails(fde.text)) {
+    // Same rule as the real agents: lessons may leave a deployment; code and client details never do.
+    const refusal = `I can't share another deployment's code, configuration or client details; each client's data stays inside its own agent. The shareable lesson is above.`;
+    return { type, from, text: `${text} ${refusal}`, ...(cites?.length ? { cites } : {}), ts: Date.now() };
+  }
   const note = fde ? ` (Taking the FDE's note into account: "${fde.text}")` : "";
   return { type, from, text: text + note, ...(cites?.length ? { cites } : {}), ts: Date.now() };
 }
+
+/** "Share client-5's exact code / config / file / credentials" and similar. */
+const asksForPrivateDetails = (text: string) =>
+  /\b(code|snippet|source|config(uration)?|files?|credentials?|keys?|secrets?|customer data|exact implementation)\b/i.test(text) &&
+  /\b(share|send|give|show|paste|copy)\b/i.test(text);
+
+const firstLine = (s: string) => sentence(s.split("\n").find((l) => /^\d+\./.test(l.trim()))?.replace(/^\s*\d+\.\s*/, "") ?? s.split("\n")[0] ?? s);
 
 const requesterOf = (transcript: Event[]) => transcript.find((e) => e.type === "request")?.from;
 const requestOf = (transcript: Event[]) => transcript.find((e) => e.type === "request")?.text ?? "";
