@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE Council · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Creepster&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05060b;--panel:#0d0f17;--line:#1b1f2d;--text:#e9eaf2;--muted:#7f8597;--c3:#5ee1ff;--c5:#ffb454;--fde:#ff6fb1;--ok:#4ade80;
+  --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',system-ui,sans-serif;--spooky:'Creepster',cursive}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
+#app{display:grid;grid-template-columns:1fr 400px;height:100vh}
+.scene{position:relative;min-width:0;overflow:hidden;background:#05060b}
+.scene canvas{position:absolute;inset:0;display:block}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.topbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;padding:14px 18px;z-index:5;pointer-events:none}
+.topbar>*{pointer-events:auto}
+.brand{font-family:var(--spooky);font-size:26px;letter-spacing:.04em;color:#ffb454;text-shadow:0 0 20px rgba(255,180,84,.5);line-height:1}
+.brand small{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--muted);display:block;margin-top:2px;text-transform:uppercase}
+.req{flex:1;font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:center;min-width:0}
+.req b{color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.req .tag{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--c3);border:1px solid rgba(94,225,255,.3);padding:3px 7px;border-radius:999px;white-space:nowrap}
+button{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text);background:rgba(13,15,23,.75);border:1px solid var(--line);padding:8px 12px;border-radius:9px;cursor:pointer;transition:.15s;backdrop-filter:blur(6px)}
+button:hover{border-color:var(--c5);transform:translateY(-1px)}
+button.primary{background:linear-gradient(135deg,#ff9d2e,#ff6a00);border-color:transparent;color:#1a0d00}
+.kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--line);padding:1px 5px;border-radius:5px;color:var(--muted)}
+/* isolation monitor */
+.monitor{position:absolute;left:18px;top:74px;z-index:5;display:flex;gap:8px;pointer-events:none}
+.mon{background:rgba(13,15,23,.72);border:1px solid var(--line);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px);min-width:96px}
+.mon .n{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.mon .l{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.mon.ok .n{color:var(--ok)}.mon.c3 .n{color:var(--c3)}.mon.fde .n{color:var(--fde)}
+/* banner for the interrupt */
+.banner{position:absolute;left:50%;top:120px;transform:translate(-50%,-10px);z-index:6;background:rgba(13,15,23,.85);border:1px solid var(--fde);border-radius:14px;padding:12px 18px;font-family:var(--mono);font-size:12px;color:var(--text);opacity:0;transition:.3s;pointer-events:none;box-shadow:0 0 50px -10px var(--fde);text-align:center}
+.banner.show{opacity:1;transform:translate(-50%,0)}
+.banner b{color:var(--fde)}
+.banner .sub{color:var(--muted);font-size:10.5px;margin-top:4px}
+/* 3D labels */
+.lbl{font-family:var(--sans);text-align:center;transform:translateY(-6px);transition:.3s}
+.lbl .nm{font-weight:700;font-size:12px;color:#d6d9e6;text-shadow:0 2px 8px #000}
+.lbl .id{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em}
+.lbl .st{display:inline-block;margin-top:3px;font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:#7f8597;background:rgba(5,6,11,.6)}
+.lbl.thinking .st{color:#d6d9e6;border-color:#555;animation:blink .8s infinite}
+.lbl.asking .st{color:#8b7cff;border-color:#8b7cff}
+.lbl.speaking .st{color:var(--c3);border-color:var(--c3)}
+.lbl.objecting .st{color:var(--c5);border-color:var(--c5)}
+.lbl.walled .st{color:var(--ok);border-color:var(--ok)}
+.lbl.reeval .st{color:var(--fde);border-color:var(--fde)}
+@keyframes blink{50%{opacity:.3}}
+.bub{max-width:250px;background:rgba(13,15,23,.92);border:1px solid var(--line);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.4;box-shadow:0 10px 40px -10px #000;transform:translateY(-100%);position:relative}
+.bub::after{content:"";position:absolute;left:50%;bottom:-7px;width:12px;height:12px;background:inherit;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.bub .who{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.bub.objection{border-color:var(--c5);box-shadow:0 0 30px -6px var(--c5)}
+.bub.fde{border-color:var(--fde);box-shadow:0 0 30px -6px var(--fde)}
+.bub.plan{border-color:var(--ok)}
+.envelope{font-family:var(--mono);font-size:9px;color:var(--c3);background:rgba(5,6,11,.8);border:1px solid rgba(94,225,255,.35);padding:3px 7px;border-radius:999px;white-space:nowrap}
+.envelope.redact{color:var(--ok);border-color:rgba(74,222,128,.4)}
+.knock{font-family:var(--spooky);font-size:26px;color:#fff;text-shadow:0 0 16px rgba(255,255,255,.6);white-space:nowrap}
+/* shout */
+.shout{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(640px,calc(100% - 40px));z-index:5}
+.shout label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fde);display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.shout label .hint{margin-left:auto;color:var(--muted);text-transform:none;letter-spacing:0}
+.shout .row{display:flex;gap:8px}
+.shout input{flex:1;font-family:var(--sans);font-size:14px;color:var(--text);background:rgba(13,15,23,.88);border:1px solid var(--line);border-radius:12px;padding:13px 16px;outline:none;backdrop-filter:blur(8px);transition:.2s}
+.shout input:focus{border-color:var(--fde);box-shadow:0 0 0 3px rgba(255,111,177,.15)}
+.shout.armed input{border-color:var(--fde);animation:arm 1.3s infinite}
+@keyframes arm{0%,100%{box-shadow:0 0 0 3px rgba(255,111,177,.15),0 0 30px -6px var(--fde)}50%{box-shadow:0 0 0 7px rgba(255,111,177,.06),0 0 60px -6px var(--fde)}}
+.shout button{background:var(--fde);border-color:transparent;color:#2a0a18}
+/* side */
+.side{border-left:1px solid var(--line);background:var(--panel);display:grid;grid-template-rows:auto 1fr auto;min-height:0}
+.side h4{margin:0;padding:14px 16px 10px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+.feed{overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.msg{opacity:0;transform:translateY(6px);animation:in .35s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.msg .who{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;display:flex;gap:8px;align-items:center}
+.msg .who b{font-weight:500}
+.msg .b{background:#11141d;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:12.8px;line-height:1.5}
+.msg.lesson .b{border-color:rgba(94,225,255,.3)}
+.msg.objection .b{border-color:rgba(255,180,84,.5);background:linear-gradient(180deg,rgba(255,180,84,.07),#11141d)}
+.msg.revision .b{border-color:rgba(74,222,128,.35)}
+.msg.none .b{opacity:.55;font-size:12px;padding:6px 10px}
+.msg.fde .b{border-color:var(--fde);background:linear-gradient(180deg,rgba(255,111,177,.08),#11141d)}
+.msg.request .b{border-color:#8b7cff}
+.msg.moderator .b{border-style:dashed;background:transparent;color:var(--muted);font-size:12px}
+.chip{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip.cite{border-color:rgba(94,225,255,.35);color:var(--c3)}
+.chip.red{border-color:rgba(74,222,128,.4);color:var(--ok)}
+.meta{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.cursor{display:inline-block;width:6px;height:13px;background:var(--c3);vertical-align:-2px;margin-left:2px;animation:blink .7s infinite}
+.sys{align-self:center;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;opacity:0;animation:in .4s forwards;text-align:center}
+.planbox{border-top:1px solid var(--line);padding:14px 16px;max-height:44vh;overflow:auto}
+.plan{background:#11141d;border:1px solid var(--line);border-radius:14px;padding:12px 14px;transition:.4s}
+.plan.ready{border-color:rgba(74,222,128,.45);box-shadow:0 0 0 1px rgba(74,222,128,.2),0 20px 60px -20px rgba(74,222,128,.5)}
+.plan .empty{color:var(--muted);font-size:12px;line-height:1.5;text-align:center;padding:14px 4px}
+.plan .title{font-weight:600;font-size:13px;margin-bottom:10px}
+.plan ol{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:8px;font-size:12.3px;line-height:1.45}
+.plan li{opacity:0;animation:in .4s forwards}
+.candy{display:inline-block;width:10px;height:10px;border-radius:3px;transform:rotate(45deg);margin:0 6px 0 2px;vertical-align:-1px;box-shadow:0 0 8px currentColor;background:currentColor}
+.plan li .src{font-family:var(--mono);font-size:9.5px;margin-left:4px;color:var(--muted)}
+.plan .actions{margin-top:12px;display:flex;gap:8px}
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);background:#11141d;border:1px solid rgba(74,222,128,.5);color:var(--text);padding:10px 16px;border-radius:12px;font-size:13px;opacity:0;transition:.3s;z-index:60;display:flex;gap:8px;align-items:center;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast .k{color:var(--ok)}
+.overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(5,6,11,.8);backdrop-filter:blur(8px);z-index:70;transition:.6s}
+.overlay.hide{opacity:0;pointer-events:none}
+.overlay .box{text-align:center;max-width:600px;padding:20px}
+.overlay h1{font-family:var(--spooky);font-size:70px;margin:0 0 6px;color:#ffb454;letter-spacing:.04em;text-shadow:0 0 40px rgba(255,180,84,.5)}
+.overlay p{color:var(--muted);font-size:16px;line-height:1.6;margin:0 0 24px}
+.overlay .keys{margin-top:16px;color:var(--muted);font-size:11px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.loading{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.2em;z-index:4}
+@media (max-width:980px){#app{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="scene" id="scene">
+    <div class="loading" id="loading">SUMMONING THE HOUSE…</div>
+    <div id="labels"></div>
+    <div class="topbar">
+      <div class="brand">FDE Council<small>Haunted house · every room a sealed actor</small></div>
+      <div class="req"><span class="tag" id="reqtag">quiet night</span><b id="reqtext">No one at the door…</b></div>
+      <span class="kbd" id="modebadge">replay</span>
+      <button id="cambtn" onclick="toggleCam()">🎥 cinematic</button>
+      <button onclick="toggleSound()" id="sndbtn">🔊</button>
+      <button onclick="reset()">↺ Reset</button>
+      <button class="primary" id="startbtn" onclick="start()">🎃 Run</button>
+    </div>
+    <div class="monitor">
+      <div class="mon"><div class="n">5</div><div class="l">sealed actors</div></div>
+      <div class="mon ok"><div class="n" id="m-cross">0</div><div class="l">cross-room reads</div></div>
+      <div class="mon c3"><div class="n" id="m-relay">0</div><div class="l">relay messages</div></div>
+      <div class="mon ok"><div class="n" id="m-redact">0</div><div class="l">fields redacted</div></div>
+      <div class="mon fde"><div class="n" id="m-fde">0</div><div class="l">owner interrupts</div></div>
+    </div>
+    <div class="banner" id="banner"><b>OWNER CONSTRAINT PROPAGATED</b> → <span id="banner-n">4</span> actors re-evaluating<div class="sub" id="banner-sub">delivered over the relay in <b>0.3s</b> · mid-debate · no restart</div></div>
+    <div class="shout" id="shout">
+      <label>Shout from the balcony <span class="hint">Enter to shout · empty Enter uses the suggestion</span></label>
+      <div class="row"><input id="fdeinput" placeholder="Add a constraint the council must respect…" autocomplete="off"><button onclick="sendFde()">Shout</button></div>
+    </div>
+  </div>
+  <div class="side">
+    <h4>Live transcript · Agent Relay <span id="livedot" class="kbd">replay</span></h4>
+    <div class="feed" id="feed"></div>
+    <div class="planbox">
+      <h4 style="padding:0 0 10px;border:0">The candy · plan with provenance <span class="kbd">W = locked door</span></h4>
+      <div class="plan" id="plan"><div class="empty">The cauldron brews a plan once the seminar agrees.<br>Each candy is the colour of the room it came from.</div></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"><span class="k">✓</span><span id="toasttext"></span></div>
+<div class="overlay" id="overlay">
+  <div class="box">
+    <h1>FDE Council</h1>
+    <p>A haunted house. Five sealed rooms, one client each.<br>When a trick-or-treater knocks, the ghosts hold a seminar on the stairs and brew the right candy.<br>Nothing ever leaves a room except a lesson.</p>
+    <button class="primary" onclick="start()">🎃 Open the house</button>
+    <div class="keys"><span><span class="kbd">space</span> run</span><span><span class="kbd">R</span> reset</span><span><span class="kbd">W</span> locked door</span><span><span class="kbd">C</span> free camera</span><span><span class="kbd">M</span> sound</span></div>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {CSS2DRenderer,CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+
+/* ================= DATA ================= */
+const CLIENTS=[
+  {id:'client-1',name:'Northwind Analytics',room:'West Chamber',stack:'Next.js · Recharts · Postgres',color:0x8b7cff,cx:-4,floor:1,mem:'12 deployments. Last incident: chart tooltips clipped on Safari.'},
+  {id:'client-2',name:'Harbor Logistics',room:'East Chamber',stack:'Django · HTMX · MySQL',color:0x60a5fa,cx:4,floor:1,mem:'Server-rendered. No theming layer.'},
+  {id:'client-3',name:'Lumen Health',room:'West Attic',stack:'React · D3 · Supabase',color:0x5ee1ff,cx:-4,floor:2,mem:'Dark mode shipped in 2h via CSS variables. D3 reads computed styles.'},
+  {id:'client-4',name:'Atlas Fintech',room:'East Attic',stack:'Vue · ECharts · Snowflake',color:0x4ade80,cx:4,floor:2,mem:'Compliance-locked UI. Theming needs change control.'},
+  {id:'client-5',name:'Orbit Retail',room:'Cellar Study',stack:'Next.js · Recharts · BigQuery',color:0xffb454,cx:-4,floor:0,mem:'CSS-variable dark mode broke all charts. Fix: inject tokens via getComputedStyle.'},
+];
+const BY=Object.fromEntries(CLIENTS.map(c=>[c.id,c]));
+const hex=n=>'#'+n.toString(16).padStart(6,'0');
+const COLOR=id=>id==='FDE'||id==='fde'?'#ff6fb1':(BY[id]?hex(BY[id].color):'#8a90a3');
+const REDACT={lesson:['source code','credentials','customer names','repo paths'],objection:['source code','incident ticket id','customer names'],revision:['source code','repo paths'],none:[]};
+
+const SCRIPT=[
+  {t:200,type:'shot',name:'wide'},
+  {t:600,type:'arrive'},
+  {t:200,type:'request',from:'client-1',text:'Add dark mode to the analytics dashboard. Marketing wants it before the Q4 launch.'},
+  {t:300,type:'status',agent:'client-1',state:'asking'},
+  {t:400,type:'shot',name:'house'},
+  {t:500,type:'sys',text:'knock heard in every room · 4 ghosts consult private memory'},
+  {t:100,type:'status',agent:'client-2',state:'thinking'},{t:100,type:'status',agent:'client-3',state:'thinking'},{t:100,type:'status',agent:'client-4',state:'thinking'},{t:100,type:'status',agent:'client-5',state:'thinking'},
+  {t:1300,type:'status',agent:'client-3',state:'speaking'},
+  {t:50,type:'message',from:'client-3',kind:'lesson',cites:'client-3',text:'We shipped dark mode in about two hours. CSS custom properties on :root, a data-theme attribute toggled by a tiny hook, preference persisted in localStorage. No component rewrites, and our D3 charts picked up the colours because they read computed styles.'},
+  {t:300,type:'status',agent:'client-3',state:'idle'},
+  {t:300,type:'status',agent:'client-2',state:'speaking'},
+  {t:50,type:'message',from:'client-2',kind:'none',text:'No relevant experience. Server-rendered Django, no theming layer.'},
+  {t:200,type:'status',agent:'client-2',state:'idle'},
+  {t:200,type:'status',agent:'client-4',state:'speaking'},
+  {t:50,type:'message',from:'client-4',kind:'none',text:'No relevant experience. Theming is blocked by change control on our side.'},
+  {t:200,type:'status',agent:'client-4',state:'idle'},
+  {t:500,type:'status',agent:'client-5',state:'objecting'},
+  {t:50,type:'message',from:'client-5',kind:'objection',cites:'client-5',text:'Objection. We tried exactly that CSS-variable approach and it broke every chart. Recharts resolves colours as props at render time, not from CSS, so the SVG stayed light-mode on a dark page. We lost half a day. Client 1 is on Recharts too.'},
+  {t:700,type:'status',agent:'client-5',state:'idle'},
+  {t:300,type:'status',agent:'client-3',state:'speaking'},
+  {t:50,type:'message',from:'client-3',kind:'lesson',cites:'client-3',text:'Fair. We never hit that because D3 lets us pass computed styles directly. The chart layer is the real risk here, not the shell.'},
+  {t:300,type:'status',agent:'client-3',state:'idle'},
+  {t:500,type:'message',from:'moderator',kind:'moderator',text:'Conflict on the chart layer. Swap the chart library, or keep Recharts and inject tokens. The seminar waits for the house owner.'},
+  {t:200,type:'shot',name:'balcony'},
+  {t:200,type:'await-fde',suggestion:'Client 1 cannot change chart libraries. Recharts stays.'},
+];
+const AFTER_FDE=[
+  {t:200,type:'reeval',agents:['client-2','client-3','client-4','client-5']},
+  {t:300,type:'sys',text:'the owner has spoken · constraint accepted by 4 actors · ghosts re-evaluate'},
+  {t:200,type:'shot',name:'house'},
+  {t:1200,type:'status',agent:'client-5',state:'speaking'},
+  {t:50,type:'message',from:'client-5',kind:'revision',cites:'client-5',text:'Then the fix we eventually used applies directly. Read the theme tokens with getComputedStyle at mount, pass them to Recharts as props, and subscribe charts to a themechange event so they re-render. Recharts stays. About 40 minutes.'},
+  {t:300,type:'status',agent:'client-5',state:'idle'},
+  {t:300,type:'status',agent:'client-3',state:'speaking'},
+  {t:50,type:'message',from:'client-3',kind:'revision',cites:'client-3',text:'Agreed. Combine both: CSS variables for the app shell, explicit token injection for the chart layer, one themechange event bridging them. That is the whole plan.'},
+  {t:300,type:'status',agent:'client-3',state:'idle'},
+  {t:500,type:'message',from:'moderator',kind:'moderator',text:'Consensus. The cauldron brews the candy for Client 1.'},
+  {t:200,type:'shot',name:'cauldron'},
+  {t:600,type:'plan',for:'client-1',title:'Dark mode for Northwind Analytics',steps:[
+    {text:'Theme tokens as CSS variables on :root, toggled via data-theme, persisted in localStorage.',source:'client-3'},
+    {text:'Keep Recharts. Inject colours as props read from getComputedStyle at mount.',source:'client-5'},
+    {text:'Emit a themechange event and re-render charts on it so SVG never drifts from the shell.',source:'client-5'},
+    {text:'Do not swap chart libraries. Constraint from the house owner.',source:'FDE'},
+    {text:'Test on Safari: tooltip clipping already seen in this deployment.',source:'client-1'},
+  ]},
+  {t:400,type:'deliver'},
+  {t:400,type:'shot',name:'wide'},
+  {t:400,type:'sys',text:'seminar closed · 2 lessons · 1 objection · 1 owner constraint · 0 bytes of private data left any room'},
+];
+
+/* ================= SOUND ================= */
+let AC=null,sound=true;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
+function tone(f,d=.12,type='sine',g=.08,t0=0){const a=ac();if(!a||!sound)return;const o=a.createOscillator(),v=a.createGain();o.type=type;o.frequency.value=f;o.connect(v);v.connect(a.destination);const s=a.currentTime+t0;v.gain.setValueAtTime(g,s);v.gain.exponentialRampToValueAtTime(.0001,s+d);o.start(s);o.stop(s+d+.02)}
+const SFX={knock(){tone(90,.18,'triangle',.25);tone(80,.2,'triangle',.25,.28)},whoosh(){tone(600,.25,'sine',.04);tone(900,.2,'sine',.03,.05)},object(){tone(160,.3,'sawtooth',.06);tone(120,.35,'sawtooth',.06,.1)},shout(){tone(440,.1,'square',.05);tone(660,.1,'square',.05,.1);tone(880,.25,'square',.05,.2)},brew(){[0,.1,.2,.3].forEach((d,i)=>tone(300+i*120,.2,'sine',.05,d))},candy(){tone(1040,.15,'sine',.06);tone(1320,.25,'sine',.06,.12)},lock(){tone(200,.08,'square',.08);tone(180,.08,'square',.08,.1);tone(160,.1,'square',.08,.2)}};
+window.toggleSound=()=>{sound=!sound;document.getElementById('sndbtn').textContent=sound?'🔊':'🔇'};
+
+/* ================= THREE SETUP ================= */
+const $=s=>document.querySelector(s);
+const sceneEl=$('#scene');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+sceneEl.appendChild(renderer.domElement);
+const labelRenderer=new CSS2DRenderer({element:$('#labels')});
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x05060b);scene.fog=new THREE.FogExp2(0x07081a,.022);
+const camera=new THREE.PerspectiveCamera(42,1,.1,300);camera.position.set(0,7,30);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enabled=false;controls.target.set(0,4.5,0);controls.enableDamping=true;
+const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(1,1),.85,.6,.55);composer.addPass(bloom);composer.addPass(new OutputPass());
+function resize(){const w=sceneEl.clientWidth,h=sceneEl.clientHeight;renderer.setSize(w,h);labelRenderer.setSize(w,h);composer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix()}
+window.addEventListener('resize',resize);resize();
+
+/* lights */
+scene.add(new THREE.HemisphereLight(0x303a66,0x05040a,.5));
+const moonL=new THREE.DirectionalLight(0xbfcaff,.55);moonL.position.set(-18,26,-8);moonL.castShadow=true;moonL.shadow.mapSize.set(2048,2048);
+Object.assign(moonL.shadow.camera,{left:-20,right:20,top:20,bottom:-20,near:1,far:80});scene.add(moonL);
+/* moon + stars */
+const moon=new THREE.Mesh(new THREE.SphereGeometry(3.2,32,32),new THREE.MeshBasicMaterial({color:0xfff1c4}));moon.position.set(-34,26,-48);scene.add(moon);
+{const g=new THREE.BufferGeometry(),n=2200,p=new Float32Array(n*3);for(let i=0;i<n;i++){const r=120+Math.random()*60,th=Math.random()*Math.PI*2,ph=Math.random()*Math.PI*.5;p[i*3]=r*Math.cos(th)*Math.cos(ph);p[i*3+1]=r*Math.sin(ph)+2;p[i*3+2]=r*Math.sin(th)*Math.cos(ph)}
+g.setAttribute('position',new THREE.BufferAttribute(p,3));scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:.35,sizeAttenuation:true,transparent:true,opacity:.8})))}
+/* ground + path + graveyard */
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({color:0x0b0a14,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const path=new THREE.Mesh(new THREE.PlaneGeometry(3.2,26),new THREE.MeshStandardMaterial({color:0x15131f,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(0,.01,16);path.receiveShadow=true;scene.add(path);
+const stoneM=new THREE.MeshStandardMaterial({color:0x2a2838,roughness:.9});
+[[-11,9],[-13.5,12],[12,8],[14,11.5],[-9,14],[11,15]].forEach(([x,z],i)=>{const s=new THREE.Mesh(new THREE.BoxGeometry(.9,1.3+(i%3)*.3,.3),stoneM);s.position.set(x,.65,z);s.rotation.y=(i-2)*.2;s.castShadow=true;scene.add(s)});
+/* dead trees */
+function tree(x,z,s=1){const g=new THREE.Group();const m=new THREE.MeshStandardMaterial({color:0x1c1826,roughness:1});const t=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.35*s,5*s,6),m);t.position.y=2.5*s;g.add(t);for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.04*s,.12*s,2.4*s,5),m);b.position.set(0,4*s+i*.25*s,0);b.rotation.z=(i%2?1:-1)*(.6+i*.15);b.rotation.y=i*1.3;b.position.x+=Math.sin(b.rotation.y)*.9*s*(i%2?1:-1);g.add(b)}g.position.set(x,0,z);g.traverse(o=>o.castShadow=true);scene.add(g)}
+tree(-15,2,1.2);tree(16,0,1);tree(-18,-6,1.4);
+
+/* ================= HOUSE ================= */
+const W=12,D=6,FH=3;
+const wallM=new THREE.MeshStandardMaterial({color:0x1b1826,roughness:.95});
+const floorM=new THREE.MeshStandardMaterial({color:0x241f33,roughness:.9});
+const trimM=new THREE.MeshStandardMaterial({color:0x3a3250,roughness:.8});
+const house=new THREE.Group();scene.add(house);
+function box(w,h,d,m,x,y,z,parent=house){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+box(W+.4,FH*3+.2,.3,wallM,0,FH*1.5,-D/2);           // back wall
+box(.3,FH*3,D,wallM,-W/2,FH*1.5,0);box(.3,FH*3,D,wallM,W/2,FH*1.5,0); // side walls
+for(let f=0;f<=3;f++)box(W+.4,.18,D+.2,floorM,0,f*FH,0);  // floor slabs
+for(let f=0;f<3;f++){box(.16,FH,D-.2,wallM,-2,f*FH+FH/2,-.1);box(.16,FH,D-.2,wallM,2,f*FH+FH/2,-.1)} // partitions
+/* foyer: door opening in front is implied; frame */
+box(.2,2.6,.2,trimM,-0.9,1.3,D/2);box(.2,2.6,.2,trimM,0.9,1.3,D/2);box(2,.2,.2,trimM,0,2.6,D/2);
+/* roof */
+{const r=new THREE.Mesh(new THREE.ConeGeometry(W*.78,3.6,4),new THREE.MeshStandardMaterial({color:0x2a2238,roughness:.9,flatShading:true}));r.rotation.y=Math.PI/4;r.position.y=FH*3+1.8;r.castShadow=true;house.add(r);
+ const ch=box(.8,2.2,.8,wallM,4,FH*3+2.2,-1.2);const cap=box(1.1,.2,1.1,trimM,4,FH*3+3.3,-1.2)}
+/* relay shaft */
+const shaftM=new THREE.MeshBasicMaterial({color:0x5ee1ff,transparent:true,opacity:.08,blending:THREE.AdditiveBlending,depthWrite:false});
+const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,FH*3-.3,24,1,true),shaftM);shaft.position.set(0,FH*1.5,0);house.add(shaft);
+const shaftCore=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,FH*3-.3,8),new THREE.MeshBasicMaterial({color:0x5ee1ff,transparent:true,opacity:.35}));shaftCore.position.copy(shaft.position);house.add(shaftCore);
+/* stairs (simple steps in shaft) */
+for(let f=0;f<3;f++)for(let i=0;i<8;i++){const s=box(1.2,.08,.5,trimM,0,f*FH+.3+i*.34,-1.8+i*.42);s.rotation.y=0}
+const shaftLbl=label('<div class="lbl"><div class="id" style="color:#5ee1ff;letter-spacing:.2em">RELAY</div></div>',0,FH*3-.2,0);
+/* FDE balcony on middle landing */
+const balcony=new THREE.Group();balcony.position.set(0,FH,D/2-.2);house.add(balcony);
+box(2.2,.12,1.4,trimM,0,.06,.4,balcony);
+for(let i=-4;i<=4;i++)box(.06,.9,.06,trimM,i*.25,.55,1.05,balcony);box(2.2,.06,.06,trimM,0,1,1.05,balcony);
+const fde=new THREE.Group();fde.position.set(0,.12,.4);balcony.add(fde);
+{const body=new THREE.Mesh(new THREE.CapsuleGeometry(.22,.6,4,12),new THREE.MeshStandardMaterial({color:0xff6fb1,emissive:0xff6fb1,emissiveIntensity:.35}));body.position.y=.65;body.castShadow=true;fde.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.2,16,16),new THREE.MeshStandardMaterial({color:0xf1d2b6}));head.position.y=1.3;fde.add(head);
+ const hat=new THREE.Mesh(new THREE.ConeGeometry(.28,.6,12),new THREE.MeshStandardMaterial({color:0x2a2238}));hat.position.y=1.7;fde.add(hat);
+ const lantern=new THREE.Mesh(new THREE.SphereGeometry(.1,12,12),new THREE.MeshBasicMaterial({color:0xffb454}));lantern.position.set(.42,.9,.1);fde.add(lantern);
+ const lanL=new THREE.PointLight(0xffb454,1.6,6);lanL.position.copy(lantern.position);fde.add(lanL);fde.userData.light=lanL}
+label('<div class="lbl"><div class="nm" style="color:#ff6fb1">FDE</div><div class="id">house owner · balcony</div></div>',0,FH+2.2,D/2+.3);
+/* cauldron in foyer */
+const cauldron=new THREE.Group();cauldron.position.set(0,.1,.2);house.add(cauldron);
+{const pts=[];for(let i=0;i<=10;i++){const t=i/10;pts.push(new THREE.Vector2(.25+Math.sin(t*Math.PI)*.55+.05,t*.9))}
+ const pot=new THREE.Mesh(new THREE.LatheGeometry(pts,24),new THREE.MeshStandardMaterial({color:0x1c1a2a,roughness:.6,metalness:.4}));pot.castShadow=true;cauldron.add(pot);
+ const brew=new THREE.Mesh(new THREE.CircleGeometry(.6,24),new THREE.MeshBasicMaterial({color:0x4ade80}));brew.rotation.x=-Math.PI/2;brew.position.y=.86;cauldron.add(brew);cauldron.userData.brew=brew;
+ const bl=new THREE.PointLight(0x4ade80,1.2,5);bl.position.y=1.3;cauldron.add(bl);cauldron.userData.light=bl;
+ const fire=new THREE.PointLight(0xff8a2a,.6,3);fire.position.y=.15;cauldron.add(fire);cauldron.userData.fire=fire;
+ cauldron.userData.bubbles=[];for(let i=0;i<10;i++){const b=new THREE.Mesh(new THREE.SphereGeometry(.05+Math.random()*.05,8,8),new THREE.MeshBasicMaterial({color:0x4ade80,transparent:true,opacity:.8}));b.userData.t=Math.random();b.userData.r=Math.random()*.4;b.userData.a=Math.random()*6;cauldron.add(b);cauldron.userData.bubbles.push(b)}}
+label('<div class="lbl"><div class="id">THE SEMINAR</div></div>',0,2.1,.6);
+/* front door with pivot */
+const doorPivot=new THREE.Group();doorPivot.position.set(-.8,0,D/2);house.add(doorPivot);
+const door=box(1.6,2.5,.12,new THREE.MeshStandardMaterial({color:0x2a2238,roughness:.8}),.8,1.25,0,doorPivot);
+const knob=new THREE.Mesh(new THREE.SphereGeometry(.06,8,8),new THREE.MeshBasicMaterial({color:0xffb454}));knob.position.set(1.4,1.2,.1);doorPivot.add(knob);
+/* archive shelf on ground right */
+const shelf=new THREE.Group();shelf.position.set(4,0,-D/2+.5);house.add(shelf);
+box(3.2,.08,.9,trimM,0,1,0,shelf);box(3.2,.08,.9,trimM,0,2,0,shelf);box(.08,2.6,.9,trimM,-1.6,1.3,0,shelf);box(.08,2.6,.9,trimM,1.6,1.3,0,shelf);
+label('<div class="lbl"><div class="id">PLAN ARCHIVE · SUPABASE</div></div>',4,2.6,-D/2+.6);
+const booksG=new THREE.Group();shelf.add(booksG);
+/* rooms */
+const rooms={};
+function label(html,x,y,z,parent=house){const d=document.createElement('div');d.innerHTML=html;const o=new CSS2DObject(d.firstElementChild);o.position.set(x,y,z);parent.add(o);return o}
+function makeGhost(color){const g=new THREE.Group();const m=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:.25,transparent:true,opacity:.92,roughness:.4});
+ const b=new THREE.Mesh(new THREE.CapsuleGeometry(.42,.7,6,16),m);b.position.y=.8;b.castShadow=true;g.add(b);
+ const eye=new THREE.MeshBasicMaterial({color:0x111522});[-.15,.15].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.06,8,8),eye);e.position.set(x,1.05,.38);g.add(e)});
+ const mouth=new THREE.Mesh(new THREE.SphereGeometry(.07,8,8),eye);mouth.position.set(0,.88,.4);mouth.scale.set(1,1.4,1);g.add(mouth);
+ g.userData.mat=m;return g}
+CLIENTS.forEach((c,i)=>{
+  const base=c.floor*FH,cx=c.cx;
+  const g=new THREE.Group();g.position.set(cx,base,0);house.add(g);
+  const light=new THREE.PointLight(0x1a1a2a,.15,6);light.position.set(0,FH-.5,.8);g.add(light);
+  const ghost=makeGhost(c.color);ghost.position.set(0,.2,0);g.add(ghost);
+  /* desk + screen with the client's colour */
+  box(1.4,.08,.6,trimM,1.1,.9,-1.8,g);box(.08,.9,.08,trimM,.5,.45,-1.9,g);box(.08,.9,.08,trimM,1.7,.45,-1.9,g);
+  const screen=new THREE.Mesh(new THREE.PlaneGeometry(.8,.5),new THREE.MeshBasicMaterial({color:c.color}));screen.position.set(1.1,1.25,-1.9);g.add(screen);
+  /* sealed door with lock on back wall left */
+  box(.9,1.9,.1,new THREE.MeshStandardMaterial({color:0x14121d}),-1.3,.95,-D/2+.22,g);
+  const lock=new THREE.Group();lock.position.set(-1.0,.95,-D/2+.3);g.add(lock);
+  const lockM=new THREE.MeshStandardMaterial({color:0x2a3a30,emissive:0x4ade80,emissiveIntensity:0});
+  const lb=new THREE.Mesh(new THREE.BoxGeometry(.18,.16,.08),lockM);lock.add(lb);const lr=new THREE.Mesh(new THREE.TorusGeometry(.07,.02,8,16,Math.PI),lockM);lr.position.y=.09;lock.add(lr);
+  const lbl=label(`<div class="lbl"><div class="nm">${c.name}</div><div class="id">${c.id} · ${c.room}</div><div class="st">idle</div></div>`,0,FH-.25,.6,g);
+  rooms[c.id]={c,g,light,ghost,lock,lockM,lbl,screen,state:'idle',i};
+});
+/* trick-or-treater */
+const kid=new THREE.Group();kid.position.set(-16,0,7);scene.add(kid);
+{const legM=new THREE.MeshStandardMaterial({color:0x2a2238});[-.12,.12].forEach(x=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.16,.5,.16),legM);l.position.set(x,.25,0);kid.add(l)});
+ const body=new THREE.Mesh(new THREE.ConeGeometry(.42,1,12),new THREE.MeshStandardMaterial({color:0x4a3a7a}));body.position.y=1;body.castShadow=true;kid.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.34,16,16),new THREE.MeshStandardMaterial({color:0xff8a2a,emissive:0xff6a00,emissiveIntensity:.5}));head.position.y=1.8;head.scale.y=.9;kid.add(head);
+ const stem=new THREE.Mesh(new THREE.CylinderGeometry(.05,.07,.2,6),new THREE.MeshStandardMaterial({color:0x2d6b2d}));stem.position.y=2.15;kid.add(stem);
+ const pl=new THREE.PointLight(0xff8a2a,.8,3);pl.position.y=1.8;kid.add(pl);
+ const bag=new THREE.Group();bag.position.set(.5,.9,.1);kid.add(bag);const bm=new THREE.Mesh(new THREE.BoxGeometry(.42,.5,.3),new THREE.MeshStandardMaterial({color:0x5a2a0a}));bag.add(bm);kid.userData.bag=bag;
+ const eyes=new THREE.MeshBasicMaterial({color:0x1a0d00});[-.12,.12].forEach(x=>{const e=new THREE.Mesh(new THREE.ConeGeometry(.07,.12,3),eyes);e.position.set(x,1.86,.3);kid.add(e)})}
+/* door ghost (requesting client appears at the door) */
+const doorGhost=makeGhost(0xffffff);doorGhost.position.set(0,.2,D/2-.6);doorGhost.visible=false;house.add(doorGhost);
+/* shout rings */
+const ringM=new THREE.MeshBasicMaterial({color:0xff6fb1,transparent:true,opacity:0,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false});
+const ring1=new THREE.Mesh(new THREE.RingGeometry(.95,1,64),ringM);ring1.position.set(0,FH+1,D/2+.2);house.add(ring1);
+const ring2=new THREE.Mesh(new THREE.RingGeometry(.95,1,64),ringM.clone());ring2.rotation.x=-Math.PI/2;ring2.position.set(0,FH+.2,D/2+.2);house.add(ring2);
+/* fog planes near ground */
+const fogM=new THREE.MeshBasicMaterial({color:0x6d6a8a,transparent:true,opacity:.08,depthWrite:false});
+const fogs=[];for(let i=0;i<6;i++){const f=new THREE.Mesh(new THREE.PlaneGeometry(26,5),fogM);f.rotation.x=-Math.PI/2;f.position.set((i-3)*7,.25+i*.05,8+(i%2)*4);scene.add(f);fogs.push(f)}
+
+/* ================= ANIMATION CORE ================= */
+const anims=[];const ease=p=>p<.5?2*p*p:-1+(4-2*p)*p;
+function anim(dur,fn,easing=ease){return new Promise(res=>anims.push({t0:performance.now(),dur,fn,res,easing}))}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* camera shots */
+const SHOTS={
+  wide:{pos:[0,7.5,30],look:[0,4.5,0]},
+  house:{pos:[0,6,20],look:[0,4.6,0]},
+  door:{pos:[2.5,2.2,11],look:[0,1.6,3]},
+  balcony:{pos:[1.5,5.2,11],look:[0,4.4,2]},
+  cauldron:{pos:[2.5,3,8.5],look:[0,1.2,0]},
+  overview:{pos:[14,9,22],look:[0,4.5,0]},
+};
+const cam={pos:new THREE.Vector3(0,7.5,30),look:new THREE.Vector3(0,4.5,0),tPos:new THREE.Vector3(0,7.5,30),tLook:new THREE.Vector3(0,4.5,0),shake:0,cinematic:true,drift:0};
+function shot(name,extra){const s=typeof name==='string'?SHOTS[name]:name;if(!s)return;cam.tPos.set(...s.pos);cam.tLook.set(...s.look);if(extra?.shake)cam.shake=extra.shake}
+function roomShot(id,push=1){const r=rooms[id];const x=r.c.cx,y=r.c.floor*FH+1.5;cam.tPos.set(x*.55,y+.8,11.5-push*1.5);cam.tLook.set(x*.85,y,0)}
+window.toggleCam=()=>{cam.cinematic=!cam.cinematic;controls.enabled=!cam.cinematic;$('#cambtn').textContent=cam.cinematic?'🎥 cinematic':'🕹 free camera';if(!cam.cinematic){controls.target.copy(cam.look)}};
+const clock=new THREE.Clock();
+function loop(){
+  const now=performance.now(),t=clock.getElapsedTime();
+  for(let i=anims.length-1;i>=0;i--){const a=anims[i];let p=Math.min(1,(now-a.t0)/a.dur);a.fn(a.easing(p),p);if(p>=1){anims.splice(i,1);a.res()}}
+  /* ghosts bob */
+  for(const id in rooms){const r=rooms[id];const sp=r.state==='speaking'||r.state==='objecting';r.ghost.position.y=.2+Math.sin(t*(sp?5:1.6)+r.i)*(sp?.14:.07);r.ghost.rotation.y=Math.sin(t*.7+r.i)*.2;if(r.state==='objecting')r.ghost.position.x=Math.sin(t*40)*.06;else r.ghost.position.x*=.8;
+    const s=sp?1+Math.sin(t*10)*.04:1;r.ghost.scale.setScalar(s)}
+  doorGhost.position.y=.2+Math.sin(t*2)*.08;
+  /* cauldron bubbles */
+  cauldron.userData.bubbles.forEach(b=>{b.userData.t+=.012*(cauldron.userData.on?2.5:1);if(b.userData.t>1)b.userData.t=0;b.position.set(Math.cos(b.userData.a)*b.userData.r,.86+b.userData.t*.6,Math.sin(b.userData.a)*b.userData.r);b.material.opacity=.9*(1-b.userData.t)});
+  cauldron.userData.light.intensity=(cauldron.userData.on?3:1)+Math.sin(t*9)*.3;cauldron.userData.fire.intensity=.5+Math.random()*.3;
+  fde.userData.light.intensity=1.4+Math.sin(t*6)*.3+Math.random()*.2;
+  shaftM.opacity=(shaftOn?.22:.07)+Math.sin(t*3)*.03;shaftCore.material.opacity=shaftOn?.8:.3;
+  fogs.forEach((f,i)=>{f.position.x+=(.004+i*.001)*(i%2?1:-1);if(f.position.x>30)f.position.x=-30;if(f.position.x<-30)f.position.x=30});
+  moon.lookAt(camera.position);
+  /* camera */
+  if(cam.cinematic){cam.pos.lerp(cam.tPos,.035);cam.look.lerp(cam.tLook,.045);cam.drift+=.003;
+    const dx=Math.sin(cam.drift)*.35,dy=Math.cos(cam.drift*.7)*.2;const sh=cam.shake;cam.shake*=.9;
+    camera.position.set(cam.pos.x+dx+(Math.random()-.5)*sh,cam.pos.y+dy+(Math.random()-.5)*sh,cam.pos.z);camera.lookAt(cam.look)}
+  else controls.update();
+  composer.render();labelRenderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+let shaftOn=false;
+$('#loading').remove();loop();
+
+/* ================= STATE ================= */
+const COL={idle:0x1a1a2a,thinking:0x8a8aa8,asking:0x8b7cff,speaking:0x5ee1ff,objecting:0xffb454,walled:0x4ade80,reeval:0xff6fb1};
+function setState(id,state){const r=rooms[id];if(!r)return;r.state=state;
+  const col=COL[state]||COL.idle;r.light.color.setHex(col);r.light.intensity=state==='idle'?.15:state==='thinking'?.9:2.4;
+  r.ghost.userData.mat.emissive.setHex(state==='idle'?0xffffff:col);r.ghost.userData.mat.emissiveIntensity=state==='idle'?.2:state==='thinking'?.4:.9;
+  r.lockM.emissiveIntensity=state==='walled'?1.5:0;
+  const el=r.lbl.element;el.className='lbl '+(state==='idle'?'':state);el.querySelector('.st').textContent=state==='reeval'?'re-evaluating':state;
+  shaftOn=Object.values(rooms).some(x=>/speaking|objecting|thinking|reeval/.test(x.state));
+}
+const mon={cross:0,relay:0,redact:0,fde:0};function bump(k,n=1){mon[k]+=n;$('#m-'+k).textContent=mon[k];$('#m-'+k).animate([{transform:'scale(1.3)'},{transform:'scale(1)'}],{duration:300})}
+/* relay particle: room -> shaft -> cauldron */
+function relayPulse(fromId,colorHex){
+  const r=rooms[fromId];const start=new THREE.Vector3(r.c.cx,r.c.floor*FH+1.2,.3);
+  const curve=new THREE.CatmullRomCurve3([start,new THREE.Vector3(r.c.cx*.5,start.y+.6,1.2),new THREE.Vector3(0,start.y,.4),new THREE.Vector3(0,1.2,.2)]);
+  const m=new THREE.Mesh(new THREE.SphereGeometry(.13,12,12),new THREE.MeshBasicMaterial({color:colorHex}));house.add(m);const pl=new THREE.PointLight(colorHex,2,4);m.add(pl);
+  let last=0;
+  anim(1300,(p)=>{m.position.copy(curve.getPoint(p));if(p-last>.05){last=p;const tr=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6),new THREE.MeshBasicMaterial({color:colorHex,transparent:true,opacity:.8}));tr.position.copy(m.position);house.add(tr);anim(500,q=>{tr.material.opacity=.8*(1-q);tr.scale.setScalar(1-q*.8)}).then(()=>house.remove(tr))}},p=>p)
+  .then(()=>{house.remove(m);const b=cauldron.userData.brew;b.material.color.setHex(colorHex);cauldron.userData.light.color.setHex(colorHex);anim(900,q=>{b.material.color.lerp(new THREE.Color(0x4ade80),q*.1);cauldron.userData.light.color.lerp(new THREE.Color(0x4ade80),q*.1)})});
+}
+/* speech bubble as 3D label */
+async function bubble(fromId,text,kind,envelope){
+  const d=document.createElement('div');d.className='bub '+(kind||'');
+  const who=fromId==='fde'?'house owner':fromId;
+  d.innerHTML=`<div class="who" style="color:${COLOR(fromId)}">${who}</div>${text.length>120?text.slice(0,117)+'…':text}${envelope?`<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">${envelope}</div>`:''}`;
+  const o=new CSS2DObject(d);
+  if(fromId==='fde')o.position.set(0,FH+2.6,D/2+.2);else{const r=rooms[fromId];o.position.set(r.c.cx,r.c.floor*FH+2.3,.6)}
+  house.add(o);d.animate([{opacity:0,transform:'translateY(-90%) scale(.9)'},{opacity:1,transform:'translateY(-100%) scale(1)'}],{duration:250,fill:'forwards'});
+  await sleep(kind==='none'?1400:2800);
+  d.animate([{opacity:1},{opacity:0}],{duration:500,fill:'forwards'}).onfinish=()=>house.remove(o);
+}
+function knockLabel(){const d=document.createElement('div');d.className='knock';d.textContent='knock knock';const o=new CSS2DObject(d);o.position.set(0,3.4,D/2+.4);house.add(o);d.animate([{opacity:0,transform:'translateY(10px) scale(.6)'},{opacity:1,transform:'translateY(-10px) scale(1.1)'},{opacity:0,transform:'translateY(-40px)'}],{duration:1500}).onfinish=()=>house.remove(o)}
+async function flickerAll(){for(let i=0;i<6;i++){for(const id in rooms){rooms[id].light.intensity=Math.random()*3}fde.userData.light.intensity=Math.random()*4;await sleep(70)}for(const id in rooms)setState(id,rooms[id].state)}
+function shoutWave(){SFX.shout();[ring1,ring2].forEach((rg,i)=>{rg.scale.setScalar(.1);rg.material.opacity=1;anim(1300,p=>{rg.scale.setScalar(.1+p*22);rg.material.opacity=1-p},p=>1-Math.pow(1-p,2))});cam.shake=.25;flickerAll()}
+/* kid */
+async function kidWalk(to,ms){const from=kid.position.clone();const dir=new THREE.Vector3().subVectors(to,from);kid.rotation.y=Math.atan2(dir.x,dir.z);
+  await anim(ms,(p,raw)=>{kid.position.lerpVectors(from,to,p);kid.position.y=Math.abs(Math.sin(raw*ms/110))*.08},p=>p)}
+async function arrive(){shot('door');await kidWalk(new THREE.Vector3(-3.5,0,6),2200);await kidWalk(new THREE.Vector3(0,0,4.6),1100);kid.rotation.y=Math.PI;await sleep(150);
+  SFX.knock();knockLabel();await anim(500,p=>{doorPivot.rotation.y=Math.sin(p*Math.PI*4)*.03});cam.shake=.15;await sleep(700)}
+async function deliver(plan){
+  cauldron.userData.on=true;SFX.brew();
+  const bag=kid.userData.bag;const bagWorld=new THREE.Vector3();
+  for(let i=0;i<plan.steps.length;i++){
+    const col=parseInt(COLOR(plan.steps[i].source).slice(1),16);
+    const c=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.22),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.2}));c.position.set(0,1,.2);house.add(c);
+    const cl=new THREE.PointLight(col,1.5,3);c.add(cl);SFX.candy();
+    bag.getWorldPosition(bagWorld);house.worldToLocal(bagWorld);
+    const start=c.position.clone(),mid=new THREE.Vector3(.4+i*.15,3.4,2.2),end=bagWorld.clone().add(new THREE.Vector3(0,.3,0));
+    const curve=new THREE.QuadraticBezierCurve3(start,mid,end);
+    anim(900,(p)=>{c.position.copy(curve.getPoint(p));c.rotation.x+=.2;c.rotation.y+=.15},p=>p).then(()=>{house.remove(c);const small=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.12),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1}));small.position.set((i%3-1)*.12,.3+Math.floor(i/3)*.1,.05);small.rotation.set(.5,.5,0);bag.add(small)});
+    await sleep(220);
+  }
+  await sleep(700);
+  await anim(700,p=>{doorPivot.rotation.y=-p*1.9});
+  const r=rooms[plan.for];doorGhost.userData.mat.emissive.setHex(r.c.color);doorGhost.userData.mat.emissiveIntensity=.9;doorGhost.visible=true;doorGhost.scale.setScalar(.01);anim(400,p=>doorGhost.scale.setScalar(p));
+  setState(plan.for,'speaking');
+  const d=document.createElement('div');d.className='bub plan';d.innerHTML=`<div class="who" style="color:${COLOR(plan.for)}">${plan.for} · at the door</div>Here is your candy. Every piece is a lesson from a different room, and none of them is a room.`;
+  const o=new CSS2DObject(d);o.position.set(0,2.9,D/2+.3);house.add(o);await sleep(2600);house.remove(o);
+  setState(plan.for,'idle');await anim(400,p=>doorGhost.scale.setScalar(1-p));doorGhost.visible=false;
+  anim(700,p=>{doorPivot.rotation.y=-1.9*(1-p)});cauldron.userData.on=false;
+  kid.rotation.y=0;await kidWalk(new THREE.Vector3(2,0,9),1200);await kidWalk(new THREE.Vector3(20,0,10),2600);
+}
+function shelveBook(plan){const col=parseInt(COLOR(plan.for).slice(1),16);const n=booksG.children.length;const b=new THREE.Mesh(new THREE.BoxGeometry(.22,.8,.6),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.5}));
+  b.position.set(-1.35+(n%10)*.28,1.46+Math.floor(n/10)*1,0);booksG.add(b);b.position.y+=1;anim(600,p=>{b.position.y=1.46+Math.floor(n/10)*1+(1-p)})}
+
+/* ================= TRANSCRIPT / HUD ================= */
+const feed=$('#feed');
+let cancel=false;
+async function stream(node,text,speed=20){const w=text.split(' ');let out='';const cur=document.createElement('span');cur.className='cursor';for(let i=0;i<w.length;i++){if(cancel)return;out+=(i?' ':'')+w[i];node.textContent=out;node.appendChild(cur);feed.scrollTop=feed.scrollHeight;await sleep(speed+Math.random()*18)}cur.remove()}
+function envelopeHtml(m){if(!BY[m.from]||m.kind==='none')return '';const red=REDACT[m.kind]||[];return `<span class="envelope">scope: ${m.kind} only</span><span class="envelope redact">redacted ${red.length}: ${red.slice(0,2).join(', ')}${red.length>2?'…':''}</span>`}
+async function addMessage(m,{withBubble=true}={}){
+  const who=m.from==='fde'?'FDE · house owner':m.from==='moderator'?'Seminar':m.from;
+  const d=document.createElement('div');d.className='msg '+(m.kind||'');
+  d.innerHTML=`<div class="who"><b style="color:${m.from==='moderator'?'var(--muted)':COLOR(m.from)}">${who}</b>${BY[m.from]?BY[m.from].room:''}</div><div class="b"><span class="txt"></span></div>`;
+  feed.appendChild(d);feed.scrollTop=feed.scrollHeight;
+  if(BY[m.from]){bump('relay');const red=(REDACT[m.kind]||[]).length;if(red)bump('redact',red)}
+  if(withBubble&&(BY[m.from]||m.from==='fde')){bubble(m.from,m.text,m.kind,envelopeHtml(m));if(BY[m.from]){relayPulse(m.from,m.kind==='objection'?0xffb454:BY[m.from].color);m.kind==='objection'?SFX.object():SFX.whoosh();if(cam.cinematic&&m.kind!=='none')roomShot(m.from,m.kind==='objection'?1.6:1);if(m.kind==='objection')cam.shake=.2}}
+  await stream(d.querySelector('.txt'),m.text,m.kind==='none'?8:20);
+  const meta=[];if(m.kind&&!['moderator','request'].includes(m.kind))meta.push(`<span class="chip" style="border-color:${COLOR(m.from)}55;color:${COLOR(m.from)}">${m.kind}</span>`);
+  if(m.cites)meta.push(`<span class="chip cite">cites ${m.cites} memory only</span>`);
+  if(BY[m.from]&&m.kind!=='none')meta.push(`<span class="chip red">redacted: ${(REDACT[m.kind]||[]).join(', ')}</span>`);
+  const lat=m.latency??(80+Math.round(Math.random()*260));meta.push(`<span class="chip">${lat}ms · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`);
+  d.querySelector('.b').insertAdjacentHTML('beforeend',`<div class="meta">${meta.join('')}</div>`);feed.scrollTop=feed.scrollHeight;
+}
+function sys(t){const d=document.createElement('div');d.className='sys';d.textContent='— '+t+' —';feed.appendChild(d);feed.scrollTop=feed.scrollHeight}
+async function renderPlan(p){const e=$('#plan');e.classList.add('ready');e.innerHTML=`<div class="title">🍬 ${p.title}</div><ol id="planlist"></ol><div class="actions"><button class="primary" id="shelvebtn">Shelve in archive</button><button id="copybtn">Copy</button></div>`;
+  $('#shelvebtn').onclick=savePlan;$('#copybtn').onclick=copyPlan;const ol=$('#planlist');
+  for(const s of p.steps){const li=document.createElement('li');li.innerHTML=`<span class="candy" style="color:${COLOR(s.source)}"></span>${s.text}<span class="src">${s.source==='FDE'?'house owner':'from '+s.source}</span>`;ol.appendChild(li);await sleep(300)}e._plan=p}
+let plans=[];
+function savePlan(){const p=$('#plan')._plan;if(!p)return;plans.unshift(p);try{localStorage.setItem('fde-3d-plans',JSON.stringify(plans))}catch(e){}shelveBook(p);toast('Shelved in the plan archive · Supabase plans table · no private data');if(live)live.send(JSON.stringify({type:'save',plan:p}))}
+function copyPlan(){const p=$('#plan')._plan;if(!p)return;navigator.clipboard?.writeText(p.title+'\n'+p.steps.map((s,i)=>`${i+1}. ${s.text} [${s.source}]`).join('\n'));toast('Copied')}
+function toast(t){const e=$('#toast');$('#toasttext').textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),3000)}
+function banner(n,sub){$('#banner-n').textContent=n;if(sub)$('#banner-sub').innerHTML=sub;const b=$('#banner');b.classList.add('show');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('show'),4200)}
+
+/* ================= ROUTER ================= */
+let running=false,awaiting=null,live=null,t_fde=0;
+async function handle(e){
+  switch(e.type){
+    case 'shot':shot(e.name);break;
+    case 'arrive':await arrive();break;
+    case 'request':$('#reqtag').textContent='knock · '+e.from;$('#reqtext').textContent=e.text;await addMessage({from:e.from,kind:'request',text:e.text});break;
+    case 'status':setState(e.agent,e.state);break;
+    case 'sys':sys(e.text);break;
+    case 'message':await addMessage(e);break;
+    case 'fde':await addMessage({from:'fde',kind:'fde',text:e.text});break;
+    case 'await-fde':armFde(e.suggestion);break;
+    case 'reeval':{const dt=((performance.now()-t_fde)/1000).toFixed(1);e.agents.forEach(a=>setState(a,'reeval'));banner(e.agents.length,`delivered over the relay in <b>${dt}s</b> · mid-debate · no restart`);await sleep(1400);e.agents.forEach(a=>setState(a,'thinking'));break}
+    case 'plan':await renderPlan(e);$('#reqtag').textContent='candy ready';$('#plan')._plan=e;break;
+    case 'deliver':await deliver($('#plan')._plan);$('#reqtag').textContent='delivered';break;
+  }
+}
+function armFde(s){awaiting=s;$('#shout').classList.add('armed');const i=$('#fdeinput');i.placeholder=s;i.focus();sys('seminar paused · the house owner may speak');anim(1800,p=>{fde.position.y=.12+Math.abs(Math.sin(p*Math.PI*3))*.3})}
+async function sendFde(){const i=$('#fdeinput');const text=i.value.trim()||awaiting||'';if(!text)return;i.value='';t_fde=performance.now();
+  $('#shout').classList.remove('armed');shot('balcony');shoutWave();bump('fde');
+  await addMessage({from:'fde',kind:'fde',text});
+  if(live){live.send(JSON.stringify({type:'fde',text}));return}
+  if(awaiting!==null){awaiting=null;await play(AFTER_FDE)}}
+async function play(list){for(const e of list){if(cancel)return;await sleep(e.t);if(cancel)return;await handle(e)}}
+async function start(){if(running)return;running=true;cancel=false;ac();$('#overlay').classList.add('hide');$('#startbtn').textContent='● Night in progress';if(live){live.send(JSON.stringify({type:'start'}));return}await play(SCRIPT)}
+function reset(){cancel=true;running=false;awaiting=null;feed.innerHTML='';$('#plan').className='plan';$('#plan').innerHTML='<div class="empty">The cauldron brews a plan once the seminar agrees.<br>Each candy is the colour of the room it came from.</div>';$('#plan')._plan=null;
+  $('#reqtag').textContent='quiet night';$('#reqtext').textContent='No one at the door…';$('#shout').classList.remove('armed');$('#fdeinput').placeholder='Add a constraint the council must respect…';$('#startbtn').textContent='🎃 Run';
+  CLIENTS.forEach(c=>setState(c.id,'idle'));kid.position.set(-16,0,7);kid.userData.bag.children.slice(1).forEach(c=>kid.userData.bag.remove(c));doorPivot.rotation.y=0;doorGhost.visible=false;cauldron.userData.on=false;shot('wide');
+  for(const k in mon){mon[k]=0;$('#m-'+k).textContent='0'}
+  setTimeout(()=>{cancel=false},60)}
+/* privacy wall */
+async function askRoom(id,about){const other=about||(id==='client-1'?'client-2':'client-1');const r=rooms[id];if(cam.cinematic)roomShot(id,1.4);
+  setState(id,'thinking');await anim(500,p=>{r.lock.rotation.z=Math.sin(p*Math.PI*6)*.3});setState(id,'walled');SFX.lock();bump('cross');$('#m-cross').textContent='0';mon.cross=0;
+  await addMessage({from:id,kind:'none',text:`Asked: "what did ${other} build?" → I hold no records for ${other}. Each room is a sealed actor. I can only share sanitized lessons on the stairs, never another client's data.`},{withBubble:false});
+  bubble(id,`I hold no records for ${other}. This door only opens from the inside.`,'plan');toast('Privacy wall held · door stayed locked · 0 bytes crossed');
+  await sleep(2600);setState(id,'idle');if(cam.cinematic)shot('house')}
+
+/* live hook */
+window.FDE={push:handle,setState,shot,clients:CLIENTS};
+(function(){const url=new URLSearchParams(location.search).get('ws');if(!url)return;try{const ws=new WebSocket(url);
+ws.onopen=()=>{live=ws;$('#livedot').textContent='live';$('#livedot').style.color='#4ade80';$('#modebadge').textContent='live';toast('Connected to relay connector')};
+ws.onmessage=ev=>{try{handle(JSON.parse(ev.data))}catch(e){console.warn('bad event',ev.data)}};
+ws.onclose=()=>{live=null;$('#livedot').textContent='replay';$('#modebadge').textContent='replay';toast('Connector lost · replay mode')}}catch(e){}})();
+window.start=start;window.reset=reset;window.sendFde=sendFde;
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'){if(e.key==='Enter')sendFde();return}
+  if(e.code==='Space'){e.preventDefault();start()}if(e.key==='r'||e.key==='R')reset();if(e.key==='w'||e.key==='W')askRoom('client-2','client-1');if(e.key==='m'||e.key==='M')toggleSound();if(e.key==='c'||e.key==='C')toggleCam();
+  if(e.key==='1')shot('wide');if(e.key==='2')shot('house');if(e.key==='3')shot('door');if(e.key==='4')shot('balcony');if(e.key==='5')shot('cauldron');if(e.key==='6')shot('overview')});
+renderer.domElement.addEventListener('click',ev=>{if(!cam.cinematic)return;const rect=renderer.domElement.getBoundingClientRect();const m=new THREE.Vector2(((ev.clientX-rect.left)/rect.width)*2-1,-((ev.clientY-rect.top)/rect.height)*2+1);const rc=new THREE.Raycaster();rc.setFromCamera(m,camera);
+  for(const id in rooms){const hits=rc.intersectObject(rooms[id].ghost,true);if(hits.length){askRoom(id);break}}});
+try{plans=JSON.parse(localStorage.getItem('fde-3d-plans')||'[]')}catch(e){}plans.slice().reverse().forEach(shelveBook);
+CLIENTS.forEach(c=>setState(c.id,'idle'));
+</script>
+</body>
+</html>
