@@ -25,6 +25,8 @@ export type ClientProfile = {
     name: string
     stack: string
     constraints: string[]
+    /** Optional speaking style, e.g. "cocky, says 'just autoscale'". Tone only, never facts. */
+    persona?: string
 }
 
 export type SeminarStatus = "idle" | "running" | "awaiting_approval" | "done"

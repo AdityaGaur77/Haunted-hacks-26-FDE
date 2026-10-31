@@ -14,7 +14,10 @@ const OUTPUT_FORMAT = `Reply with ONLY a JSON object, no markdown:
 
 export function describeSelf(id: string, profile: ClientProfile | null, memories: Memory[]): string {
     const p = profile
-        ? `Stack: ${profile.stack}\nConstraints: ${profile.constraints.join("; ") || "none"}`
+        ? `Stack: ${profile.stack}\nConstraints: ${profile.constraints.join("; ") || "none"}` +
+          (profile.persona
+              ? `\nPersonality: ${profile.persona}. Let this flavor your tone (a short phrase or attitude), but keep every fact from your memory and keep it clear and useful.`
+              : "")
         : "No profile loaded."
     const mem = memories.length
         ? memories
